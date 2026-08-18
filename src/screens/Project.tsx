@@ -1,6 +1,23 @@
 import { motion } from "framer-motion";
-import { SectionLabel } from "../components/ui";
+import { ScoreMeter, SectionLabel } from "../components/ui";
 import { IconCheck, IconChevron, IconCode, IconLayers } from "../components/Icons";
+import { exerciseById } from "../data/exercises";
+import { sportById } from "../data/sports";
+import { SportIcon } from "../components/Icons";
+
+const DELIVERED = [
+  { file: "prisma/schema.prisma", desc: "9 modelos, 2 enums, N:N com rationale + índice do hot path" },
+  { file: "supabase/migrations/…init_forja.sql", desc: "DDL completo, RLS por dono e view v_exercise_feed" },
+  { file: "prisma/seed.ts", desc: "Upserts idempotentes — a base inteira versionada em código" },
+  { file: ".env.example", desc: "Supabase + Prisma (conexão pooled e direta)" },
+];
+
+const SEED_PREVIEW: { ex: string; sport: string; score: number }[] = [
+  { ex: "agachamento-bulgaro", sport: "futebol", score: 5 },
+  { ex: "levantamento-terra", sport: "jiu-jitsu", score: 5 },
+  { ex: "barra-fixa", sport: "natacao", score: 5 },
+  { ex: "nordic-curl", sport: "corrida", score: 5 },
+];
 
 const REFINEMENTS = [
   {
@@ -169,12 +186,12 @@ prisma/
 ├─ schema.prisma
 └─ seed.ts                     # 8 esportes + exercícios + scores`;
 
-const PHASES: { n: number; title: string; body: string; status: "done" | "next" }[] = [
+const PHASES: { n: number; title: string; body: string; status: "shipped" | "done" | "next" }[] = [
   {
     n: 1,
     title: "Setup & DB",
-    body: "Next.js 14 + TS + Tailwind + shadcn; projeto Supabase; Prisma schema + seed com 8 esportes e ~50 exercícios mapeados.",
-    status: "done",
+    body: "Next.js 14 + TS + Tailwind + shadcn; projeto Supabase; Prisma schema com 9 modelos + migration SQL com RLS + seed idempotente (8 esportes · 22 exercícios · 92 pares N:N).",
+    status: "shipped",
   },
   {
     n: 2,
@@ -217,10 +234,80 @@ export default function Project() {
       </p>
 
       <div className="mt-4 rounded-xl border border-volt-400/30 bg-volt-400/8 p-3.5 text-[12px] leading-relaxed text-fog-dim">
-        <strong className="text-volt-300">Este app é o protótipo navegável das fases 1–3.</strong>{" "}
-        Aqui o banco é simulado no navegador (mesma modelagem N:N); o schema abaixo é o do projeto
-        real em Next.js + Supabase + Prisma.
+        <strong className="text-volt-300">Plano aprovado — Fase 1 entregue no repositório.</strong>{" "}
+        Este app é o protótipo navegável das fases 1–3 (banco simulado no navegador com a mesma
+        modelagem N:N); abaixo, o blueprint e os artefatos do projeto real Next.js + Supabase + Prisma.
       </div>
+
+      {/* entrega fase 1 */}
+      <section className="mt-7">
+        <div className="flex items-center justify-between">
+          <SectionLabel>00 · Entrega da Fase 1</SectionLabel>
+          <span className="flex items-center gap-1.5 rounded-md bg-[#5b8cff]/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#7fa4ff]">
+            <span className="blink-dot h-1.5 w-1.5 rounded-full bg-[#7fa4ff]" /> no repo
+          </span>
+        </div>
+
+        <div className="mt-3 overflow-hidden rounded-xl border border-ink-700 bg-ink-850">
+          {DELIVERED.map((d, i) => (
+            <div
+              key={d.file}
+              className={`flex items-center gap-3 px-3.5 py-3 ${i > 0 ? "border-t border-ink-700/70" : ""}`}
+            >
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#5b8cff]/12 text-[#7fa4ff]">
+                <IconCode size={15} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-mono text-[12px] font-bold text-fog">{d.file}</p>
+                <p className="truncate text-[11px] text-fog-mute">{d.desc}</p>
+              </div>
+              <span className="text-[#7fa4ff]"><IconCheck size={14} strokeWidth={2.6} /></span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-2.5 grid grid-cols-3 gap-2">
+          {[
+            { v: "8", l: "esportes" },
+            { v: "22", l: "exercícios" },
+            { v: "92", l: "pares N:N" },
+          ].map((s) => (
+            <div key={s.l} className="rounded-lg border border-ink-700 bg-ink-850 py-2.5 text-center">
+              <p className="tabular font-display text-xl leading-none text-[#7fa4ff]">{s.v}</p>
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-fog-mute">{s.l}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-fog-mute">
+          Amostra do seed — tabela exercise_sport
+        </p>
+        <div className="mt-2 space-y-1.5">
+          {SEED_PREVIEW.map((row) => {
+            const ex = exerciseById(row.ex);
+            const sport = sportById(row.sport);
+            const link = ex?.links.find((l) => l.sport === row.sport);
+            if (!ex) return null;
+            return (
+              <div
+                key={`${row.ex}-${row.sport}`}
+                className="flex items-center gap-3 rounded-lg border border-ink-700 bg-ink-850 px-3 py-2.5"
+              >
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md" style={{ background: `${sport.color}18`, color: sport.color }}>
+                  <SportIcon id={sport.id} size={14} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[12px] font-bold text-fog">
+                    {ex.name} <span className="text-fog-mute">×</span> {sport.name}
+                  </p>
+                  <p className="truncate text-[10.5px] italic text-fog-mute">“{link?.why}”</p>
+                </div>
+                <ScoreMeter score={row.score} color={sport.color} size="sm" />
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* refinements */}
       <section className="mt-7">
@@ -295,9 +382,11 @@ export default function Project() {
               )}
               <span
                 className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border font-display text-sm ${
-                  p.status === "done"
-                    ? "border-volt-400/50 bg-volt-400/12 text-volt-400"
-                    : "border-ink-600 bg-ink-850 text-fog-mute"
+                  p.status === "shipped"
+                    ? "border-[#5b8cff]/60 bg-[#5b8cff]/12 text-[#7fa4ff]"
+                    : p.status === "done"
+                      ? "border-volt-400/50 bg-volt-400/12 text-volt-400"
+                      : "border-ink-600 bg-ink-850 text-fog-mute"
                 }`}
               >
                 {p.n}
@@ -309,11 +398,19 @@ export default function Project() {
                   </p>
                   <span
                     className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] ${
-                      p.status === "done" ? "bg-volt-400/12 text-volt-300" : "bg-ink-800 text-fog-mute"
+                      p.status === "shipped"
+                        ? "bg-[#5b8cff]/15 text-[#7fa4ff]"
+                        : p.status === "done"
+                          ? "bg-volt-400/12 text-volt-300"
+                          : "bg-ink-800 text-fog-mute"
                     }`}
                   >
-                    {p.status === "done" ? <IconCheck size={9} strokeWidth={3} /> : <IconChevron size={9} strokeWidth={3} />}
-                    {p.status === "done" ? "Prototipada aqui" : "Próxima"}
+                    {p.status === "next" ? (
+                      <IconChevron size={9} strokeWidth={3} />
+                    ) : (
+                      <IconCheck size={9} strokeWidth={3} />
+                    )}
+                    {p.status === "shipped" ? "Entregue no repo" : p.status === "done" ? "Prototipada aqui" : "Próxima"}
                   </span>
                 </div>
                 <p className="mt-1 text-[12px] leading-relaxed text-fog-dim">{p.body}</p>
