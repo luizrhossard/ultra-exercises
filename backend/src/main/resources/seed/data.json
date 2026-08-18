@@ -1,0 +1,377 @@
+{
+  "sports": [
+    { "code": "futebol", "name": "Futebol", "description": "Arrancada, mudança de direção e resistência de jogo" },
+    { "code": "boxe", "name": "Boxe", "description": "Potência de golpe, tronco rígido e gás anaeróbio" },
+    { "code": "jiu-jitsu", "name": "Jiu-Jitsu", "description": "Pegada, controle de quadril e força isométrica" },
+    { "code": "basquete", "name": "Basquete", "description": "Salto vertical, aceleração e aterrissagem" },
+    { "code": "volei", "name": "Vôlei", "description": "Impulsão, ombro resistente e defesa lateral" },
+    { "code": "corrida", "name": "Corrida", "description": "Economia de passada e blindagem de posteriores" },
+    { "code": "natacao", "name": "Natação", "description": "Dorsais potentes, core de rotação e ombro saudável" },
+    { "code": "tenis", "name": "Tênis", "description": "Rotação de tronco, pernas elásticas e frenagem" }
+  ],
+  "exercises": [
+    {
+      "name": "Agachamento Búlgaro", "category": "FORCA", "equipment": "Halteres + banco",
+      "muscles": ["quadriceps", "gluteos", "core", "adutores"],
+      "steps": [
+        "Apoie o peito do pé de trás no banco, tronco alto e halteres ao lado do corpo.",
+        "Desça em 3 s até o joelho de trás quase tocar o chão, joelho da frente alinhado com o pé.",
+        "Pause 1 s embaixo sem perder tensão.",
+        "Empurre o chão e suba explosivo em 1 s, estendendo quadril e joelho juntos."
+      ],
+      "links": [
+        { "sport": "futebol", "score": 5, "why": "Unilateral como o jogo: cada perna empurra sozinha num arranque, num corte ou numa finalização." },
+        { "sport": "basquete", "score": 5, "why": "Força de uma perna que transfere direto para a impulsão de um pé e a absorção da aterrissagem." },
+        { "sport": "corrida", "score": 4, "why": "Corrige assimetrias de passada e fortalece o glúteo médio, que segura o quadril estável a cada apoio." },
+        { "sport": "volei", "score": 4, "why": "Aterrissar de um bloqueio é um agachamento unilateral — esse padrão protege joelho e tornozelo." },
+        { "sport": "tenis", "score": 4, "why": "Base forte para frear no fundo da quadra e sair de novo em direção à bola." },
+        { "sport": "boxe", "score": 3 },
+        { "sport": "jiu-jitsu", "score": 3 }
+      ]
+    },
+    {
+      "name": "Salto na Caixa", "category": "PLIOMETRIA", "equipment": "Caixa pliométrica",
+      "muscles": ["quadriceps", "gluteos", "panturrilhas", "core"],
+      "steps": [
+        "Pés na largura do quadril, braços para trás carregando o salto.",
+        "Estenda quadril, joelhos e tornozelos num único gesto e bata os braços para cima.",
+        "Aterrisse na caixa com os pés inteiros, joelhos semiflexionados e silenciosos.",
+        "Desça caminhando — não pule para trás."
+      ],
+      "links": [
+        { "sport": "basquete", "score": 5, "why": "É a potência do rebote: taxa de desenvolvimento de força para saltar mais, mais rápido." },
+        { "sport": "volei", "score": 5, "why": "Mesma cadeia do ataque e do bloqueio — extensão tripla com braço acelerando junto." },
+        { "sport": "futebol", "score": 4, "why": "Explosão de salto para disputas aéreas e arrancadas curtas de dentro da área." },
+        { "sport": "corrida", "score": 3 }
+      ]
+    },
+    {
+      "name": "Levantamento Terra", "category": "FORCA", "equipment": "Barra + anilhas",
+      "muscles": ["posteriores", "gluteos", "dorsais", "lombar", "core", "antebracos"],
+      "steps": [
+        "Barra sobre o meio do pé, pés na largura do quadril.",
+        "Segure a barra, costas longas, axilas 'apertando uma laranja' para ativar dorsais.",
+        "Empurre o chão e suba a barra rente ao corpo num bloco só.",
+        "Trave o quadril no topo sem hiperextender a lombar. Desça controlado."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "Quadril dominante e costas isométricas: a base de qualquer queda, raspagem e defesa de queda." },
+        { "sport": "boxe", "score": 4, "why": "A cadeia posterior é o chão de onde nasce a força do golpe — do pé ao punho." },
+        { "sport": "futebol", "score": 4, "why": "Posterior forte = menos lesão em sprint e mais potência de chute." },
+        { "sport": "corrida", "score": 4, "why": "Constrói o motor de extensão de quadril que empurra a passada para trás." },
+        { "sport": "tenis", "score": 3 },
+        { "sport": "natacao", "score": 3 }
+      ]
+    },
+    {
+      "name": "Sprint em Ladeira", "category": "CONDICIONAMENTO", "equipment": "Ladeira ~8%",
+      "muscles": ["gluteos", "quadriceps", "panturrilhas", "core"],
+      "steps": [
+        "Inclinação de 6–10%, 20–30 m marcados.",
+        "Acelere até esforço máximo mantendo tronco levemente inclinado.",
+        "Volte caminhando — a descida é sua pausa ativa.",
+        "8 a 12 repetições mantendo qualidade de passada."
+      ],
+      "links": [
+        { "sport": "futebol", "score": 5, "why": "Sprint com resistência: replica as arrancadas do jogo e blinda posteriores sem impacto brutal." },
+        { "sport": "corrida", "score": 5, "why": "Aumenta a potência da passada e a rigidez elástica com menos custo mecânico que o sprint plano." },
+        { "sport": "basquete", "score": 4, "why": "Aceleração curta e repetida, o padrão exato de um contra-ataque." },
+        { "sport": "tenis", "score": 4, "why": "Ponto é esforço de 5–10 s com pausa — sprint em ladeira espelha essa relação." },
+        { "sport": "boxe", "score": 4 },
+        { "sport": "volei", "score": 3 }
+      ]
+    },
+    {
+      "name": "Flexão Pliométrica", "category": "PLIOMETRIA", "equipment": "Peso corporal",
+      "muscles": ["peitoral", "triceps", "deltoides", "core"],
+      "steps": [
+        "Prancha alta, mãos na largura dos ombros, core travado.",
+        "Desça controlado em 2 s até o peito quase tocar o chão.",
+        "Empurre explosivo até as mãos saírem do chão.",
+        "Aterrisse macio e emende a próxima repetição sem colapsar o quadril."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "Potência de empurrar em alta velocidade — a fase final de aceleração do direto e do cruzado." },
+        { "sport": "volei", "score": 4, "why": "Ombro e tríceps reativos para a batida de bola e para a defesa mergulhada." },
+        { "sport": "basquete", "score": 3 },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Barra Fixa", "category": "FORCA", "equipment": "Barra fixa",
+      "muscles": ["dorsais", "biceps", "antebracos", "core", "trapezio"],
+      "steps": [
+        "Pegada um pouco além dos ombros, escápulas deprimidas antes de puxar.",
+        "Puxe o peito em direção à barra em 1 s, cotovelos para baixo e para trás.",
+        "Segure 1 s com o queixo acima da barra.",
+        "Desça em 2–3 s até a extensão total. Sem balanço."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "Puxada vertical com pegada: traduz direto para puxada de gola, braço e controle de postura." },
+        { "sport": "natacao", "score": 5, "why": "Mesmo padrão da fase de puxada subaquática — dorsal como motor principal." },
+        { "sport": "tenis", "score": 4, "why": "Costas fortes equilibram o volume de batidas e protegem o ombro dominante." },
+        { "sport": "volei", "score": 4, "why": "Compensa o volume de ataque e ajuda na saúde do ombro que mais corta." },
+        { "sport": "basquete", "score": 3 },
+        { "sport": "boxe", "score": 3 }
+      ]
+    },
+    {
+      "name": "Remada Curvada", "category": "FORCA", "equipment": "Barra",
+      "muscles": ["dorsais", "trapezio", "biceps", "lombar", "core"],
+      "steps": [
+        "Quadril para trás, tronco a ~45°, coluna neutra.",
+        "Puxe a barra em direção ao umbigo, cotovelos rentes ao corpo.",
+        "Esmague as escápulas 1 s no topo.",
+        "Desça controlado sem deixar o tronco subir junto."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 4, "why": "Remada é puxar adversário: postura, pegada e costas que não cedem na isometria." },
+        { "sport": "boxe", "score": 4, "why": "Costas fortes recolhem o braço mais rápido e sustentam a guarda alta round após round." },
+        { "sport": "natacao", "score": 4, "why": "Reforça a musculatura que estabiliza a escápula a cada braçada." },
+        { "sport": "tenis", "score": 4, "why": "Acelera a desaceleração do braço após o golpe — onde nascem as lesões de ombro." }
+      ]
+    },
+    {
+      "name": "Desenvolvimento Militar", "category": "FORCA", "equipment": "Barra ou halteres",
+      "muscles": ["deltoides", "triceps", "trapezio", "core"],
+      "steps": [
+        "Barra na linha da clavícula, pegada um pouco além dos ombros.",
+        "Trave glúteos e abdômen antes de empurrar.",
+        "Empurre a barra para cima e levemente para trás, cabeça 'atravessando a janela'.",
+        "Desça controlado até a posição inicial."
+      ],
+      "links": [
+        { "sport": "volei", "score": 4, "why": "Ombro forte acima da cabeça é pré-requisito para aguentar volume de cortadas e saques." },
+        { "sport": "boxe", "score": 4, "why": "Deltoides que mantêm a guarda e sustentam golpes no alto do round." },
+        { "sport": "natacao", "score": 4, "why": "Força de ombro com core travado — o mesmo casamento da braçada eficiente." },
+        { "sport": "basquete", "score": 3 },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Prancha com Toque no Ombro", "category": "CORE", "equipment": "Peso corporal",
+      "muscles": ["core", "obliquos", "deltoides", "gluteos"],
+      "steps": [
+        "Prancha alta, mãos sob os ombros, pés um pouco mais afastados.",
+        "Sem girar o quadril, leve a mão direita ao ombro esquerdo.",
+        "Alterne os lados mantendo o tronco imóvel — imagine um copo d'água nas costas.",
+        "30–45 s por série, qualidade acima de velocidade."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 4, "why": "Anti-rotação pura: é o que mantém o golpe reto quando o adversário desloca seu eixo." },
+        { "sport": "jiu-jitsu", "score": 4, "why": "Estabilidade de tronco sob perturbação — a essência de manter posição na luta de solo." },
+        { "sport": "futebol", "score": 3 },
+        { "sport": "natacao", "score": 3 },
+        { "sport": "corrida", "score": 3 }
+      ]
+    },
+    {
+      "name": "Woodchopper com Anilha", "category": "CORE", "equipment": "Anilha ou polia",
+      "muscles": ["obliquos", "core", "deltoides", "gluteos"],
+      "steps": [
+        "Segure a anilha ao lado do quadril, pés firmes, joelhos semiflexionados.",
+        "Gire o tronco e leve o peso na diagonal até acima do ombro oposto.",
+        "O quadril acompanha levemente; o poder nasce da rotação, não do braço.",
+        "Retorne em 2 s. Troque o lado ao fim da série."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 5, "why": "É o padrão do forehand: carregar, rotacionar e transferir força do chão para a raquete." },
+        { "sport": "boxe", "score": 5, "why": "Gancho e cruzado nascem aqui — rotação explosiva de tronco com base estável." },
+        { "sport": "futebol", "score": 3 },
+        { "sport": "volei", "score": 3 },
+        { "sport": "basquete", "score": 3 }
+      ]
+    },
+    {
+      "name": "Afundo Lateral", "category": "FORCA", "equipment": "Halter ou peso corporal",
+      "muscles": ["quadriceps", "adutores", "gluteos", "core"],
+      "steps": [
+        "Pés juntos, passo largo para o lado mantendo o outro estendido.",
+        "Quadril para trás, desça na perna dobrada com o tronco levemente inclinado.",
+        "Sinta o alongamento no adutor da perna esticada.",
+        "Empurre de volta ao centro sem juntar os pés por completo."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 5, "why": "A passada aberta de defesa é um afundo lateral em velocidade — força no ângulo exato do jogo." },
+        { "sport": "basquete", "score": 4, "why": "Deslizar na defesa e atacar o close-out vivem nesse plano lateral." },
+        { "sport": "volei", "score": 4, "why": "Base da passada lateral de bloqueio e da defesa de manchete deslocada." },
+        { "sport": "futebol", "score": 4, "why": "Mudança de direção exige adutor forte — músculo-chave em cortes e dribles." },
+        { "sport": "jiu-jitsu", "score": 3 }
+      ]
+    },
+    {
+      "name": "Cadeira Nórdica", "category": "FORCA", "equipment": "Parceiro ou apoio de pé",
+      "muscles": ["posteriores", "gluteos", "panturrilhas"],
+      "steps": [
+        "Ajoelhado, tornozelos fixos, corpo em linha reta do joelho à cabeça.",
+        "Desça o tronco à frente o mais devagar que conseguir (3–5 s).",
+        "Amorteça com as mãos quando não der mais para segurar.",
+        "Empurre de volta com ajuda dos braços até dominar a fase excêntrica."
+      ],
+      "links": [
+        { "sport": "futebol", "score": 5, "why": "O exercício com mais evidência de prevenção de lesão de isquiotibiais no sprint — o terror do futebol." },
+        { "sport": "corrida", "score": 5, "why": "Posteriores excêntricamente fortes freiam a perna no fim da fase de balanço da passada." },
+        { "sport": "volei", "score": 3 },
+        { "sport": "basquete", "score": 3 }
+      ]
+    },
+    {
+      "name": "Corda de Batalha", "category": "CONDICIONAMENTO", "equipment": "Battle rope",
+      "muscles": ["deltoides", "core", "antebracos", "quadriceps"],
+      "steps": [
+        "Corda ancorada, joelhos semiflexionados, quadril para trás.",
+        "Ondas alternadas com o braço solto — o ombro não pode subir.",
+        "20–30 s de trabalho máximo, mantendo a amplitude das ondas.",
+        "Descanse 40–60 s e repita 6–8 vezes."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "Ombros em queimação com tronco estável: condiciona exatamente o que cansa no fim do round." },
+        { "sport": "jiu-jitsu", "score": 3 },
+        { "sport": "natacao", "score": 3 },
+        { "sport": "futebol", "score": 3 }
+      ]
+    },
+    {
+      "name": "Sombra com Halteres Leves", "category": "ESPECIFICO", "equipment": "Halteres 1–2 kg",
+      "muscles": ["deltoides", "peitoral", "core", "panturrilhas"],
+      "steps": [
+        "Halteres leves (1–2 kg), guarda fechada, queixo baixo.",
+        "3 min de combinações soltas, focando velocidade — não força bruta.",
+        "Volte a guarda toda vez; o erro clássico é deixar a mão cair.",
+        "Finalize cada round com 30 s só de esquivas e pêndulos."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "Resistência específica de ombro: mantém a guarda e a velocidade de mão do 1º ao último round." }
+      ]
+    },
+    {
+      "name": "Deslocamento Lateral com Faixa", "category": "ESPECIFICO", "equipment": "Mini band",
+      "muscles": ["abdutores", "gluteos", "quadriceps", "core"],
+      "steps": [
+        "Mini band acima dos joelhos, posição de base do seu esporte.",
+        "Passos laterais curtos sem juntar os pés, joelhos para fora.",
+        "10 m para um lado, 10 m de volta, sem subir e descer o quadril.",
+        "Mantenha o peito alto e os olhos na 'bola'."
+      ],
+      "links": [
+        { "sport": "volei", "score": 4, "why": "É a base da movimentação de bloqueio e da defesa lateral de quadra." },
+        { "sport": "basquete", "score": 4, "why": "Deslizar na defesa sem cruzar os pés — padrão treinado aqui de forma isolada." },
+        { "sport": "tenis", "score": 4, "why": "Ajustes laterais curtos antes da batida dependem dessa ativação de quadril." },
+        { "sport": "futebol", "score": 3 }
+      ]
+    },
+    {
+      "name": "Salto Lateral Skater", "category": "PLIOMETRIA", "equipment": "Peso corporal",
+      "muscles": ["gluteos", "quadriceps", "adutores", "panturrilhas"],
+      "steps": [
+        "Salte lateralmente de uma perna para a outra, como um patinador.",
+        "Aterrisse absorvendo com quadril e joelho — pause 1 s no início.",
+        "Com o tempo, reduza o contato e torne o salto reativo e contínuo.",
+        "Braços ajudam no equilíbrio e no ritmo."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 4, "why": "Frear e empurrar lateralmente em uma perna: o ciclo exato da movimentação de base." },
+        { "sport": "basquete", "score": 4, "why": "Potência lateral para o close-out e a troca de marcação." },
+        { "sport": "futebol", "score": 4, "why": "Corte e drible vivem da capacidade de empurrar o chão de lado, em uma perna." },
+        { "sport": "volei", "score": 3 }
+      ]
+    },
+    {
+      "name": "Arremesso Rotacional de Med Ball", "category": "PLIOMETRIA", "equipment": "Med ball + parede",
+      "muscles": ["obliquos", "core", "peitoral", "deltoides", "gluteos"],
+      "steps": [
+        "De lado para a parede, bola no quadril de trás, joelhos semiflexionados.",
+        "Gire o quadril primeiro, depois o tronco, e solte a bola contra a parede.",
+        "A bola sai na altura do peito, braços quase estendidos.",
+        "Pegue no rebote e emende. 6–8 por lado com qualidade máxima."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "Sequência quadril→tronco→braço idêntica à do cruzado, com sobrecarga e velocidade." },
+        { "sport": "tenis", "score": 5, "why": "Transferência direta para forehand/backhand: mesma ordem de ativação da cadeia rotacional." },
+        { "sport": "volei", "score": 3 },
+        { "sport": "basquete", "score": 3 }
+      ]
+    },
+    {
+      "name": "Mobilidade de Quadril 90/90", "category": "MOBILIDADE", "equipment": "Peso corporal",
+      "muscles": ["flexores", "gluteos", "adutores"],
+      "steps": [
+        "Sentado, as duas pernas a 90° — uma à frente, outra atrás.",
+        "Peito alto, leve o tronco levemente à frente sobre a perna da frente por 30 s.",
+        "Troque de lado girando os quadris sem usar as mãos, se possível.",
+        "5 transições lentas por lado, respirando fundo."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "Rotação interna e externa de quadril é a chave de guarda, reposição e fuga de quadril." },
+        { "sport": "futebol", "score": 3 },
+        { "sport": "natacao", "score": 3 },
+        { "sport": "tenis", "score": 3 },
+        { "sport": "corrida", "score": 3 }
+      ]
+    },
+    {
+      "name": "Ponte de Glúteo Unilateral", "category": "FORCA", "equipment": "Peso corporal ou halter",
+      "muscles": ["gluteos", "posteriores", "core"],
+      "steps": [
+        "Deitado, uma perna apoiada no chão e a outra estendida.",
+        "Suba o quadril empurrando o calcanhar até alinhar tronco e coxa.",
+        "Segure 2 s no topo espremendo o glúteo.",
+        "Desça em 2 s sem encostar o quadril por completo."
+      ],
+      "links": [
+        { "sport": "corrida", "score": 4, "why": "Glúteo máximo é o motor da passada; unilateral garante que o lado fraco não fique para trás." },
+        { "sport": "futebol", "score": 4, "why": "Extensão de quadril forte para chute, arranque e proteção do joelho." },
+        { "sport": "jiu-jitsu", "score": 3 },
+        { "sport": "volei", "score": 3 }
+      ]
+    },
+    {
+      "name": "Burpee com Salto", "category": "CONDICIONAMENTO", "equipment": "Peso corporal",
+      "muscles": ["peitoral", "quadriceps", "core", "panturrilhas", "deltoides"],
+      "steps": [
+        "Do agachamento, jogue as pernas para trás até a prancha.",
+        "Uma flexão com o peito próximo ao chão.",
+        "Retorne os pés para as mãos num salto.",
+        "Estenda tudo num salto vertical, braços para cima."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 4, "why": "Queda e levantada rápidas com frequência cardíaca alta — condiciona o 'levantar e continuar' da luta." },
+        { "sport": "futebol", "score": 3 },
+        { "sport": "corrida", "score": 3 },
+        { "sport": "jiu-jitsu", "score": 3 },
+        { "sport": "basquete", "score": 3 }
+      ]
+    },
+    {
+      "name": "Panturrilha em Pé", "category": "FORCA", "equipment": "Step + halter",
+      "muscles": ["panturrilhas"],
+      "steps": [
+        "Metade do pé no step, calcanhar pendurado, halter na mão.",
+        "Suba na ponta do pé em 2 s até o topo completo.",
+        "Segure 2 s no topo — é aí que o tendão de Aquiles trabalha.",
+        "Desça em 2 s até o alongamento total e repita."
+      ],
+      "links": [
+        { "sport": "corrida", "score": 4, "why": "O 'mola' da passada: rigidez de panturrilha e Aquiles melhora a economia de corrida." },
+        { "sport": "volei", "score": 4, "why": "Última articulação a empurrar no salto — e a primeira a absorver na queda." },
+        { "sport": "basquete", "score": 4, "why": "Reatividade de tornozelo para saltos repetidos e mudanças de direção." },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Puxada na Toalha", "category": "FORCA", "equipment": "Toalha + barra fixa",
+      "muscles": ["antebracos", "dorsais", "biceps", "core"],
+      "steps": [
+        "Passe duas toalhas sobre a barra e segure uma em cada mão.",
+        "Puxe o corpo mantendo as toalhas esmagadas na pegada.",
+        "Suba até a altura das mãos e desça controlado.",
+        "Se ficar pesado, use os pés no chão para assistir."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "Pegada em tecido + puxada: o mais próximo da puxada de kimono que existe na academia." },
+        { "sport": "boxe", "score": 3 },
+        { "sport": "natacao", "score": 3 }
+      ]
+    }
+  ]
+}
