@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String      @id @default(uuid())
+  email          String      @unique
+  name           String?
+  createdAt      DateTime    @default(now()) @map("created_at")
+  selectedSports UserSport[]
+  routines       Routine[]
+
+  @@map("users")
+}
+
+enum SportLevel {
+  RECREATIONAL
+  AMATEUR
+  COMPETITIVE
+  PROFESSIONAL
+}
+
+model UserSport {
+  userId  String     @map("user_id")
+  sportId String     @map("sport_id")
+  level   SportLevel @default(RECREATIONAL)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sport   Sport      @relation(fields: [sportId], references: [id], onDelete: Cascade)
+
+  @@id([userId, sportId])
+  @@map("user_sport")
+}
+
+model Sport {
+  id          String          @id @default(uuid())
+  code        String          @unique
+  name        String
+  description String?
+  iconUrl     String?         @map("icon_url")
+  exercises   ExerciseSport[]
+  users       UserSport[]
+  routines    Routine[]
+
+  @@map("sports")
+}
+
+model Exercise {
+  id           String          @id @default(uuid())
+  name         String
+  description  String?
+  muscleGroups String[]        @map("muscle_groups")
+  equipment    String?         @map("equipment_needed")
+  videoUrl     String?         @map("video_url")
+  imageUrl     String?         @map("image_url")
+  sports       ExerciseSport[]
+  routineItems RoutineItem[]
+
+  @@index([name])
+  @@map("exercises")
+}
+
+model ExerciseSport {
+  exerciseId     String   @map("exercise_id")
+  sportId        String   @map("sport_id")
+  relevanceScore Int      @map("relevance_score")
+  rationale      String?
+  exercise       Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  sport          Sport    @relation(fields: [sportId], references: [id], onDelete: Cascade)
+
+  @@id([exerciseId, sportId])
+  @@index([sportId, relevanceScore(sort: Desc)])
+  @@map("exercise_sport")
+}
+
+model Routine {
+  id        String        @id @default(uuid())
+  userId    String        @map("user_id")
+  sportId   String        @map("sport_id")
+  name      String
+  createdAt DateTime      @default(now()) @map("created_at")
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sport     Sport         @relation(fields: [sportId], references: [id])
+  items     RoutineItem[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("routines")
+}
+
+model RoutineItem {
+  routineId  String   @map("routine_id")
+  exerciseId String   @map("exercise_id")
+  position   Int      @default(0)
+  sets       Int
+  reps       String
+  restTime   Int      @map("rest_time")
+  routine    Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@id([routineId, exerciseId])
+  @@map("routine_items")
+}
