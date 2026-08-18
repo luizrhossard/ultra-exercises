@@ -14,9 +14,64 @@ export default function Onboarding() {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   return (
-    <div className="flex min-h-dvh flex-col px-5 pb-8">
+    <div className="flex min-h-dvh flex-col lg:flex-row">
+      {/* brand panel — apenas desktop */}
+      <aside className="relative hidden overflow-hidden border-r border-ink-800 lg:flex lg:w-[44%] lg:flex-col lg:justify-between lg:px-12 lg:py-10">
+        <div className="stripes-sport pointer-events-none absolute inset-0 opacity-60" />
+        <div className="relative flex items-center gap-2.5">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-volt-400 text-ink-950 shadow-[0_6px_24px_rgba(212,245,60,0.3)]">
+            <IconBolt size={21} strokeWidth={2.2} />
+          </span>
+          <span className="font-display text-2xl uppercase tracking-[0.08em] text-fog">Forja</span>
+          <span className="ml-auto rounded-md border border-ink-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-fog-mute">
+            MVP · v0.1
+          </span>
+        </div>
+        <div className="relative">
+          <SectionLabel>Agregador de exercícios por esporte</SectionLabel>
+          <h1 className="mt-4 font-display text-[76px] uppercase leading-[0.95] text-fog">
+            Treine para
+            <br />o <span className="text-volt-400">seu</span>
+            <br />
+            esporte.
+          </h1>
+          <p className="mt-6 max-w-[380px] text-[15px] leading-relaxed text-fog-dim">
+            Cada exercício da base tem uma <strong className="text-fog">relevância de 1 a 5</strong> para
+            cada modalidade. Escolha o que você pratica — a gente ordena tudo pelo que mais
+            transfere pro seu jogo.
+          </p>
+          <div className="mt-8 flex gap-3">
+            {[
+              { v: "22", l: "Exercícios" },
+              { v: "8", l: "Esportes" },
+              { v: "92", l: "Mapeamentos" },
+            ].map((s) => (
+              <div key={s.l} className="rounded-xl border border-ink-700 bg-ink-850/80 px-4 py-3">
+                <p className="tabular font-display text-2xl leading-none text-volt-400">{s.v}</p>
+                <p className="mt-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-fog-mute">{s.l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="relative flex flex-wrap gap-2">
+          {SPORTS.map((s) => (
+            <span
+              key={s.id}
+              className="flex items-center gap-2 rounded-lg border border-ink-700 bg-ink-850/70 px-2.5 py-1.5 text-[11px] font-bold text-fog-dim"
+            >
+              <span style={{ color: s.color }}>
+                <SportIcon id={s.id} size={14} />
+              </span>
+              {s.name}
+            </span>
+          ))}
+        </div>
+      </aside>
+
+      {/* fluxo (mobile intacto, desktop à direita) */}
+      <div className="flex flex-1 flex-col px-5 pb-8 lg:justify-center lg:px-14 lg:py-12">
       {/* ticker */}
-      <div className="-mx-5 mt-4 overflow-hidden border-y border-ink-700 bg-ink-850 py-2">
+      <div className="-mx-5 mt-4 overflow-hidden border-y border-ink-700 bg-ink-850 py-2 lg:hidden">
         <div className="ticker-track flex w-max items-center gap-6">
           {[0, 1].map((k) => (
             <div key={k} className="flex items-center gap-6">
@@ -32,7 +87,7 @@ export default function Onboarding() {
       </div>
 
       {/* wordmark */}
-      <div className="mt-6 flex items-center gap-2.5">
+      <div className="mt-6 flex items-center gap-2.5 lg:hidden">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-volt-400 text-ink-950">
           <IconBolt size={20} strokeWidth={2.2} />
         </span>
@@ -43,7 +98,7 @@ export default function Onboarding() {
       </div>
 
       {/* headline */}
-      <header className="mt-10">
+      <header className="mt-10 lg:hidden">
         <SectionLabel>Agregador de exercícios por esporte</SectionLabel>
         <h1 className="mt-3 font-display text-[44px] leading-[0.98] uppercase text-fog">
           Treine para
@@ -65,7 +120,7 @@ export default function Onboarding() {
             {selected.length} selecionado{selected.length === 1 ? "" : "s"}
           </span>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-2.5">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 lg:grid-cols-3">
           {SPORTS.map((s, i) => {
             const on = selected.includes(s.id);
             return (
@@ -118,7 +173,7 @@ export default function Onboarding() {
       </div>
 
       {/* CTA */}
-      <div className="sticky bottom-0 mt-10 bg-gradient-to-t from-ink-900 via-ink-900/95 to-transparent pb-1 pt-6">
+      <div className="sticky bottom-0 mt-10 bg-gradient-to-t from-ink-900 via-ink-900/95 to-transparent pb-1 pt-6 lg:static lg:mt-8 lg:bg-none lg:pt-0">
         <motion.button
           whileTap={selected.length ? { scale: 0.97 } : undefined}
           disabled={selected.length === 0}
@@ -135,6 +190,7 @@ export default function Onboarding() {
         <p className="mt-2.5 text-center text-[11px] text-fog-mute">
           Mínimo de 1 esporte · dados salvos localmente neste protótipo
         </p>
+      </div>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export default function Feed() {
   }, [mySports, query, sportFilter, cat]);
 
   return (
-    <div className="px-5 pb-32 pt-6">
+    <div className="px-5 pb-32 pt-6 lg:px-10 lg:pb-24 lg:pt-10">
       {/* header */}
       <div className="flex items-center justify-between">
         <span className="font-display text-sm uppercase tracking-[0.2em] text-fog-mute">Forja</span>
@@ -48,29 +48,33 @@ export default function Feed() {
         </button>
       </div>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-4 font-display text-[40px] uppercase leading-none text-fog"
-      >
-        Explorar
-      </motion.h1>
-      <p className="mt-2 text-[13px] text-fog-dim">
-        <span className="tabular font-bold text-volt-400">{list.length}</span> exercícios ordenados por
-        relevância para {mySports.map((s) => sportById(s).name).join(", ")}.
-      </p>
+      <div className="lg:flex lg:items-end lg:justify-between lg:gap-10">
+        <div>
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 font-display text-[40px] uppercase leading-none text-fog lg:text-[56px]"
+          >
+            Explorar
+          </motion.h1>
+          <p className="mt-2 max-w-md text-[13px] text-fog-dim">
+            <span className="tabular font-bold text-volt-400">{list.length}</span> exercícios ordenados por
+            relevância para {mySports.map((s) => sportById(s).name).join(", ")}.
+          </p>
+        </div>
 
-      {/* search */}
-      <div className="relative mt-5">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fog-mute">
-          <IconSearch size={17} />
-        </span>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar exercício, músculo, equipamento…"
-          className="w-full rounded-xl border border-ink-700 bg-ink-850 py-3 pl-10 pr-4 text-[14px] text-fog placeholder:text-fog-mute focus:border-volt-400 focus:outline-none"
-        />
+        {/* search */}
+        <div className="relative mt-5 lg:mt-0 lg:w-[380px] lg:shrink-0 lg:pb-1">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fog-mute">
+            <IconSearch size={17} />
+          </span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar exercício, músculo, equipamento…"
+            className="w-full rounded-xl border border-ink-700 bg-ink-850 py-3 pl-10 pr-4 text-[14px] text-fog placeholder:text-fog-mute focus:border-volt-400 focus:outline-none"
+          />
+        </div>
       </div>
 
       {/* sport chips */}
@@ -107,7 +111,7 @@ export default function Feed() {
       </div>
 
       {/* list */}
-      <div className="mt-5 space-y-2.5">
+      <div className="mt-5 space-y-2.5 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {list.map((ex, i) => {
           const link = bestLink(ex, mySports);
           const sport = link ? sportById(link.sport) : null;
@@ -123,7 +127,7 @@ export default function Feed() {
               transition={{ delay: Math.min(i * 0.045, 0.4), duration: 0.35, ease: "easeOut" }}
               whileTap={{ scale: 0.98 }}
               onClick={() => openPlayer(ex.id)}
-              className="block w-full rounded-2xl border border-ink-700 bg-ink-850 p-4 text-left transition-colors hover:border-ink-500"
+              className="block w-full rounded-2xl border border-ink-700 bg-ink-850 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-ink-500 hover:bg-ink-800"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

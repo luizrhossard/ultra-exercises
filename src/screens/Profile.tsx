@@ -12,11 +12,11 @@ export default function Profile() {
   const [confirmReset, setConfirmReset] = useState(false);
 
   return (
-    <div className="px-5 pb-32 pt-6">
+    <div className="px-5 pb-32 pt-6 lg:mx-auto lg:max-w-4xl lg:px-10 lg:pb-24 lg:pt-10">
       <motion.h1
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-display text-[40px] uppercase leading-none text-fog"
+        className="font-display text-[40px] uppercase leading-none text-fog lg:text-[56px]"
       >
         Perfil
       </motion.h1>
@@ -70,7 +70,7 @@ export default function Profile() {
           <SectionLabel>Meus esportes</SectionLabel>
           <span className="text-[10px] text-fog-mute">mínimo 1 ativo</span>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-2.5">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
           {SPORTS.map((s) => {
             const on = profile.sports.includes(s.id);
             return (

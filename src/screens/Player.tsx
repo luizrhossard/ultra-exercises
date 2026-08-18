@@ -53,13 +53,25 @@ export default function Player() {
   const accent = CATEGORY_ACCENT[ex.category];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 60 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 80 }}
-      transition={{ duration: 0.28, ease: "easeOut" }}
-      className="fixed inset-0 z-40 mx-auto w-full max-w-[430px] overflow-y-auto bg-ink-900"
-    >
+    <>
+      <motion.div
+        className="fixed inset-0 z-30 hidden bg-ink-950/75 backdrop-blur-sm lg:block"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={closePlayer}
+        aria-hidden
+      />
+      <motion.div
+        initial={{ opacity: 0, x: 60 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 80 }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ex.name}
+        className="fixed inset-0 z-40 mx-auto w-full max-w-[430px] overflow-y-auto bg-ink-900 lg:my-auto lg:h-fit lg:max-h-[90dvh] lg:max-w-[880px] lg:rounded-3xl lg:border lg:border-ink-600 lg:shadow-[0_50px_140px_rgba(0,0,0,0.65)]"
+      >
       {/* header */}
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-ink-700 bg-ink-900/95 px-4 py-3 backdrop-blur-md">
         <button
@@ -82,8 +94,8 @@ export default function Player() {
         </span>
       </div>
 
-      <div className="px-5 pb-36 pt-5">
-        <h1 className="font-display text-[34px] uppercase leading-[1.02] text-fog">{ex.name}</h1>
+      <div className="px-5 pb-36 pt-5 lg:px-9 lg:pb-2 lg:pt-8">
+        <h1 className="font-display text-[34px] uppercase leading-[1.02] text-fog lg:text-[46px]">{ex.name}</h1>
 
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-fog-dim">
           <span className="flex items-center gap-1.5">
@@ -147,8 +159,9 @@ export default function Player() {
           </div>
         </div>
 
+        <div className="mt-7 lg:mt-9 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-7">
         {/* why it helps */}
-        <section className="mt-7">
+        <section className="lg:col-start-1 lg:row-start-1">
           <div className="flex items-center gap-2">
             <span className="text-volt-400"><IconFlame size={16} /></span>
             <SectionLabel>Por que ajuda no seu jogo</SectionLabel>
@@ -186,7 +199,7 @@ export default function Player() {
         </section>
 
         {/* muscle map */}
-        <section className="mt-7">
+        <section className="mt-7 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:mt-0 lg:self-start">
           <SectionLabel>Músculos trabalhados</SectionLabel>
           <div className="mt-3">
             <MuscleMap muscles={ex.muscles} />
@@ -194,7 +207,7 @@ export default function Player() {
         </section>
 
         {/* steps */}
-        <section className="mt-7">
+        <section className="mt-7 lg:col-start-1 lg:row-start-2">
           <SectionLabel>Passo a passo</SectionLabel>
           <ol className="mt-3 space-y-2.5">
             {ex.steps.map((step, i) => (
@@ -213,15 +226,16 @@ export default function Player() {
             ))}
           </ol>
         </section>
+        </div>
 
-        <p className="mt-6 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] text-fog-mute">
+        <p className="mt-6 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] text-fog-mute lg:mt-8">
           <IconBolt size={12} strokeWidth={2.2} />
           Relevância máxima aqui: {myLinks[0] ? `${myLinks[0].score}/5 para ${sportById(myLinks[0].sport).name}` : "—"}
         </p>
       </div>
 
       {/* CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[430px] border-t border-ink-700 bg-ink-900/95 px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3 backdrop-blur-md">
+      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[430px] border-t border-ink-700 bg-ink-900/95 px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3 backdrop-blur-md lg:static lg:mx-9 lg:mb-9 lg:mt-6 lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-ink-700 lg:bg-ink-850 lg:px-5 lg:py-4">
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => {
@@ -232,6 +246,7 @@ export default function Player() {
           <IconPlus size={18} strokeWidth={2.4} /> Adicionar à rotina
         </motion.button>
       </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

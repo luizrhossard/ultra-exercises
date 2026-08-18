@@ -221,11 +221,11 @@ const PHASES: { n: number; title: string; body: string; status: "shipped" | "don
 
 export default function Project() {
   return (
-    <div className="px-5 pb-32 pt-6">
+    <div className="px-5 pb-32 pt-6 lg:mx-auto lg:max-w-5xl lg:px-10 lg:pb-24 lg:pt-10">
       <motion.h1
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-display text-[40px] uppercase leading-none text-fog"
+        className="font-display text-[40px] uppercase leading-none text-fog lg:text-[56px]"
       >
         Projeto
       </motion.h1>
@@ -312,7 +312,7 @@ export default function Project() {
       {/* refinements */}
       <section className="mt-7">
         <SectionLabel>01 · Refinamentos propostos ao escopo</SectionLabel>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">
           {REFINEMENTS.map((r, i) => (
             <motion.div
               key={r.title}

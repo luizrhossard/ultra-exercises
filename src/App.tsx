@@ -2,6 +2,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { v4 as uuidv4 } from "uuid";
 import { AppProvider, useApp } from "./store";
 import BottomNav from "./components/BottomNav";
+import Sidebar from "./components/Sidebar";
 import { Sheet } from "./components/ui";
 import { IconBolt, IconCheck, IconClipboard } from "./components/Icons";
 import { exerciseById } from "./data/exercises";
@@ -100,7 +101,7 @@ function AddSheet() {
 function Toasts() {
   const { toasts } = useApp();
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[70] mx-auto flex w-full max-w-[430px] flex-col items-center gap-2 px-6">
+    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[70] mx-auto flex w-full max-w-[430px] flex-col items-center gap-2 px-6 lg:bottom-8 lg:max-w-none">
       <AnimatePresence>
         {toasts.map((t) => (
           <motion.div
@@ -133,13 +134,7 @@ function Shell() {
         <div className="glow-drift absolute -bottom-20 left-1/3 h-72 w-72 rounded-full bg-[rgba(255,81,72,0.05)] blur-3xl" />
       </div>
 
-      {/* desktop side flourishes */}
-      <p
-        className="fixed left-6 top-1/2 z-0 hidden -translate-y-1/2 font-display text-sm uppercase tracking-[0.5em] text-fog-mute/50 xl:block"
-        style={{ writingMode: "vertical-rl" }}
-      >
-        Forja® — treino específico por esporte
-      </p>
+      {/* desktop side flourish */}
       <p
         className="fixed right-6 top-1/2 z-0 hidden -translate-y-1/2 rotate-180 font-display text-sm uppercase tracking-[0.5em] text-fog-mute/50 xl:block"
         style={{ writingMode: "vertical-rl" }}
@@ -147,8 +142,11 @@ function Shell() {
         exercise × sport · relevance 1–5
       </p>
 
+      <Sidebar />
+
       {/* app column */}
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col border-x border-ink-800 bg-ink-900/70 backdrop-blur-sm">
+      <div className="relative z-10 lg:pl-[260px]">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col border-x border-ink-800 bg-ink-900/70 backdrop-blur-sm lg:max-w-[1120px] lg:bg-ink-900/50">
         {!profile.onboarded ? (
           <Onboarding />
         ) : (
@@ -168,9 +166,12 @@ function Shell() {
                 {tab === "perfil" && <Profile />}
               </motion.main>
             </AnimatePresence>
-            <BottomNav />
+            <div className="lg:hidden">
+              <BottomNav />
+            </div>
           </>
         )}
+      </div>
       </div>
 
       <AnimatePresence>{playerId && profile.onboarded && <Player key="player" />}</AnimatePresence>

@@ -48,11 +48,12 @@ export default function Routines() {
   const focusSport = sportById(focus);
 
   return (
-    <div className="px-5 pb-32 pt-6">
+    <div className="px-5 pb-32 pt-6 lg:grid lg:grid-cols-[420px_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-10 lg:pb-24 lg:pt-10">
+      <div className="lg:sticky lg:top-8">
       <motion.h1
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-display text-[40px] uppercase leading-none text-fog"
+        className="font-display text-[40px] uppercase leading-none text-fog lg:text-[56px]"
       >
         Rotinas
       </motion.h1>
@@ -114,8 +115,11 @@ export default function Routines() {
         </motion.button>
       </div>
 
+      </div>
+
+      <div className="lg:min-w-0">
       {/* saved routines */}
-      <div className="mt-7 flex items-baseline justify-between">
+      <div className="mt-7 flex items-baseline justify-between lg:mt-0">
         <h2 className="font-display text-xl uppercase tracking-wide text-fog">Salvas</h2>
         <span className="tabular text-[12px] font-bold text-fog-mute">{routines.length} rotina{routines.length === 1 ? "" : "s"}</span>
       </div>
@@ -157,6 +161,8 @@ export default function Routines() {
             />
           ))}
         </AnimatePresence>
+      </div>
+
       </div>
 
       {/* exercise picker for a routine */}
