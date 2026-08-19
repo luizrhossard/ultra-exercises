@@ -9,6 +9,8 @@ export default function Onboarding() {
   const { completeOnboarding } = useApp();
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const toggle = (id: string) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -176,15 +178,20 @@ export default function Onboarding() {
       <div className="sticky bottom-0 mt-10 bg-gradient-to-t from-ink-900 via-ink-900/95 to-transparent pb-1 pt-6 lg:static lg:mt-8 lg:bg-none lg:pt-0">
         <motion.button
           whileTap={selected.length ? { scale: 0.97 } : undefined}
-          disabled={selected.length === 0}
-          onClick={() => completeOnboarding(name.trim(), selected)}
+          disabled={selected.length === 0 || saving}
+          onClick={async () => {
+            setSaving(true); setError("");
+            try { await completeOnboarding(name.trim(), selected); }
+            catch (err) { setError(err instanceof Error ? err.message : "Não foi possível salvar seu perfil."); }
+            finally { setSaving(false); }
+          }}
           className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-lg uppercase tracking-[0.06em] transition-all ${
             selected.length
               ? "bg-volt-400 text-ink-950 shadow-[0_14px_40px_rgba(212,245,60,0.3)]"
               : "cursor-not-allowed bg-ink-700 text-fog-mute"
           }`}
         >
-          Entrar na arena
+          {saving ? "Salvando…" : "Entrar na arena"}
           <IconChevron size={20} strokeWidth={2.2} />
         </motion.button>
         <p className="mt-2.5 text-center text-[11px] text-fog-mute">

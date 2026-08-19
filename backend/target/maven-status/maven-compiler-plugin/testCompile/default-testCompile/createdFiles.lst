@@ -1,0 +1,5 @@
+com\forja\service\ExerciseFeedServiceTest.class
+com\forja\security\JwtServiceTest.class
+com\forja\web\AuthControllerTest.class
+com\forja\web\RoutineControllerTest.class
+com\forja\service\RoutineGeneratorServiceTest.class

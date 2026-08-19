@@ -5,9 +5,10 @@ import { SPORTS, sportById } from "../data/sports";
 import { useApp } from "../store";
 import { SportIcon, IconBolt, IconCheck } from "../components/Icons";
 import { SectionLabel } from "../components/ui";
+import ReadinessCard from "../components/ReadinessCard";
 
 export default function Profile() {
-  const { profile, routines, setName, toggleSport, resetAll, toast } = useApp();
+  const { profile, setName, toggleSport, resetAll, toast } = useApp();
   const [name, setNameLocal] = useState(profile.name);
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -50,12 +51,13 @@ export default function Profile() {
         </motion.button>
       </div>
 
+      <ReadinessCard />
+
       {/* stats */}
-      <div className="mt-4 grid grid-cols-3 gap-2.5">
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
         {[
           { v: EXERCISES.length, l: "Exercícios na base" },
           { v: profile.sports.length, l: "Esportes ativos" },
-          { v: routines.length, l: "Rotinas salvas" },
         ].map((s) => (
           <div key={s.l} className="rounded-xl border border-ink-700 bg-ink-850 p-3.5 text-center">
             <p className="tabular font-display text-3xl text-volt-400">{s.v}</p>

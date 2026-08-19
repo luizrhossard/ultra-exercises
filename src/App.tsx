@@ -1,102 +1,15 @@
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import { v4 as uuidv4 } from "uuid";
 import { AppProvider, useApp } from "./store";
 import BottomNav from "./components/BottomNav";
 import Sidebar from "./components/Sidebar";
-import { Sheet } from "./components/ui";
-import { IconBolt, IconCheck, IconClipboard } from "./components/Icons";
-import { exerciseById } from "./data/exercises";
-import { sportById } from "./data/sports";
+import { IconBolt } from "./components/Icons";
 import Onboarding from "./screens/Onboarding";
 import Feed from "./screens/Feed";
 import Player from "./screens/Player";
 import Routines from "./screens/Routines";
 import Project from "./screens/Project";
 import Profile from "./screens/Profile";
-
-function AddSheet() {
-  const { addFor, closeAdd, routines, addToRoutine, saveRoutine, toast, profile, setTab } = useApp();
-  const ex = addFor ? exerciseById(addFor) : null;
-
-  const createNew = () => {
-    if (!ex) return;
-    const best =
-      ex.links
-        .filter((l) => profile.sports.includes(l.sport))
-        .sort((a, b) => b.score - a.score)[0]?.sport ?? profile.sports[0];
-    const s = sportById(best);
-    const dt = new Date();
-    const name = `Treino rápido · ${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}`;
-    const r = { id: uuidv4(), name, sportId: best, createdAt: Date.now(), items: [] };
-    saveRoutine(r);
-    addToRoutine(r.id, ex.id);
-    toast(`Rotina "${name}" criada`, s.color);
-    closeAdd();
-    setTab("rotinas");
-  };
-
-  return (
-    <Sheet open={!!ex} onClose={closeAdd} title={ex ? `Adicionar · ${ex.name}` : ""}>
-      <div className="space-y-2 pb-4">
-        <button
-          onClick={createNew}
-          className="flex w-full items-center gap-3 rounded-xl border border-dashed border-volt-400/50 bg-volt-400/8 p-3 text-left transition-colors hover:bg-volt-400/14"
-        >
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-volt-400 text-ink-950">
-            <IconBolt size={17} strokeWidth={2.2} />
-          </span>
-          <div>
-            <p className="text-[13px] font-bold text-volt-300">Nova rotina com este exercício</p>
-            <p className="text-[11px] text-fog-mute">Cria um treino rápido focado no esporte com maior relevância</p>
-          </div>
-        </button>
-
-        {routines.map((r) => {
-          const s = sportById(r.sportId);
-          const has = r.items.some((it) => it.exerciseId === ex?.id);
-          return (
-            <button
-              key={r.id}
-              disabled={has}
-              onClick={() => {
-                if (!ex) return;
-                addToRoutine(r.id, ex.id);
-                toast(`Adicionado a "${r.name}"`, s.color);
-                closeAdd();
-              }}
-              className={`flex w-full items-center gap-3 rounded-xl border border-ink-700 bg-ink-800 p-3 text-left transition-colors ${
-                has ? "opacity-50" : "hover:border-ink-500"
-              }`}
-            >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg" style={{ background: `${s.color}18`, color: s.color }}>
-                <IconClipboard size={16} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-bold text-fog">{r.name}</p>
-                <p className="text-[11px] text-fog-mute">
-                  {r.items.length} exercício{r.items.length === 1 ? "" : "s"} · {s.name}
-                </p>
-              </div>
-              {has ? (
-                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-volt-400">
-                  <IconCheck size={12} strokeWidth={2.6} /> Na lista
-                </span>
-              ) : (
-                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-fog-mute">Adicionar</span>
-              )}
-            </button>
-          );
-        })}
-
-        {routines.length === 0 && (
-          <p className="py-2 text-center text-[11px] text-fog-mute">
-            Nenhuma rotina salva — crie uma acima.
-          </p>
-        )}
-      </div>
-    </Sheet>
-  );
-}
+import Auth from "./screens/Auth";
 
 function Toasts() {
   const { toasts } = useApp();
@@ -122,7 +35,7 @@ function Toasts() {
 }
 
 function Shell() {
-  const { profile, tab, playerId } = useApp();
+  const { profile, tab, playerId, token, authLoading } = useApp();
 
   return (
     <div className="noise relative min-h-dvh">
@@ -142,12 +55,14 @@ function Shell() {
         exercise × sport · relevance 1–5
       </p>
 
-      <Sidebar />
+      {token && <Sidebar />}
 
       {/* app column */}
-      <div className="relative z-10 lg:pl-[260px]">
+      <div className={`relative z-10 ${token ? "lg:pl-[260px]" : ""}`}>
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col border-x border-ink-800 bg-ink-900/70 backdrop-blur-sm lg:max-w-[1120px] lg:bg-ink-900/50">
-        {!profile.onboarded ? (
+        {authLoading ? <div className="grid min-h-dvh place-items-center font-display text-xl uppercase text-volt-400">Carregando…</div> : !token ? (
+          <Auth />
+        ) : !profile.onboarded ? (
           <Onboarding />
         ) : (
           <>
@@ -175,7 +90,6 @@ function Shell() {
       </div>
 
       <AnimatePresence>{playerId && profile.onboarded && <Player key="player" />}</AnimatePresence>
-      <AddSheet />
       <Toasts />
     </div>
   );

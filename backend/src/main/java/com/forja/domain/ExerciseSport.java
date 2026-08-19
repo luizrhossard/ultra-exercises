@@ -20,12 +20,12 @@ import java.io.Serializable;
 @Builder
 public class ExerciseSport {
 
-    @Id
+    @jakarta.persistence.Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "exercise_id")
     private Exercise exercise;
 
-    @Id
+    @jakarta.persistence.Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sport_id")
     private Sport sport;

@@ -13,7 +13,6 @@ import {
   IconPause,
   IconTimer,
   IconDumbbell,
-  IconPlus,
   IconBolt,
   IconFlame,
 } from "../components/Icons";
@@ -28,7 +27,7 @@ const FALLBACK_WHY: Record<string, string> = {
 };
 
 export default function Player() {
-  const { playerId, closePlayer, profile, openAdd, toast } = useApp();
+  const { playerId, closePlayer, profile, toast } = useApp();
   const ex = playerId ? exerciseById(playerId) : undefined;
   const reduced = useReducedMotion();
   const [playing, setPlaying] = useState(false);
@@ -234,18 +233,6 @@ export default function Player() {
         </p>
       </div>
 
-      {/* CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[430px] border-t border-ink-700 bg-ink-900/95 px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3 backdrop-blur-md lg:static lg:mx-9 lg:mb-9 lg:mt-6 lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-ink-700 lg:bg-ink-850 lg:px-5 lg:py-4">
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={() => {
-            openAdd(ex.id);
-          }}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-volt-400 py-3.5 font-display text-base uppercase tracking-[0.05em] text-ink-950 shadow-[0_10px_30px_rgba(212,245,60,0.28)]"
-        >
-          <IconPlus size={18} strokeWidth={2.4} /> Adicionar à rotina
-        </motion.button>
-      </div>
       </motion.div>
     </>
   );

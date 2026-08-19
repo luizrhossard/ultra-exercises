@@ -20,7 +20,7 @@ const NAV: { id: Tab; label: string; hint: string; icon: (p: { size?: number }) 
 ];
 
 export default function Sidebar() {
-  const { tab, setTab, setGenFocus, profile, routines } = useApp();
+  const { tab, setTab, setGenFocus, profile } = useApp();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[260px] flex-col border-r border-ink-800 bg-ink-900/90 backdrop-blur-md lg:flex">
@@ -66,11 +66,6 @@ export default function Sidebar() {
                 </span>
                 <span className="block text-[10px] uppercase tracking-[0.12em] text-fog-mute">{item.hint}</span>
               </span>
-              {item.id === "rotinas" && routines.length > 0 && (
-                <span className="tabular rounded-md bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold text-fog-dim">
-                  {routines.length}
-                </span>
-              )}
             </motion.button>
           );
         })}

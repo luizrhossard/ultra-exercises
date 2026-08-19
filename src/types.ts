@@ -51,21 +51,6 @@ export interface Exercise {
   links: SportLink[];
 }
 
-export interface RoutineItem {
-  exerciseId: string;
-  sets: number;
-  reps: string;
-  rest: number;
-}
-
-export interface Routine {
-  id: string;
-  name: string;
-  sportId: string;
-  createdAt: number;
-  items: RoutineItem[];
-}
-
 export interface UserProfile {
   name: string;
   sports: string[];

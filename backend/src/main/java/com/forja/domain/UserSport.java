@@ -16,12 +16,12 @@ import java.io.Serializable;
 @Builder
 public class UserSport {
 
-    @Id
+    @jakarta.persistence.Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     private AppUser user;
 
-    @Id
+    @jakarta.persistence.Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sport_id")
     private Sport sport;

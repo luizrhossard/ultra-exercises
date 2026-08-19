@@ -16,12 +16,12 @@ import java.io.Serializable;
 @Builder
 public class RoutineItem {
 
-    @Id
+    @jakarta.persistence.Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "routine_id")
     private Routine routine;
 
-    @Id
+    @jakarta.persistence.Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "exercise_id")
     private Exercise exercise;
