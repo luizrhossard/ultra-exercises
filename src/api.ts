@@ -1,6 +1,9 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8085/api";
 
-export type AuthResponse = { token: string; email: string; name: string | null };
+export type AuthResponse = { mfaRequired: boolean; challengeToken?: string | null; token?: string | null; email?: string | null; name?: string | null };
+export type TwoFactorStatus = { enabled: boolean };
+export type TwoFactorSetup = { secret: string; otpauthUri: string };
+export type TwoFactorRecoveryCodes = { recoveryCodes: string[] };
 export type AthleteProfile = {
   email: string;
   name: string | null;
@@ -61,6 +64,7 @@ const GENERIC_BY_STATUS: Record<number, string> = {
   403: "Você não tem permissão para esta ação.",
   404: "Recurso não encontrado.",
   409: "Conflito com o estado atual. Atualize e tente novamente.",
+  413: "Os dados enviados são muito grandes.",
   429: "Muitas tentativas. Aguarde um momento e tente novamente.",
 };
 
@@ -145,6 +149,7 @@ export async function request<T>(path: string, options: RequestInit = {}, token?
 
 export const api = {
   login: (email: string, password: string) => request<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  verifyTwoFactor: (challengeToken: string, code: string) => request<AuthResponse>("/auth/2fa/verify", { method: "POST", body: JSON.stringify({ challengeToken, code }) }),
   register: (email: string, password: string, name: string) => request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify({ email, password, name }) }),
   me: (token: string) => request<AthleteProfile>("/me", {}, token),
   saveProfile: (token: string, name: string, sports: string[]) => request<AthleteProfile>("/me", {
@@ -168,4 +173,10 @@ export const api = {
   startSession: (token: string, sessionId: number) => request<ApiSession>(`/sessions/${sessionId}/start`, { method: "POST" }, token),
   patchSession: (token: string, sessionId: number, body: { status?: string; durationMinutes?: number; sessionRpe?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
   patchSessionItem: (token: string, sessionId: number, exerciseId: number, body: { completedSets?: number; completedReps?: string; loadKg?: number; itemRpe?: number; painLevel?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}/items/${exerciseId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
+  // ---- Dois fatores (UE-24) ----
+  twoFactorStatus: (token: string) => request<TwoFactorStatus>("/me/2fa/status", {}, token),
+  setupTwoFactor: (token: string) => request<TwoFactorSetup>("/me/2fa/setup", { method: "POST" }, token),
+  activateTwoFactor: (token: string, code: string) => request<TwoFactorRecoveryCodes>("/me/2fa/activate", { method: "POST", body: JSON.stringify({ code }) }, token),
+  regenerateRecoveryCodes: (token: string, password: string, code: string) => request<TwoFactorRecoveryCodes>("/me/2fa/recovery-codes", { method: "POST", body: JSON.stringify({ password, code }) }, token),
+  disableTwoFactor: (token: string, password: string, code: string) => request<void>("/me/2fa/disable", { method: "POST", body: JSON.stringify({ password, code }) }, token),
 };

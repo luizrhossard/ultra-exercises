@@ -28,6 +28,7 @@ function load<T>(key: string, fallback: T): T {
 interface AppStore {
   token: string | null;
   authLoading: boolean;
+  pendingChallenge: string | null;
   profile: UserProfile;
   tab: Tab;
   playerId: string | null;
@@ -39,6 +40,8 @@ interface AppStore {
   closePlayer: () => void;
   toast: (msg: string, color?: string) => void;
   authenticate: (mode: "login" | "register", email: string, password: string, name: string) => Promise<void>;
+  verifyChallenge: (code: string) => Promise<void>;
+  cancelChallenge: () => void;
   logout: () => void;
   completeOnboarding: (name: string, sports: string[]) => Promise<void>;
   setName: (n: string) => void;
@@ -65,6 +68,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [genFocus, setGenFocus] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("forja:token:v1"));
+  const [pendingChallenge, setPendingChallenge] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(() => {
     const stored = localStorage.getItem("forja:token:v1");
     return stored ? !getCachedOrStale<AthleteProfile>(userCacheKey(stored), "me") : false;
@@ -98,15 +102,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const authenticate = useCallback(async (mode: "login" | "register", email: string, password: string, name: string) => {
     const response = mode === "login" ? await api.login(email, password) : await api.register(email, password, name);
+    // 2FA [UE-24]: credenciais primárias válidas → estado de autenticação parcial.
+    if (response.mfaRequired && response.challengeToken) {
+      setPendingChallenge(response.challengeToken);
+      return;
+    }
+    if (!response.token) throw new Error("Não foi possível entrar.");
     clearCache();
     setAuthLoading(true);
     localStorage.setItem("forja:token:v1", response.token);
     setToken(response.token);
   }, []);
 
+  const verifyChallenge = useCallback(async (code: string) => {
+    if (!pendingChallenge) throw new Error("Sessão de verificação ausente. Entre novamente.");
+    const response = await api.verifyTwoFactor(pendingChallenge, code);
+    if (!response.token) throw new Error("Não foi possível concluir a entrada.");
+    setPendingChallenge(null);
+    clearCache();
+    setAuthLoading(true);
+    localStorage.setItem("forja:token:v1", response.token);
+    setToken(response.token);
+  }, [pendingChallenge]);
+
+  const cancelChallenge = useCallback(() => setPendingChallenge(null), []);
+
   const logout = useCallback(() => {
     clearCache();
     localStorage.removeItem("forja:token:v1"); setToken(null);
+    setPendingChallenge(null);
     setAuthLoading(false);
     setProfile({ name: "", sports: [], onboarded: false }); setTab("explorar");
   }, []);
@@ -144,6 +168,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         profile,
         token,
         authLoading,
+        pendingChallenge,
         tab,
         playerId,
         toasts,
@@ -154,6 +179,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         closePlayer: () => setPlayerId(null),
         toast,
         authenticate,
+        verifyChallenge,
+        cancelChallenge,
         logout,
         completeOnboarding,
         setName,
