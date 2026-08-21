@@ -48,6 +48,7 @@ forja:
     register:     { limit: 5,   window-seconds: 3600 }  # 5/IP por hora
     public-read:  { limit: 30,  window-seconds: 60 }    # 30/IP por minuto
     authenticated: { limit: 100, window-seconds: 60 }   # 100/usuário por minuto
+    two-factor:   { limit: 5,   window-seconds: 600 }   # desafio 2FA: 5/IP a cada 10 min [UE-24]
     max-payload-bytes: 1048576                          # 1 MiB
 
 logging:

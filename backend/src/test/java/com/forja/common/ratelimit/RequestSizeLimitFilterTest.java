@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RequestSizeLimitFilterTest {
 
     private final RequestSizeLimitFilter filter = new RequestSizeLimitFilter(
-            new RateLimitProperties(true, null, null, null, null, 1024),
+            new RateLimitProperties(true, null, null, null, null, null, 1024),
             new ObjectMapper().findAndRegisterModules());
 
     @Test

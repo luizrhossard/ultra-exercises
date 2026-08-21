@@ -59,6 +59,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
             scope = "login";
             rule = props.login();
             key = "login:" + ip;
+        } else if (HttpMethod.POST.matches(request.getMethod()) && "/api/auth/2fa/verify".equals(request.getRequestURI())) {
+            // Desafio 2FA: janela própria e rígida (força bruta do segundo fator) [UE-24].
+            scope = "2fa";
+            rule = props.twoFactor();
+            key = "2fa:" + ip;
         } else if (HttpMethod.POST.matches(request.getMethod()) && "/api/auth/register".equals(request.getRequestURI())) {
             scope = "register";
             rule = props.register();

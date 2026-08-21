@@ -33,6 +33,23 @@ public class AppUser {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
+    // ---- Dois fatores (TOTP) [UE-24] ----
+
+    /** Segredo TOTP ativo. Presente apenas quando totpEnabled=true. */
+    @Column(name = "totp_secret", length = 255)
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    @Builder.Default
+    private boolean totpEnabled = false;
+
+    /** Segredo aguardando confirmação de código (setup). Expira em totpPendingExpiresAt. */
+    @Column(name = "totp_pending_secret", length = 255)
+    private String totpPendingSecret;
+
+    @Column(name = "totp_pending_expires_at")
+    private Instant totpPendingExpiresAt;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<UserSport> userSports = new ArrayList<>();

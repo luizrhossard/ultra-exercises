@@ -13,6 +13,7 @@ public record RateLimitProperties(
         Rule register,
         Rule publicRead,
         Rule authenticated,
+        Rule twoFactor,
         long maxPayloadBytes) {
 
     public record Rule(int limit, long windowSeconds) {
@@ -23,6 +24,7 @@ public record RateLimitProperties(
         if (register == null) register = new Rule(5, 3600);     // 5 por IP por hora
         if (publicRead == null) publicRead = new Rule(30, 60);  // 30 por IP por minuto
         if (authenticated == null) authenticated = new Rule(100, 60); // 100 por usuário por minuto
+        if (twoFactor == null) twoFactor = new Rule(5, 600);    // 5 por IP a cada 10 min [UE-24]
         if (maxPayloadBytes <= 0) maxPayloadBytes = 1_048_576;  // 1 MiB
     }
 }

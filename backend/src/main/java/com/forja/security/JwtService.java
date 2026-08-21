@@ -19,6 +19,9 @@ public class JwtService {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
 
+    /** Vida útil do estado de autenticação parcial (desafio 2FA): 5 minutos. */
+    static final long CHALLENGE_TTL_SECONDS = 300;
+
     private final byte[] secret;
     private final long ttlMinutes;
 
@@ -29,13 +32,27 @@ public class JwtService {
     }
 
     public String issue(String subject) {
+        return issueToken(subject, ttlMinutes * 60, null);
+    }
+
+    /** Token de desafio 2FA: vida curta, só serve para concluir o login (UE-24). */
+    public String issueChallenge(String subject) {
+        return issueToken(subject, CHALLENGE_TTL_SECONDS, "2fa");
+    }
+
+    private String issueToken(String subject, long ttlSeconds, String typ) {
         String header = b64("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
-        long exp = Instant.now().plusSeconds(ttlMinutes * 60).getEpochSecond();
-        String payload = b64("{\"sub\":\"%s\",\"exp\":%d}".formatted(subject, exp));
+        long exp = Instant.now().plusSeconds(ttlSeconds).getEpochSecond();
+        String payload = typ == null
+                ? b64("{\"sub\":\"%s\",\"exp\":%d}".formatted(subject, exp))
+                : b64("{\"sub\":\"%s\",\"exp\":%d,\"typ\":\"%s\"}".formatted(subject, exp, typ));
         return header + "." + payload + "." + sign(header + "." + payload);
     }
 
-    public Optional<String> validate(String token) {
+    public record JwtClaims(String sub, String typ) {
+    }
+
+    public Optional<JwtClaims> parse(String token) {
         try {
             String[] parts = token.split("\\.");
             if (parts.length != 3) return Optional.empty();
@@ -53,10 +70,27 @@ public class JwtService {
             if (exp < Instant.now().getEpochSecond()) return Optional.empty();
 
             String subject = payload.path("sub").asText(null);
-            return Optional.ofNullable(subject).filter(s -> !s.isBlank());
+            if (subject == null || subject.isBlank()) return Optional.empty();
+
+            String typ = payload.hasNonNull("typ") ? payload.path("typ").asText() : null;
+            return Optional.of(new JwtClaims(subject, typ));
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    /** Token de acesso pleno: rejeita explicitamente tokens de desafio. */
+    public Optional<String> validate(String token) {
+        return parse(token)
+                .filter(claims -> claims.typ() == null)
+                .map(JwtClaims::sub);
+    }
+
+    /** Token de desafio 2FA: só aceita o tipo "2fa". */
+    public Optional<String> validateChallenge(String token) {
+        return parse(token)
+                .filter(claims -> "2fa".equals(claims.typ()))
+                .map(JwtClaims::sub);
     }
 
     private String sign(String data) {

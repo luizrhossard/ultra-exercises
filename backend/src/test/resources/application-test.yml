@@ -28,6 +28,7 @@ forja:
     register:     { limit: 1000, window-seconds: 60 }
     public-read:  { limit: 1000, window-seconds: 60 }
     authenticated: { limit: 10000, window-seconds: 60 }
+    two-factor:   { limit: 1000, window-seconds: 60 }
 
 springdoc:
   api-docs:

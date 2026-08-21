@@ -30,6 +30,7 @@ class RateLimitFilterTest {
                 new RateLimitProperties.Rule(2, 3600),  // register
                 new RateLimitProperties.Rule(3, 60),    // public read
                 new RateLimitProperties.Rule(5, 60),    // authenticated
+                new RateLimitProperties.Rule(5, 600),   // two-factor [UE-24]
                 1024), limiter, json);
     }
 
