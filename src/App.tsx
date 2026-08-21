@@ -1,15 +1,27 @@
+import { lazy, Suspense } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { AppProvider, useApp } from "./store";
 import BottomNav from "./components/BottomNav";
 import Sidebar from "./components/Sidebar";
 import { IconBolt } from "./components/Icons";
-import Onboarding from "./screens/Onboarding";
-import Feed from "./screens/Feed";
-import Player from "./screens/Player";
-import Routines from "./screens/Routines";
-import Project from "./screens/Project";
-import Profile from "./screens/Profile";
-import Auth from "./screens/Auth";
+
+const Auth = lazy(() => import("./screens/Auth"));
+const Onboarding = lazy(() => import("./screens/Onboarding"));
+const Feed = lazy(() => import("./screens/Feed"));
+const Routines = lazy(() => import("./screens/Routines"));
+const Project = lazy(() => import("./screens/Project"));
+const Profile = lazy(() => import("./screens/Profile"));
+const Player = lazy(() => import("./screens/Player"));
+
+function ScreenFallback() {
+  return (
+    <div className="grid min-h-[40dvh] place-items-center">
+      <span role="status" aria-label="Carregando" className="tabular font-display text-lg uppercase tracking-[0.2em] text-volt-400">
+        Carregando…
+      </span>
+    </div>
+  );
+}
 
 function Toasts() {
   const { toasts } = useApp();
@@ -61,9 +73,9 @@ function Shell() {
       <div className={`relative z-10 ${token ? "lg:pl-[260px]" : ""}`}>
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col border-x border-ink-800 bg-ink-900/70 backdrop-blur-sm lg:max-w-[1120px] lg:bg-ink-900/50">
         {authLoading ? <div className="grid min-h-dvh place-items-center font-display text-xl uppercase text-volt-400">Carregando…</div> : !token ? (
-          <Auth />
+          <Suspense fallback={<ScreenFallback />}><Auth /></Suspense>
         ) : !profile.onboarded ? (
-          <Onboarding />
+          <Suspense fallback={<ScreenFallback />}><Onboarding /></Suspense>
         ) : (
           <>
             <AnimatePresence mode="wait">
@@ -75,10 +87,12 @@ function Shell() {
                 transition={{ duration: 0.24, ease: "easeOut" }}
                 className="flex-1"
               >
-                {tab === "explorar" && <Feed />}
-                {tab === "rotinas" && <Routines />}
-                {tab === "projeto" && <Project />}
-                {tab === "perfil" && <Profile />}
+                <Suspense fallback={<ScreenFallback />}>
+                  {tab === "explorar" && <Feed />}
+                  {tab === "rotinas" && <Routines />}
+                  {tab === "projeto" && <Project />}
+                  {tab === "perfil" && <Profile />}
+                </Suspense>
               </motion.main>
             </AnimatePresence>
             <div className="lg:hidden">
@@ -89,7 +103,13 @@ function Shell() {
       </div>
       </div>
 
-      <AnimatePresence>{playerId && profile.onboarded && <Player key="player" />}</AnimatePresence>
+      <AnimatePresence>
+        {playerId && profile.onboarded && (
+          <Suspense fallback={<ScreenFallback />}>
+            <Player key={playerId} />
+          </Suspense>
+        )}
+      </AnimatePresence>
       <Toasts />
     </div>
   );

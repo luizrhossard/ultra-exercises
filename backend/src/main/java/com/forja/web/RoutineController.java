@@ -6,11 +6,13 @@ import com.forja.repository.AppUserRepository;
 import com.forja.repository.ExerciseRepository;
 import com.forja.repository.RoutineRepository;
 import com.forja.service.RoutineGeneratorService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -45,6 +47,7 @@ public class RoutineController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     List<RoutineDto> mine(Authentication auth) {
         return routines.findByUserIdOrderByCreatedAtDesc(currentUser(auth).getId())
                 .stream().map(RoutineController::toDto).toList();
@@ -52,14 +55,15 @@ public class RoutineController {
 
     @PostMapping("/generate")
     @ResponseStatus(HttpStatus.CREATED)
-    RoutineDto generate(@RequestBody GenerateRequest request, Authentication auth) {
+    RoutineDto generate(@Valid @RequestBody GenerateRequest request, Authentication auth) {
         var routine = generator.generate(auth.getName(), request.sportId());
         return toDto(routine);
     }
 
     @PostMapping("/{id}/items")
+    @Transactional
     ResponseEntity<RoutineDto> addItem(@PathVariable Long id,
-                                       @RequestBody AddItemRequest request,
+                                       @Valid @RequestBody AddItemRequest request,
                                        Authentication auth) {
         return ownedRoutine(id, auth).map(routine -> {
             var exercise = exercises.findById(request.exerciseId())
@@ -79,10 +83,11 @@ public class RoutineController {
                 routines.save(routine);
             }
             return ResponseEntity.ok(toDto(routine));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+        }).orElseThrow(() -> new NoSuchElementException("Rotina não encontrada"));
     }
 
     @PatchMapping("/{id}/items/{exerciseId}")
+    @Transactional
     ResponseEntity<RoutineDto> patchItem(@PathVariable Long id,
                                          @PathVariable Long exerciseId,
                                          @RequestBody ItemPatch patch,
@@ -97,13 +102,14 @@ public class RoutineController {
                     });
             routines.save(routine);
             return ResponseEntity.ok(toDto(routine));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+        }).orElseThrow(() -> new NoSuchElementException("Rotina não encontrada"));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void delete(@PathVariable Long id, Authentication auth) {
-        ownedRoutine(id, auth).ifPresent(routines::delete);
+        ownedRoutine(id, auth).orElseThrow(() -> new NoSuchElementException("Rotina não encontrada"));
+        routines.deleteById(id);
     }
 
     // ---- helpers ----

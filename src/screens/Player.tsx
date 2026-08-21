@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { exerciseById } from "../data/exercises";
 import { sportById } from "../data/sports";
-import { CATEGORY_ACCENT, MUSCLE_LABEL } from "../types";
+import { CATEGORY_ACCENT } from "../types";
 import { useApp } from "../store";
 import MuscleMap from "../components/MuscleMap";
 import { ScoreMeter, SectionLabel } from "../components/ui";
@@ -27,16 +27,11 @@ const FALLBACK_WHY: Record<string, string> = {
 };
 
 export default function Player() {
-  const { playerId, closePlayer, profile, toast } = useApp();
+  const { playerId, closePlayer, profile } = useApp();
   const ex = playerId ? exerciseById(playerId) : undefined;
   const reduced = useReducedMotion();
   const [playing, setPlaying] = useState(false);
   const [reps, setReps] = useState(0);
-
-  useEffect(() => {
-    setPlaying(false);
-    setReps(0);
-  }, [playerId]);
 
   useEffect(() => {
     if (!playing || reduced) return;

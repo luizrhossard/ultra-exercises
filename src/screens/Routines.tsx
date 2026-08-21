@@ -1,38 +1,53 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { api, type ApiRoutine, type ApiSession } from "../api";
+import { api, type ApiRoutine, type ApiSession, type ApiSport } from "../api";
 import { useApp } from "../store";
 import { Sheet } from "../components/ui";
 import { IconBolt, IconCheck, IconRefresh, IconTimer } from "../components/Icons";
+import { CACHE_TTL, invalidate, userCacheKey } from "../cache";
+import { useCachedQuery } from "../hooks/useCachedQuery";
 
 export default function Routines() {
   const { token, profile, toast } = useApp();
-  const [routines, setRoutines] = useState<ApiRoutine[]>([]);
-  const [sports, setSports] = useState<{ id: number; code: string; name: string }[]>([]);
   const [focus, setFocus] = useState(profile.sports[0] ?? "");
-  const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [session, setSession] = useState<ApiSession | null>(null);
 
-  const load = async () => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const [allSports, allRoutines] = await Promise.all([api.sports(), api.routines(token)]);
-      setSports(allSports.filter((sport) => profile.sports.includes(sport.code)));
-      setRoutines(allRoutines);
-    } catch { toast("Não foi possível carregar suas rotinas."); }
-    finally { setLoading(false); }
-  };
-  useEffect(() => { void load(); }, [token, profile.sports.join(",")]);
+  const userKey = token ? userCacheKey(token) : "";
+  const sportsQuery = useCachedQuery<ApiSport[]>({
+    userKey,
+    key: "sports",
+    ttl: CACHE_TTL.sports,
+    fetcher: () => api.sports(),
+    enabled: Boolean(token),
+  });
+  const routinesQuery = useCachedQuery<ApiRoutine[]>({
+    userKey,
+    key: "routines",
+    ttl: CACHE_TTL.routines,
+    fetcher: () => api.routines(token as string),
+    enabled: Boolean(token),
+  });
+
+  const loading = sportsQuery.loading || routinesQuery.loading;
+  const sports = useMemo(
+    () => (sportsQuery.data ?? []).filter((sport) => profile.sports.includes(sport.code)),
+    [sportsQuery.data, profile.sports]
+  );
+  const routines = routinesQuery.data ?? [];
+
+  useEffect(() => {
+    if (sportsQuery.error || routinesQuery.error) toast("Não foi possível carregar suas rotinas.");
+  }, [sportsQuery.error, routinesQuery.error, toast]);
 
   const focusSport = useMemo(() => sports.find((sport) => sport.code === focus), [sports, focus]);
   const generate = async () => {
     if (!token || !focusSport) return;
     setGenerating(true);
     try {
-      const routine = await api.generateRoutine(token, focusSport.id);
-      setRoutines((current) => [routine, ...current]);
+      await api.generateRoutine(token, focusSport.id);
+      invalidate(userKey, /routines/);
+      routinesQuery.refresh();
       toast(`Treino de ${focusSport.name} criado.`);
     } catch { toast("Não foi possível gerar o treino."); }
     finally { setGenerating(false); }
@@ -54,16 +69,26 @@ export default function Routines() {
       <div className="mt-4 flex flex-wrap gap-2">{sports.map((sport) => <button key={sport.code} onClick={() => setFocus(sport.code)} className={`rounded-full border px-3 py-1.5 text-[12px] font-bold ${focus === sport.code ? "border-volt-400 bg-volt-400/12 text-volt-300" : "border-ink-700 text-fog-mute"}`}>{sport.name}</button>)}</div>
       <button disabled={!focusSport || generating} onClick={generate} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3.5 font-display uppercase text-ink-950 disabled:opacity-50">{generating ? <><IconRefresh className="animate-spin" size={17} /> Gerando…</> : <><IconBolt size={17} /> Gerar para {focusSport?.name ?? "seu esporte"}</>}</button>
     </section>
-    <div className="mt-7 flex items-baseline justify-between"><h2 className="font-display text-xl uppercase text-fog">Prescritas</h2><button onClick={() => void load()} className="text-[11px] font-bold uppercase text-volt-300">Atualizar</button></div>
-    <div className="mt-3 space-y-3">{loading ? <p className="py-8 text-center text-sm text-fog-mute">Carregando…</p> : routines.length === 0 ? <p className="rounded-2xl border border-dashed border-ink-600 p-8 text-center text-[13px] text-fog-mute">Gere sua primeira rotina acima.</p> : routines.map((routine) => <RoutineCard key={routine.id} routine={routine} onStart={() => void start(routine)} />)}</div>
+    <div className="mt-7 flex items-baseline justify-between"><h2 className="font-display text-xl uppercase text-fog">Prescritas</h2><button onClick={() => { routinesQuery.refresh(); sportsQuery.refresh(); }} className="text-[11px] font-bold uppercase text-volt-300">Atualizar</button></div>
+    <div className="mt-3 space-y-3">{loading ? <RoutineListSkeleton /> : routines.length === 0 ? <p className="rounded-2xl border border-dashed border-ink-600 p-8 text-center text-[13px] text-fog-mute">Gere sua primeira rotina acima.</p> : routines.map((routine) => <RoutineCard key={routine.id} routine={routine} onStart={() => void start(routine)} />)}</div>
     <SessionSheet session={session} onClose={() => setSession(null)} onChange={setSession} />
   </div>;
 }
 
-function RoutineCard({ routine, onStart }: { routine: ApiRoutine; onStart: () => void }) {
+function RoutineListSkeleton() {
+  return (
+    <div aria-label="Carregando rotinas" aria-busy="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="mb-3 h-[84px] animate-pulse rounded-2xl border border-ink-700 bg-ink-850" />
+      ))}
+    </div>
+  );
+}
+
+const RoutineCard = memo(function RoutineCard({ routine, onStart }: { routine: ApiRoutine; onStart: () => void }) {
   const [open, setOpen] = useState(false);
   return <div className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-850"><button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-4 text-left"><div><h3 className="font-display text-[17px] uppercase text-fog">{routine.name}</h3><p className="mt-1 text-[11px] text-fog-mute">{routine.sportName} · {routine.items.length} exercícios</p></div><span className="text-fog-mute">{open ? "−" : "+"}</span></button>{open && <div className="border-t border-ink-700 p-4"><div className="space-y-2">{routine.items.map((item) => <div key={item.exerciseId} className="flex items-center justify-between rounded-lg bg-ink-800 p-2.5"><div><p className="text-[12px] font-bold text-fog">{item.exerciseName}</p><p className="text-[10px] text-fog-mute">{item.sets} × {item.reps} · descanso {item.restTime}s</p></div></div>)}</div><button onClick={onStart} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3 text-[12px] font-bold uppercase tracking-[.1em] text-ink-950"><IconTimer size={15} /> Iniciar sessão</button></div>}</div>;
-}
+});
 
 function SessionSheet({ session, onClose, onChange }: { session: ApiSession | null; onClose: () => void; onChange: (session: ApiSession | null) => void }) {
   const { token, toast } = useApp();

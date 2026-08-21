@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { api } from "../api";
+import { api, type Readiness } from "../api";
 import { useApp } from "../store";
+import { CACHE_TTL, setCache, userCacheKey } from "../cache";
+import { useCachedQuery } from "../hooks/useCachedQuery";
 import { IconBolt } from "./Icons";
 
 const fields = [
@@ -17,20 +19,35 @@ export default function ReadinessCard() {
   const [review, setReview] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const userKey = token ? userCacheKey(token) : "";
+  const readiness = useCachedQuery<Readiness | null>({
+    userKey,
+    key: "readiness/today",
+    ttl: CACHE_TTL.readiness,
+    fetcher: () => api.todayReadiness(token as string),
+    enabled: Boolean(token),
+  });
+
   useEffect(() => {
-    if (!token) return;
-    api.todayReadiness(token).then((data) => {
-      if (!data) return;
-      setValues({ sleepQuality: data.sleepQuality, fatigue: data.fatigue, stress: data.stress, soreness: data.soreness, painArea: data.painArea ?? "", painLevel: data.painLevel, notes: data.notes ?? "" });
-      setScore(data.readinessScore); setReview(data.requiresReview);
-    }).catch(() => toast("Não foi possível carregar a prontidão."));
-  }, [token, toast]);
+    if (!readiness.data) return;
+    const data = readiness.data;
+    // Sincroniza os dados remotos com o formulário quando o SWR atualiza (padrão intencional).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setValues({ sleepQuality: data.sleepQuality, fatigue: data.fatigue, stress: data.stress, soreness: data.soreness, painArea: data.painArea ?? "", painLevel: data.painLevel, notes: data.notes ?? "" });
+    setScore(data.readinessScore);
+    setReview(data.requiresReview);
+  }, [readiness.data]);
+
+  useEffect(() => {
+    if (readiness.error) toast("Não foi possível carregar a prontidão.");
+  }, [readiness.error, toast]);
 
   const save = async () => {
     if (!token) return;
     setBusy(true);
     try {
       const data = await api.saveReadiness(token, values);
+      setCache(userKey, "readiness/today", data, CACHE_TTL.readiness);
       setScore(data.readinessScore); setReview(data.requiresReview);
       toast(data.requiresReview ? "Check-in salvo: revise o treino com a comissão." : "Prontidão salva.");
     } catch { toast("Não foi possível salvar o check-in."); }

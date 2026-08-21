@@ -1,5 +1,6 @@
 package com.forja.web;
 
+import com.forja.common.exception.UnauthorizedException;
 import com.forja.domain.AppUser;
 import com.forja.repository.AppUserRepository;
 import com.forja.security.JwtService;
@@ -56,6 +57,6 @@ public class AuthController {
                 .filter(user -> encoder.matches(request.password(), user.getPassword()))
                 .map(user -> ResponseEntity.ok(
                         new AuthResponse(jwt.issue(user.getEmail()), user.getEmail(), user.getName())))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+                .orElseThrow(() -> new UnauthorizedException("Credenciais inválidas."));
     }
 }

@@ -6,9 +6,11 @@ import com.forja.service.ExerciseFeedService;
 import com.forja.service.ExerciseFeedService.FeedItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/exercises")
@@ -38,6 +40,7 @@ public class ExerciseController {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     ResponseEntity<ExerciseDetailDto> detail(@PathVariable Long id) {
         return exercises.findById(id)
                 .map(ex -> ResponseEntity.ok(new ExerciseDetailDto(
@@ -55,6 +58,6 @@ public class ExerciseController {
                                         l.getRelevanceScore(),
                                         l.getRationale()))
                                 .toList())))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new NoSuchElementException("Exercício não encontrado: " + id));
     }
 }

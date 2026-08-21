@@ -24,6 +24,14 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
 forja:
   jwt:
     # troque por um segredo real (32+ caracteres) via variável de ambiente

@@ -11,6 +11,17 @@ export type Readiness = {
   painArea: string | null; painLevel: number; notes: string | null; readinessScore: number; requiresReview: boolean;
 };
 export type ApiSport = { id: number; code: string; name: string; description: string | null };
+export type ApiFeedItem = {
+  exerciseId: number;
+  name: string;
+  category: "FORCA" | "PLIOMETRIA" | "CORE" | "CONDICIONAMENTO" | "MOBILIDADE" | "ESPECIFICO";
+  equipment: string | null;
+  muscles: string[];
+  bestScore: number;
+  strongCount: number;
+  scoreBySport: Record<string, number>;
+  rationaleBySport: Record<string, string>;
+};
 export type ApiRoutineItem = { exerciseId: number; exerciseName: string; position: number; sets: number; reps: string; restTime: number };
 export type ApiRoutine = { id: number; name: string; sportCode: string; sportName: string; createdAt: string; items: ApiRoutineItem[] };
 export type ApiSessionItem = { exerciseId: number; exerciseName: string; position: number; prescribedSets: number; prescribedReps: string; prescribedRestTime: number; completedSets: number | null; completedReps: string | null; loadKg: number | null; itemRpe: number | null; painLevel: number | null; notes: string | null };
@@ -22,8 +33,15 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers },
   });
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Não foi possível comunicar com a API.");
+    const raw = await response.text();
+    let message = raw || `Erro ${response.status}`;
+    try {
+      const body = JSON.parse(raw) as { message?: string; fields?: { message?: string }[] };
+      message = body.message || body.fields?.[0]?.message || message;
+    } catch {
+      // corpo não-JSON (ex.: gateway): mantém o texto bruto
+    }
+    throw new Error(message);
   }
   return response.status === 204 ? (undefined as T) : response.json() as Promise<T>;
 }
@@ -39,6 +57,14 @@ export const api = {
   saveReadiness: (token: string, body: Omit<Readiness, "date" | "readinessScore" | "requiresReview">) =>
     request<Readiness>("/readiness/today", { method: "PUT", body: JSON.stringify(body) }, token),
   sports: () => request<ApiSport[]>("/sports"),
+  exercisesFeed: (sportIds: number[], q?: string, category?: string) => {
+    const params = new URLSearchParams();
+    for (const id of sportIds) params.append("sportIds", String(id));
+    if (q) params.append("q", q);
+    if (category) params.append("category", category);
+    const qs = params.toString();
+    return request<ApiFeedItem[]>(`/exercises/feed${qs ? `?${qs}` : ""}`);
+  },
   routines: (token: string) => request<ApiRoutine[]>("/routines", {}, token),
   generateRoutine: (token: string, sportId: number) => request<ApiRoutine>("/routines/generate", { method: "POST", body: JSON.stringify({ sportId }) }, token),
   createSession: (token: string, routineId: number) => request<ApiSession>(`/routines/${routineId}/sessions`, { method: "POST" }, token),

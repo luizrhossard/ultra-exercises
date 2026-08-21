@@ -2,6 +2,7 @@ com\forja\web\ExerciseController.class
 com\forja\repository\ReadinessCheckinRepository.class
 com\forja\domain\Routine.class
 com\forja\web\ExerciseController$LinkDto.class
+com\forja\common\exception\ErrorResponse.class
 com\forja\web\TrainingSessionController$SessionDto.class
 com\forja\domain\SessionStatus.class
 com\forja\domain\TrainingSession$TrainingSessionBuilder.class
@@ -25,6 +26,7 @@ com\forja\domain\Routine$RoutineBuilder.class
 com\forja\web\ExerciseController$ExerciseDetailDto.class
 com\forja\domain\UserSport.class
 com\forja\seed\DataSeeder$SeedData.class
+com\forja\config\OpenApiConfig.class
 com\forja\web\ProfileController$SportSelection.class
 com\forja\service\RoutineGeneratorService.class
 com\forja\repository\RoutineRepository.class
@@ -43,6 +45,7 @@ com\forja\web\RoutineController$RoutineDto.class
 com\forja\web\TrainingSessionController.class
 com\forja\domain\Sport.class
 com\forja\web\TrainingSessionController$ItemDto.class
+com\forja\common\exception\UnauthorizedException.class
 com\forja\web\ProfileController.class
 com\forja\web\AuthController$RegisterRequest.class
 com\forja\service\ExerciseFeedService.class
@@ -71,6 +74,8 @@ com\forja\domain\ExerciseSport$ExerciseSportBuilder.class
 com\forja\domain\TrainingSessionItem.class
 com\forja\domain\TrainingSessionItem$Id.class
 com\forja\domain\ReadinessCheckin$ReadinessCheckinBuilder.class
+com\forja\common\exception\ErrorResponse$FieldError.class
 com\forja\web\ProfileController$ProfileDto.class
+com\forja\common\exception\GlobalExceptionHandler.class
 com\forja\domain\Exercise$ExerciseBuilder.class
 com\forja\domain\ReadinessCheckin.class

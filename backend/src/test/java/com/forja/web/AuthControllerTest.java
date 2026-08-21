@@ -1,5 +1,6 @@
 package com.forja.web;
 
+import com.forja.common.exception.UnauthorizedException;
 import com.forja.domain.AppUser;
 import com.forja.repository.AppUserRepository;
 import com.forja.security.JwtService;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
@@ -83,17 +85,17 @@ class AuthControllerTest {
         when(users.findByEmail("a@forja.com")).thenReturn(Optional.of(user));
         when(encoder.matches("errada", "encoded")).thenReturn(false);
 
-        var response = controller.login(new AuthController.LoginRequest("a@forja.com", "errada"));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThatThrownBy(() -> controller.login(new AuthController.LoginRequest("a@forja.com", "errada")))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Credenciais inválidas");
     }
 
     @Test
     void loginWithUnknownEmailReturnsUnauthorized() {
         when(users.findByEmail("nope@forja.com")).thenReturn(Optional.empty());
 
-        var response = controller.login(new AuthController.LoginRequest("nope@forja.com", "senha12345"));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThatThrownBy(() -> controller.login(new AuthController.LoginRequest("nope@forja.com", "senha12345")))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Credenciais inválidas");
     }
 }

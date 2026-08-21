@@ -19,9 +19,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -111,9 +113,8 @@ class RoutineControllerTest {
         when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(me));
         when(routines.findById(5L)).thenReturn(Optional.of(foreign));
 
-        var response = controller.addItem(5L, new RoutineController.AddItemRequest(9L), auth);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThatThrownBy(() -> controller.addItem(5L, new RoutineController.AddItemRequest(9L), auth))
+                .isInstanceOf(NoSuchElementException.class);
     }
 
     @Test
@@ -140,9 +141,8 @@ class RoutineControllerTest {
         when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(me));
         when(routines.findById(5L)).thenReturn(Optional.of(routine(5L, other, sport(1L))));
 
-        var response = controller.patchItem(5L, 9L, new RoutineController.ItemPatch(3, 90), auth);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThatThrownBy(() -> controller.patchItem(5L, 9L, new RoutineController.ItemPatch(3, 90), auth))
+                .isInstanceOf(NoSuchElementException.class);
     }
 
     @Test
@@ -152,8 +152,10 @@ class RoutineControllerTest {
         when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(me));
         when(routines.findById(5L)).thenReturn(Optional.of(routine(5L, other, sport(1L))));
 
-        controller.delete(5L, auth);
+        assertThatThrownBy(() -> controller.delete(5L, auth))
+                .isInstanceOf(NoSuchElementException.class);
 
         verify(routines, never()).delete(any());
+        verify(routines, never()).deleteById(5L);
     }
 }

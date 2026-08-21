@@ -3,6 +3,43 @@ Agendamento de Treinos Esportivos
 
 Este projeto é composto por duas partes principais: o **Frontend** (React + Vite) e o **Backend** (Spring Boot + PostgreSQL).
 
+> **Arquitetura oficial:** o backend Java/Spring é a fonte única de verdade
+> (dados, ranking do feed e regras de treino). O frontend consome a API em
+> `/api` e mantém um catálogo local apenas como *fallback offline*. Decisão
+> registrada em [docs/adr/ADR-001-unificacao-backend.md](docs/adr/ADR-001-unificacao-backend.md).
+
+---
+
+## 🧪 Testes
+
+### Backend (45 testes: 28 unitários + 17 de integração)
+
+Os testes de integração usam um Postgres dedicado (`db-test`, porta **5434**),
+subido via Docker Compose. É **pré-requisito**:
+
+```powershell
+docker compose -f backend/docker-compose.yml up -d db-test
+```
+
+Depois, na pasta `backend/`:
+
+```powershell
+mvn clean test
+```
+
+### Frontend (37 testes)
+
+```powershell
+npm test
+```
+
+---
+
+## 📖 Documentação da API
+
+- Swagger UI: `http://localhost:8085/swagger-ui/index.html` (backend no ar)
+- Resumo do contrato: [docs/api/openapi.md](docs/api/openapi.md)
+
 ---
 
 ## 🚀 Como Rodar o Projeto Locally

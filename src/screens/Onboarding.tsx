@@ -6,11 +6,10 @@ import { SportIcon, IconBolt, IconCheck, IconChevron } from "../components/Icons
 import { SectionLabel } from "../components/ui";
 
 export default function Onboarding() {
-  const { completeOnboarding } = useApp();
+  const { completeOnboarding, toast } = useApp();
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+const [saving, setSaving] = useState(false);
 
   const toggle = (id: string) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -179,10 +178,10 @@ export default function Onboarding() {
         <motion.button
           whileTap={selected.length ? { scale: 0.97 } : undefined}
           disabled={selected.length === 0 || saving}
-          onClick={async () => {
-            setSaving(true); setError("");
+onClick={async () => {
+            setSaving(true);
             try { await completeOnboarding(name.trim(), selected); }
-            catch (err) { setError(err instanceof Error ? err.message : "Não foi possível salvar seu perfil."); }
+            catch { toast("Não foi possível salvar seu perfil."); }
             finally { setSaving(false); }
           }}
           className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-lg uppercase tracking-[0.06em] transition-all ${
