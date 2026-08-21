@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Perfis ativos vêm do Spring (application.yml / env SPRING_PROFILES_ACTIVE). -->
+    <springProperty scope="context" name="ACTIVE_PROFILES" source="spring.profiles.active" defaultValue="dev"/>
+
+    <!-- Desenvolvimento: console legível com traceId quando presente. -->
+    <springProfile name="!prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} [traceId=%X{traceId}] - %msg%n%ex</pattern>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Produção: uma linha JSON por evento (stdout, amigável a coletores). -->
+    <springProfile name="prod">
+        <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="com.forja.common.logging.JsonLogLayout">
+                    <service>forja-api</service>
+                    <environment>${ACTIVE_PROFILES}</environment>
+                </layout>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="JSON"/>
+        </root>
+    </springProfile>
+</configuration>

@@ -5,6 +5,7 @@ import com.forja.common.exception.ErrorResponse;
 import com.forja.security.JwtAuthFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,9 +63,10 @@ public class SecurityConfig {
 
     private void writeError(HttpServletResponse response, int status, String error, String message)
             throws IOException {
+        String traceId = MDC.get(TraceIdFilter.MDC_KEY);
         response.setStatus(status);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(json.writeValueAsString(ErrorResponse.of(status, error, message)));
+        response.getWriter().write(json.writeValueAsString(ErrorResponse.of(status, error, message, List.of(), traceId)));
     }
 
     private CorsConfigurationSource corsSource() {
