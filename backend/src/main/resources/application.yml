@@ -39,6 +39,16 @@ forja:
     ttl-minutes: 720
   cors:
     origins: http://localhost:5173,http://localhost:3000
+  security:
+    # HSTS apenas em produção atrás de HTTPS (ver docs/security/http-security-headers.md)
+    hsts-enabled: false
+  rate-limit:
+    enabled: true
+    login:        { limit: 5,   window-seconds: 900 }   # 5/IP a cada 15 min
+    register:     { limit: 5,   window-seconds: 3600 }  # 5/IP por hora
+    public-read:  { limit: 30,  window-seconds: 60 }    # 30/IP por minuto
+    authenticated: { limit: 100, window-seconds: 60 }   # 100/usuário por minuto
+    max-payload-bytes: 1048576                          # 1 MiB
 
 logging:
   level:

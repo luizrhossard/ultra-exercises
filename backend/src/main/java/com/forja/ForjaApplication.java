@@ -2,6 +2,7 @@ package com.forja;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * Forja — agregador de exercícios mapeados por especificidades esportivas.
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * pondera o esporte foco em dobro.
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class ForjaApplication {
 
     public static void main(String[] args) {
