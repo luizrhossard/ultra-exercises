@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import type { Tab, UserProfile } from "./types";
-import { api, type AthleteProfile } from "./api";
+import { api, ApiError, type AthleteProfile } from "./api";
 import { CACHE_TTL, clearCache, dedupeFetch, getCachedOrStale, invalidate, setCache, userCacheKey } from "./cache";
 
 export interface Toast {
@@ -79,8 +79,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dedupeFetch(userKey, "me", () => api.me(token)).then((remote) => {
       setCache(userKey, "me", remote, CACHE_TTL.profile);
       setProfile({ name: remote.name ?? "", sports: remote.sports.map((s) => s.code), onboarded: remote.sports.length > 0 });
-    }).catch(() => {
-      if (!getCachedOrStale<AthleteProfile>(userKey, "me")) {
+    }).catch((err) => {
+      // Sessão expirada (401): encerra a sessão mesmo com perfil em cache.
+      // Falha de rede/timeout: mantém o cache e a sessão (modo offline amigável).
+      const expired = err instanceof ApiError && err.status === 401;
+      if (expired) clearCache();
+      if (expired || !getCachedOrStale<AthleteProfile>(userKey, "me")) {
         localStorage.removeItem("forja:token:v1"); setToken(null);
       }
     }).finally(() => setAuthLoading(false));

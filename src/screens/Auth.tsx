@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { IconBolt } from "../components/Icons";
+import { ApiError } from "../api";
 import { useApp } from "../store";
 
 export default function Auth() {
@@ -10,13 +11,22 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [errorRef, setErrorRef] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setErrorRef(null);
     try { await authenticate(mode, email.trim(), password, name.trim()); }
-    catch (err) { setError(err instanceof Error ? err.message : "Não foi possível entrar."); }
+    catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        setErrorRef(err.traceId ?? null);
+      } else {
+        setError("Não foi possível entrar.");
+        setErrorRef(null);
+      }
+    }
     finally { setBusy(false); }
   };
 
@@ -31,8 +41,9 @@ export default function Auth() {
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required minLength={8} placeholder="Senha (mín. 8 caracteres)" className="w-full rounded-xl border border-ink-700 bg-ink-800 px-3.5 py-3 text-fog outline-none focus:border-volt-400" />
       </div>
       {error && <p className="mt-3 rounded-lg bg-[#ff5148]/15 p-2.5 text-[12px] text-[#ff817b]">{error}</p>}
+      {error && errorRef && <p className="mt-1 text-[11px] text-fog-mute">Ref: {errorRef}</p>}
       <button disabled={busy} className="mt-5 w-full rounded-xl bg-volt-400 py-3 font-display uppercase text-ink-950 disabled:opacity-60">{busy ? "Conectando…" : mode === "login" ? "Entrar" : "Criar conta"}</button>
-      <button type="button" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }} className="mt-4 w-full text-[12px] font-bold text-volt-300">{mode === "login" ? "Ainda não tenho conta" : "Já tenho uma conta"}</button>
+      <button type="button" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); setErrorRef(null); }} className="mt-4 w-full text-[12px] font-bold text-volt-300">{mode === "login" ? "Ainda não tenho conta" : "Já tenho uma conta"}</button>
     </motion.form>
   </div>;
 }
