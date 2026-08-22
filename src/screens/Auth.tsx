@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { IconBolt } from "../components/Icons";
+import { Logo } from "../components/Logo";
 import { ApiError } from "../api";
 import { useApp } from "../store";
 
@@ -55,7 +55,7 @@ export default function Auth() {
 
   return <div className="mx-auto flex min-h-dvh w-full max-w-[430px] items-center px-5">
     <motion.form initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} onSubmit={submit} className="w-full rounded-2xl border border-ink-700 bg-ink-850 p-6">
-      <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-volt-400 text-ink-950"><IconBolt size={21} /></span><div><p className="font-display text-2xl uppercase text-fog">Forja</p><p className="text-[11px] uppercase tracking-[.14em] text-fog-mute">Performance do atleta</p></div></div>
+      <div className="flex items-center gap-3"><Logo size={52} /></div>
       <h1 className="mt-8 font-display text-2xl uppercase text-fog">{mode === "login" ? "Entrar" : "Criar conta"}</h1>
       <p className="mt-1 text-[12px] text-fog-dim">Seu histórico e acompanhamento ficam associados à sua conta.</p>
       <div className="mt-5 space-y-3">
@@ -92,7 +92,7 @@ function TwoFactorChallenge({ code, setCode, recoveryMode, setRecoveryMode, erro
   return <div className="mx-auto flex min-h-dvh w-full max-w-[430px] items-center px-5">
     <motion.form initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} onSubmit={submit} className="w-full rounded-2xl border border-ink-700 bg-ink-850 p-6">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-volt-400 text-ink-950"><IconBolt size={21} /></span>
+        <Logo size={40} />
         <div><p className="font-display text-2xl uppercase text-fog">Verificação em dois fatores</p></div>
       </div>
       <h1 className="mt-8 font-display text-2xl uppercase text-fog">{recoveryMode ? "Código de recuperação" : "Confirme o código"}</h1>

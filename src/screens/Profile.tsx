@@ -165,7 +165,7 @@ export default function Profile() {
           )}
         </div>
         <p className="mt-4 text-center text-[10px] uppercase tracking-[0.2em] text-fog-mute">
-          Forja · MVP navegável · dados locais
+          Ultra Exercises · MVP navegável · dados locais
         </p>
       </section>
     </div>

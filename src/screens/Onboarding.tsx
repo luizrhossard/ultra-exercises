@@ -2,7 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { SPORTS } from "../data/sports";
 import { useApp } from "../store";
-import { SportIcon, IconBolt, IconCheck, IconChevron } from "../components/Icons";
+import { SportIcon, IconCheck, IconChevron } from "../components/Icons";
+import { Logo } from "../components/Logo";
 import { SectionLabel } from "../components/ui";
 
 export default function Onboarding() {
@@ -20,10 +21,7 @@ const [saving, setSaving] = useState(false);
       <aside className="relative hidden overflow-hidden border-r border-ink-800 lg:flex lg:w-[44%] lg:flex-col lg:justify-between lg:px-12 lg:py-10">
         <div className="stripes-sport pointer-events-none absolute inset-0 opacity-60" />
         <div className="relative flex items-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-volt-400 text-ink-950 shadow-[0_6px_24px_rgba(212,245,60,0.3)]">
-            <IconBolt size={21} strokeWidth={2.2} />
-          </span>
-          <span className="font-display text-2xl uppercase tracking-[0.08em] text-fog">Forja</span>
+          <Logo size={44} />
           <span className="ml-auto rounded-md border border-ink-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-fog-mute">
             MVP · v0.1
           </span>
@@ -89,10 +87,7 @@ const [saving, setSaving] = useState(false);
 
       {/* wordmark */}
       <div className="mt-6 flex items-center gap-2.5 lg:hidden">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-volt-400 text-ink-950">
-          <IconBolt size={20} strokeWidth={2.2} />
-        </span>
-        <span className="font-display text-xl uppercase tracking-[0.08em] text-fog">Forja</span>
+        <Logo size={40} />
         <span className="ml-auto rounded-md border border-ink-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-fog-mute">
           MVP · v0.1
         </span>
