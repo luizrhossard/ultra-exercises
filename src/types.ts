@@ -57,7 +57,7 @@ export interface UserProfile {
   onboarded: boolean;
 }
 
-export type Tab = "explorar" | "rotinas" | "projeto" | "perfil";
+export type Tab = "explorar" | "rotinas" | "perfil";
 
 export const MUSCLE_LABEL: Record<MuscleKey, string> = {
   peitoral: "Peitoral",

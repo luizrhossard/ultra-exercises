@@ -10,7 +10,6 @@ const Auth = lazy(() => import("./screens/Auth"));
 const Onboarding = lazy(() => import("./screens/Onboarding"));
 const Feed = lazy(() => import("./screens/Feed"));
 const Routines = lazy(() => import("./screens/Routines"));
-const Project = lazy(() => import("./screens/Project"));
 const Profile = lazy(() => import("./screens/Profile"));
 const Player = lazy(() => import("./screens/Player"));
 
@@ -91,7 +90,6 @@ function Shell() {
                 <Suspense fallback={<ScreenFallback />}>
                   {tab === "explorar" && <Feed />}
                   {tab === "rotinas" && <Routines />}
-                  {tab === "projeto" && <Project />}
                   {tab === "perfil" && <Profile />}
                 </Suspense>
               </motion.main>

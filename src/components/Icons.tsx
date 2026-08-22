@@ -119,12 +119,6 @@ export const IconBolt = (p: P) => (
   </svg>
 );
 
-export const IconCode = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M8.4 7.2L3.6 12l4.8 4.8M15.6 7.2L20.4 12l-4.8 4.8M13.4 4.6l-2.8 14.8" />
-  </svg>
-);
-
 export const IconUser = (p: P) => (
   <svg {...base(p)}>
     <circle cx="12" cy="8" r="3.8" />
@@ -215,13 +209,6 @@ export const IconGrip = (p: P) => (
 export const IconDumbbell = (p: P) => (
   <svg {...base(p)}>
     <path d="M8.2 8.2v7.6M15.8 8.2v7.6M4.6 9.8v4.4M19.4 9.8v4.4M8.2 12h7.6M2.6 12h2M19.4 12h2" />
-  </svg>
-);
-
-export const IconLayers = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M12 3.6l8.4 4.6L12 12.8 3.6 8.2 12 3.6z" />
-    <path d="M3.6 12.4l8.4 4.6 8.4-4.6M3.6 16.4l8.4 4.6 8.4-4.6" />
   </svg>
 );
 
