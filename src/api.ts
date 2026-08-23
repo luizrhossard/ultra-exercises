@@ -29,6 +29,13 @@ export type ApiRoutineItem = { exerciseId: number; exerciseName: string; positio
 export type ApiRoutine = { id: number; name: string; sportCode: string; sportName: string; createdAt: string; items: ApiRoutineItem[] };
 export type ApiSessionItem = { exerciseId: number; exerciseName: string; position: number; prescribedSets: number; prescribedReps: string; prescribedRestTime: number; completedSets: number | null; completedReps: string | null; loadKg: number | null; itemRpe: number | null; painLevel: number | null; notes: string | null };
 export type ApiSession = { id: number; routineId: number | null; routineName: string | null; sportCode: string; sportName: string; status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "SKIPPED"; scheduledAt: string; startedAt: string | null; completedAt: string | null; durationMinutes: number | null; sessionRpe: number | null; notes: string | null; items: ApiSessionItem[] };
+// ---- Progresso [UE-44] ----
+export type ApiProgressSession = { id: number; routineName: string | null; sportName: string; status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "SKIPPED"; scheduledAt: string; completedAt: string | null; durationMinutes: number | null; sessionRpe: number | null; maxPainLevel: number | null; totalVolumeKg: number | null; exerciseCount: number; setCount: number };
+export type ApiProgressSessionsPage = { items: ApiProgressSession[]; page: number; size: number; totalItems: number; totalPages: number; hasNext: boolean };
+export type ApiWeekBlock = { sessionsCompleted: number; totalDurationMinutes: number; totalVolumeKg: number | null; averageRpe: number | null; averageReadiness: number | null };
+export type ApiWeeklySummary = { periodStart: string; periodEnd: string; current: ApiWeekBlock; previous: ApiWeekBlock };
+export type ApiReadinessPoint = { date: string; readiness: number };
+export type ApiReadinessTrend = { periodDays: number; items: ApiReadinessPoint[] };
 
 /** Origem da falha: resposta HTTP, rede indisponível ou timeout local. */
 export type ApiErrorKind = "http" | "network" | "timeout";
@@ -173,6 +180,12 @@ export const api = {
   startSession: (token: string, sessionId: number) => request<ApiSession>(`/sessions/${sessionId}/start`, { method: "POST" }, token),
   patchSession: (token: string, sessionId: number, body: { status?: string; durationMinutes?: number; sessionRpe?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
   patchSessionItem: (token: string, sessionId: number, exerciseId: number, body: { completedSets?: number; completedReps?: string; loadKg?: number; itemRpe?: number; painLevel?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}/items/${exerciseId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
+  // ---- Progresso [UE-44] ----
+  progressSessions: (token: string, page: number, size = 20) =>
+    request<ApiProgressSessionsPage>(`/progress/sessions?page=${page}&size=${size}`, {}, token),
+  progressWeeklySummary: (token: string) => request<ApiWeeklySummary>("/progress/weekly-summary", {}, token),
+  progressReadinessTrend: (token: string, days: number) =>
+    request<ApiReadinessTrend>(`/progress/readiness-trend?days=${days}`, {}, token),
   // ---- Dois fatores (UE-24) ----
   twoFactorStatus: (token: string) => request<TwoFactorStatus>("/me/2fa/status", {}, token),
   setupTwoFactor: (token: string) => request<TwoFactorSetup>("/me/2fa/setup", { method: "POST" }, token),

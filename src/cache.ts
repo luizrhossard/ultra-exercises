@@ -20,6 +20,8 @@ export const CACHE_TTL = {
   routines: 2 * 60_000,
   /** Check-in de prontidão do dia. */
   readiness: 2 * 60_000,
+  /** Dados de progresso (resumo semanal e tendência de prontidão). */
+  progress: 60_000,
 } as const;
 
 export interface CacheEntry<T> {
