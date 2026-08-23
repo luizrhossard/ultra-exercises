@@ -53,6 +53,22 @@ export type ApiHistoryStats = {
   totalVolumeKg: number | null;
   averageRpe: number | null;
 };
+// ---- Dashboard de evolução [UE-27] ----
+export type ApiEvolutionPoint = { date: string; maxLoadKg: number };
+export type ApiExerciseEvolution = { exerciseId: number; months: number; items: ApiEvolutionPoint[] };
+export type ApiVolumeBucket = { periodStart: string; totalVolumeKg: number };
+export type ApiVolumeTrend = { granularity: "week" | "month"; months: number; items: ApiVolumeBucket[] };
+export type ApiPerformanceBlock = {
+  sessionsCompleted: number;
+  totalDurationMinutes: number;
+  totalVolumeKg: number | null;
+  averageRpe: number | null;
+};
+export type ApiPerformanceComparison = {
+  days: number;
+  current: ApiPerformanceBlock;
+  previous: ApiPerformanceBlock;
+};
 
 /** Origem da falha: resposta HTTP, rede indisponível ou timeout local. */
 export type ApiErrorKind = "http" | "network" | "timeout";
@@ -221,6 +237,16 @@ export const api = {
     const qs = params.toString();
     return request<ApiHistoryStats>(`/progress/history-stats${qs ? `?${qs}` : ""}`, {}, token);
   },
+  exerciseEvolution: (token: string, exerciseId: number, months = 6) =>
+    request<ApiExerciseEvolution>(
+      `/progress/exercise-evolution?exerciseId=${exerciseId}&months=${months}`, {}, token
+    ),
+  volumeTrend: (token: string, granularity: "week" | "month", months = 6) =>
+    request<ApiVolumeTrend>(
+      `/progress/volume-trend?granularity=${granularity}&months=${months}`, {}, token
+    ),
+  performanceComparison: (token: string, days = 30) =>
+    request<ApiPerformanceComparison>(`/progress/performance-comparison?days=${days}`, {}, token),
   progressWeeklySummary: (token: string) => request<ApiWeeklySummary>("/progress/weekly-summary", {}, token),
   progressReadinessTrend: (token: string, days: number) =>
     request<ApiReadinessTrend>(`/progress/readiness-trend?days=${days}`, {}, token),

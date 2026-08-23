@@ -2,11 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api, ApiError } from "../api";
 import type {
+  ApiExerciseEvolution,
   ApiHistoryExerciseOption,
   ApiHistoryStats,
+  ApiPerformanceComparison,
   ApiProgressSession,
   ApiProgressSessionsPage,
   ApiReadinessTrend,
+  ApiVolumeTrend,
   ApiWeeklySummary,
   HistoryFilters,
 } from "../api";
@@ -17,6 +20,7 @@ import { CACHE_TTL, userCacheKey } from "../cache";
 import { useCachedQuery } from "../hooks/useCachedQuery";
 import { SectionLabel } from "../components/ui";
 import { IconRefresh, IconX } from "../components/Icons";
+import { BarChart, LineChart } from "../components/charts";
 
 const TREND_OPTIONS = [7, 30, 90] as const;
 const PAGE_SIZE = 20;
@@ -130,6 +134,11 @@ export default function Progress() {
           </div>
         </div>
         <ReadinessTrend query={trendQuery} days={trendDays} />
+      </section>
+
+      <section className="mt-8">
+        <SectionLabel>Evolução · dashboard</SectionLabel>
+        <Dashboard token={token} />
       </section>
 
       <section className="mt-8">
@@ -281,6 +290,217 @@ function ReadinessTrend({
       <p className="mt-2 text-center text-[10px] uppercase tracking-[0.14em] text-fog-mute">
         Somente dias com check-in · escala 0–30
       </p>
+    </div>
+  );
+}
+
+// ---- Dashboard de evolução [UE-27] ----
+
+const MONTH_OPTIONS = [3, 6, 12] as const;
+
+function Dashboard({ token }: { token: string | null }) {
+  const userKey = token ? userCacheKey(token) : "";
+  const exercisesQuery = useCachedQuery<ApiHistoryExerciseOption[]>({
+    userKey,
+    key: "progress/history-exercises",
+    ttl: CACHE_TTL.progress,
+    fetcher: () => api.progressHistoryExercises(token as string),
+    enabled: Boolean(token),
+  });
+  const exercises = useMemo(() => exercisesQuery.data ?? [], [exercisesQuery.data]);
+
+  const [exerciseId, setExerciseId] = useState<string>("");
+  const [months, setMonths] = useState<number>(6);
+  const [granularity, setGranularity] = useState<"week" | "month">("week");
+
+  // Seleciona o primeiro exercício treinado quando a lista chega.
+  useEffect(() => {
+    if (!exerciseId && exercises.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setExerciseId(String(exercises[0].id));
+    }
+  }, [exercises, exerciseId]);
+
+  const evolutionQuery = useCachedQuery<ApiExerciseEvolution>({
+    userKey,
+    key: `progress/exercise-evolution:${exerciseId}:${months}`,
+    ttl: CACHE_TTL.progress,
+    fetcher: () => api.exerciseEvolution(token as string, Number(exerciseId), months),
+    enabled: Boolean(token) && exerciseId !== "",
+  });
+
+  const volumeQuery = useCachedQuery<ApiVolumeTrend>({
+    userKey,
+    key: `progress/volume-trend:${granularity}:${months}`,
+    ttl: CACHE_TTL.progress,
+    fetcher: () => api.volumeTrend(token as string, granularity, months),
+    enabled: Boolean(token),
+  });
+
+  const comparisonQuery = useCachedQuery<ApiPerformanceComparison>({
+    userKey,
+    key: "progress/performance-comparison:30",
+    ttl: CACHE_TTL.progress,
+    fetcher: () => api.performanceComparison(token as string, 30),
+    enabled: Boolean(token),
+  });
+
+  if (!token) return null;
+
+  if (exercises.length === 0) {
+    if (exercisesQuery.loading) {
+      return <div aria-hidden="true" className="mt-3 h-[120px] animate-pulse rounded-xl border border-ink-800 bg-ink-850/60" />;
+    }
+    return (
+      <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-4 text-center">
+        <p className="text-[12px] text-fog-dim">
+          Complete treinos para ver sua evolução por aqui — cargas, volume e comparativos.
+        </p>
+      </div>
+    );
+  }
+
+  const selectCls =
+    "rounded-lg bg-ink-800 px-2 py-1.5 text-[11px] text-fog outline-none focus:ring-1 focus:ring-volt-400/60";
+  const evoPoints = (evolutionQuery.data?.items ?? []).map((p) => ({
+    label: shortDate(p.date),
+    value: p.maxLoadKg,
+  }));
+  const volBars = (volumeQuery.data?.items ?? []).map((b) => ({
+    label: granularity === "month" ? b.periodStart.slice(0, 7) : shortDate(b.periodStart),
+    value: b.totalVolumeKg,
+  }));
+  const comparison = comparisonQuery.data;
+
+  return (
+    <div className="mt-3 space-y-3">
+      {/* Evolução de carga por exercício */}
+      <div className="rounded-xl border border-ink-700 bg-ink-850 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-fog-dim">Carga máxima · exercício</p>
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Exercício da evolução"
+              value={exerciseId}
+              onChange={(e) => setExerciseId(e.target.value)}
+              className={selectCls}
+            >
+              {exercises.map((ex) => (
+                <option key={ex.id} value={ex.id}>
+                  {ex.name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Período da evolução"
+              value={months}
+              onChange={(e) => setMonths(Number(e.target.value))}
+              className={selectCls}
+            >
+              {MONTH_OPTIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m} meses
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {evolutionQuery.loading ? (
+          <div aria-hidden="true" className="mt-2 h-[150px] animate-pulse rounded-lg bg-ink-900/60" />
+        ) : evolutionQuery.error ? (
+          <ErrorCard message="Não foi possível carregar a evolução de carga." onRetry={evolutionQuery.refresh} />
+        ) : evoPoints.length === 0 ? (
+          <p className="py-8 text-center text-[12px] text-fog-mute">
+            Sem cargas registradas para este exercício no período.
+          </p>
+        ) : (
+          <LineChart
+            points={evoPoints}
+            unit=" kg"
+            filename={`evolucao-carga-${exerciseId}.png`}
+            ariaLabel={`Evolução de carga máxima: ${evoPoints.length} registro${evoPoints.length === 1 ? "" : "s"} nos últimos ${months} meses.`}
+          />
+        )}
+      </div>
+
+      {/* Volume por semana/mês */}
+      <div className="rounded-xl border border-ink-700 bg-ink-850 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-fog-dim">Volume total · treinos concluídos</p>
+          <div role="group" aria-label="Granularidade do volume" className="flex gap-1">
+            {([["week", "Semanas"], ["month", "Meses"]] as const).map(([value, label]) => (
+              <button
+                key={value}
+                onClick={() => setGranularity(value)}
+                aria-pressed={granularity === value}
+                className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                  granularity === value ? "bg-volt-400/15 text-volt-300" : "bg-ink-800 text-fog-mute hover:text-fog-dim"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {volumeQuery.loading ? (
+          <div aria-hidden="true" className="mt-2 h-[150px] animate-pulse rounded-lg bg-ink-900/60" />
+        ) : volumeQuery.error ? (
+          <ErrorCard message="Não foi possível carregar o volume por período." onRetry={volumeQuery.refresh} />
+        ) : volBars.length === 0 ? (
+          <p className="py-8 text-center text-[12px] text-fog-mute">Sem treinos concluídos no período.</p>
+        ) : (
+          <BarChart
+            points={volBars}
+            unit=" kg"
+            filename={`volume-${granularity}.png`}
+            ariaLabel={`Volume ${granularity === "month" ? "mensal" : "semanal"}: ${volBars.length} perío${volBars.length === 1 ? "do" : "dos"} com treinos concluídos.`}
+          />
+        )}
+      </div>
+
+      {/* Comparativo hoje vs mês passado */}
+      {comparison ? (
+        <div className="rounded-xl border border-ink-700 bg-ink-850 p-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-fog-dim">
+            Comparativo · últimos {comparison.days} dias vs anteriores
+          </p>
+          {(() => {
+            const c = comparison.current;
+            const p = comparison.previous;
+            const base = p.sessionsCompleted > 0;
+            return (
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <MetricCard
+                  label={`Concluídos (${comparison.days}d)`}
+                  value={fmt(c.sessionsCompleted)}
+                  delta={base ? c.sessionsCompleted - p.sessionsCompleted : null}
+                />
+                <MetricCard
+                  label="Duração total"
+                  value={`${fmt(c.totalDurationMinutes)} min`}
+                  delta={base ? c.totalDurationMinutes - p.totalDurationMinutes : null}
+                />
+                <MetricCard
+                  label="Volume total"
+                  value={c.totalVolumeKg != null ? `${fmt(c.totalVolumeKg)} kg` : "—"}
+                  delta={
+                    base && c.totalVolumeKg != null && p.totalVolumeKg != null
+                      ? c.totalVolumeKg - p.totalVolumeKg
+                      : null
+                  }
+                />
+                <MetricCard
+                  label="RPE médio"
+                  value={c.averageRpe != null ? fmt(c.averageRpe) : "—"}
+                  delta={
+                    c.averageRpe != null && p.averageRpe != null ? c.averageRpe - p.averageRpe : null
+                  }
+                />
+              </div>
+            );
+          })()}
+        </div>
+      ) : null}
     </div>
   );
 }
