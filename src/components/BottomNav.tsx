@@ -1,12 +1,11 @@
 import { motion } from "framer-motion";
 import { useApp } from "../store";
 import type { Tab } from "../types";
-import { IconBolt, IconClipboard, IconCode, IconRadar, IconUser } from "./Icons";
+import { IconBolt, IconClipboard, IconRadar, IconUser } from "./Icons";
 
 const TABS: { id: Tab; label: string; icon: (p: { size?: number }) => React.ReactNode }[] = [
   { id: "explorar", label: "Explorar", icon: (p) => <IconRadar {...p} /> },
   { id: "rotinas", label: "Rotinas", icon: (p) => <IconClipboard {...p} /> },
-  { id: "projeto", label: "Projeto", icon: (p) => <IconCode {...p} /> },
   { id: "perfil", label: "Perfil", icon: (p) => <IconUser {...p} /> },
 ];
 

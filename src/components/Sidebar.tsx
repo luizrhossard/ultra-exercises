@@ -7,7 +7,6 @@ import { Logo } from "./Logo";
 import {
   IconBolt,
   IconClipboard,
-  IconCode,
   IconRadar,
   IconUser,
   SportIcon,
@@ -16,7 +15,6 @@ import {
 const NAV: { id: Tab; label: string; hint: string; icon: (p: { size?: number }) => React.ReactNode }[] = [
   { id: "explorar", label: "Explorar", hint: "Feed por relevância", icon: (p) => <IconRadar {...p} /> },
   { id: "rotinas", label: "Rotinas", hint: "Gerador + salvas", icon: (p) => <IconClipboard {...p} /> },
-  { id: "projeto", label: "Projeto", hint: "Blueprint técnico", icon: (p) => <IconCode {...p} /> },
   { id: "perfil", label: "Perfil", hint: "Esportes e dados", icon: (p) => <IconUser {...p} /> },
 ];
 
