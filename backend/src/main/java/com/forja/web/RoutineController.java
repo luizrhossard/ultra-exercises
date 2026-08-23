@@ -9,6 +9,7 @@ import com.forja.service.RoutineGeneratorService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -28,6 +31,10 @@ public class RoutineController {
     private final RoutineGeneratorService generator;
     private final AppUserRepository users;
     private final ExerciseRepository exercises;
+
+    /** [UE-29] Base pública do frontend montada no link/QR compartilhado. */
+    @Value("${forja.share.base-url:http://localhost:3000}")
+    private String baseUrl;
 
     record GenerateRequest(@NotNull Long sportId) {
     }
@@ -59,6 +66,23 @@ public class RoutineController {
         var routine = generator.generate(auth.getName(), request.sportId());
         return toDto(routine);
     }
+
+    /** [UE-29] Gera (uma vez) e devolve o link público de leitura da rotina para QR/compartilhamento. */
+    @PostMapping("/{id}/share")
+    @Transactional
+    ShareLinkDto share(@PathVariable Long id, Authentication auth) {
+        var routine = ownedRoutine(id, auth)
+                .orElseThrow(() -> new NoSuchElementException("Rotina não encontrada"));
+        if (routine.getShareToken() == null) {
+            var bytes = new byte[16];
+            new SecureRandom().nextBytes(bytes);
+            routine.setShareToken(Base64.getUrlEncoder().withoutPadding().encodeToString(bytes));
+            routines.save(routine);
+        }
+        return new ShareLinkDto(baseUrl + "/compartilhada/" + routine.getShareToken());
+    }
+
+    record ShareLinkDto(String url) {}
 
     @PostMapping("/{id}/items")
     @Transactional

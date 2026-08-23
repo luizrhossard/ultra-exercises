@@ -36,6 +36,10 @@ public class Routine {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
+    /** [UE-29] Token público de leitura para QR/link de compartilhamento; nulo até ser gerado. */
+    @Column(name = "share_token", length = 32, unique = true)
+    private String shareToken;
+
     @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
     @Builder.Default

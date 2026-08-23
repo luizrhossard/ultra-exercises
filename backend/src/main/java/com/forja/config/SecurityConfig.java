@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // catálogo público; rotinas e geração exigem JWT; Swagger/OpenAPI públicos (dev)
                         .requestMatchers("/api/auth/**", "/api/sports/**", "/api/exercises/**",
+                                "/api/share/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .headers(headers -> {

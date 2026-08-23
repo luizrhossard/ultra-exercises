@@ -111,7 +111,7 @@ export function ExportPngButton({
 }
 
 /** Serializa o SVG e baixa como PNG em 2x. Ambientes sem canvas (ex.: testes) falham silenciosamente. */
-async function exportSvgAsPng(svg: SVGSVGElement | null, filename: string): Promise<void> {
+export async function exportSvgAsPng(svg: SVGSVGElement | null, filename: string): Promise<void> {
   try {
     if (!svg || typeof URL === "undefined" || typeof URL.createObjectURL !== "function") return;
     const xml = new XMLSerializer().serializeToString(svg);

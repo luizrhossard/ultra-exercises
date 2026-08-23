@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { AppProvider, useApp } from "./store";
 import BottomNav from "./components/BottomNav";
@@ -13,6 +13,7 @@ const Routines = lazy(() => import("./screens/Routines"));
 const Progress = lazy(() => import("./screens/Progress"));
 const Profile = lazy(() => import("./screens/Profile"));
 const Player = lazy(() => import("./screens/Player"));
+const SharedRoutine = lazy(() => import("./screens/SharedRoutine"));
 
 function ScreenFallback() {
   return (
@@ -49,6 +50,11 @@ function Toasts() {
 
 function Shell() {
   const { profile, tab, playerId, token, authLoading } = useApp();
+  // [UE-29] Rota pública de rotina compartilhada (/compartilhada/:token) fora do gate de auth.
+  const sharedToken = useMemo(() => {
+    const match = window.location.pathname.match(/^\/compartilhada\/([A-Za-z0-9_-]+)$/);
+    return match ? match[1] : null;
+  }, []);
 
   return (
     <div className="noise relative min-h-dvh">
@@ -68,12 +74,14 @@ function Shell() {
         exercise × sport · relevance 1–5
       </p>
 
-      {token && <Sidebar />}
+      {token && !sharedToken && <Sidebar />}
 
       {/* app column */}
-      <div className={`relative z-10 ${token ? "lg:pl-[260px]" : ""}`}>
+      <div className={`relative z-10 ${token && !sharedToken ? "lg:pl-[260px]" : ""}`}>
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col border-x border-ink-800 bg-ink-900/70 backdrop-blur-sm lg:max-w-[1120px] lg:bg-ink-900/50">
-        {authLoading ? <div className="grid min-h-dvh place-items-center font-display text-xl uppercase text-volt-400">Carregando…</div> : !token ? (
+        {sharedToken ? (
+          <Suspense fallback={<ScreenFallback />}><SharedRoutine token={sharedToken} /></Suspense>
+        ) : authLoading ? <div className="grid min-h-dvh place-items-center font-display text-xl uppercase text-volt-400">Carregando…</div> : !token ? (
           <Suspense fallback={<ScreenFallback />}><Auth /></Suspense>
         ) : !profile.onboarded ? (
           <Suspense fallback={<ScreenFallback />}><Onboarding /></Suspense>
@@ -96,9 +104,11 @@ function Shell() {
                 </Suspense>
               </motion.main>
             </AnimatePresence>
-            <div className="lg:hidden">
-              <BottomNav />
-            </div>
+            {!sharedToken && (
+              <div className="lg:hidden">
+                <BottomNav />
+              </div>
+            )}
           </>
         )}
       </div>
