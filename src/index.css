@@ -151,3 +151,24 @@ body {
   }
   * { scroll-behavior: auto !important; }
 }
+
+/* [UE-29] Impressão/PDF da rotina: apenas a folha aparece, em preto no branco. */
+@media print {
+  body * { visibility: hidden !important; }
+  .print-sheet, .print-sheet * { visibility: visible !important; }
+  .print-sheet {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    padding: 24px;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .print-sheet .brand { font-weight: 800; letter-spacing: 0.25em; font-size: 14px; }
+  .print-sheet h1 { font-size: 26px; margin: 6px 0 2px; }
+  .print-sheet .meta { font-size: 12px; color: #444; }
+  .print-sheet table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+  .print-sheet th, .print-sheet td { border: 1px solid #bbb; padding: 8px 10px; text-align: left; font-size: 13px; }
+  .print-sheet th { background: #f0f0f0; }
+  .print-sheet footer { margin-top: 16px; font-size: 11px; color: #555; }
+}

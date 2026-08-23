@@ -69,6 +69,9 @@ export type ApiPerformanceComparison = {
   current: ApiPerformanceBlock;
   previous: ApiPerformanceBlock;
 };
+// ---- Compartilhamento de rotinas [UE-29] ----
+export type ApiSharedItem = { exerciseName: string; sets: number; reps: string; restTime: number };
+export type ApiSharedRoutine = { name: string; sportName: string; items: ApiSharedItem[] };
 
 /** Origem da falha: resposta HTTP, rede indisponível ou timeout local. */
 export type ApiErrorKind = "http" | "network" | "timeout";
@@ -247,6 +250,11 @@ export const api = {
     ),
   performanceComparison: (token: string, days = 30) =>
     request<ApiPerformanceComparison>(`/progress/performance-comparison?days=${days}`, {}, token),
+  // ---- Compartilhamento de rotinas [UE-29] ----
+  generateShareLink: (token: string, routineId: number) =>
+    request<{ url: string }>(`/routines/${routineId}/share`, { method: "POST" }, token),
+  sharedRoutine: (shareToken: string) =>
+    request<ApiSharedRoutine>(`/share/${encodeURIComponent(shareToken)}`),
   progressWeeklySummary: (token: string) => request<ApiWeeklySummary>("/progress/weekly-summary", {}, token),
   progressReadinessTrend: (token: string, days: number) =>
     request<ApiReadinessTrend>(`/progress/readiness-trend?days=${days}`, {}, token),

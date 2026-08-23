@@ -42,6 +42,9 @@ forja:
   security:
     # HSTS apenas em produção atrás de HTTPS (ver docs/security/http-security-headers.md)
     hsts-enabled: false
+  share:
+    # [UE-29] Base pública montada no link/QR de rotina compartilhada
+    base-url: ${SHARE_BASE_URL:http://localhost:3000}
   rate-limit:
     enabled: true
     login:        { limit: 5,   window-seconds: 900 }   # 5/IP a cada 15 min
