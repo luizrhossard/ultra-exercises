@@ -28,12 +28,15 @@ class AuthControllerTest {
     @Mock AppUserRepository users;
     @Mock PasswordEncoder encoder;
     @Mock JwtService jwt;
+    @Mock com.forja.repository.RecoveryCodeRepository recoveryRepo;
+    @Mock com.forja.service.TotpService totp;
+    @Mock com.forja.service.RecoveryCodeService recoveryCodes;
 
     AuthController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new AuthController(users, encoder, jwt);
+        controller = new AuthController(users, recoveryRepo, encoder, jwt, totp, recoveryCodes);
     }
 
     @Test

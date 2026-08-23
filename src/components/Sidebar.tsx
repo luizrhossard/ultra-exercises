@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useApp } from "../store";
 import type { Tab } from "../types";
 import { sportById } from "../data/sports";
+import { Logo } from "./Logo";
 import {
   IconBolt,
   IconClipboard,
@@ -25,16 +26,8 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[260px] flex-col border-r border-ink-800 bg-ink-900/90 backdrop-blur-md lg:flex">
       {/* brand */}
-      <div className="flex items-center gap-3 px-6 pb-6 pt-7">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-volt-400 text-ink-950 shadow-[0_6px_24px_rgba(212,245,60,0.3)]">
-          <IconBolt size={21} strokeWidth={2.3} />
-        </span>
-        <div>
-          <p className="font-display text-xl uppercase leading-none tracking-[0.06em] text-fog">Forja</p>
-          <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.22em] text-fog-mute">
-            treino específico
-          </p>
-        </div>
+      <div className="px-6 pb-5 pt-7">
+        <Logo full />
       </div>
 
       {/* nav */}

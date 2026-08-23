@@ -19,6 +19,16 @@ forja:
     ttl-minutes: 720
   cors:
     origins: http://localhost:5173
+  rate-limit:
+    # Limites altos no perfil de teste para não contaminar testes entre si;
+    # o comportamento do limitador é coberto por RateLimitFilterTest e pela
+    # SecurityHeadersAndRateLimitIntegrationTest (que sobrepõe o limite de login).
+    enabled: true
+    login:        { limit: 1000, window-seconds: 60 }
+    register:     { limit: 1000, window-seconds: 60 }
+    public-read:  { limit: 1000, window-seconds: 60 }
+    authenticated: { limit: 10000, window-seconds: 60 }
+    two-factor:   { limit: 1000, window-seconds: 60 }
 
 springdoc:
   api-docs:

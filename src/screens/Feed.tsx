@@ -10,6 +10,7 @@ import { useApp } from "../store";
 import { CACHE_TTL, userCacheKey } from "../cache";
 import { useCachedQuery } from "../hooks/useCachedQuery";
 import { SportIcon, IconSearch, IconChevron, IconDumbbell, IconBolt } from "../components/Icons";
+import { Logo } from "../components/Logo";
 import { ScoreMeter } from "../components/ui";
 import { useProgressiveList } from "../hooks/useProgressiveList";
 
@@ -77,7 +78,7 @@ export default function Feed() {
     <div className="px-5 pb-32 pt-6 lg:px-10 lg:pb-24 lg:pt-10">
       {/* header */}
       <div className="flex items-center justify-between">
-        <span className="font-display text-sm uppercase tracking-[0.2em] text-fog-mute">Forja</span>
+        <Logo size={34} />
         <button
           onClick={() => setTab("perfil")}
           className="grid h-9 w-9 place-items-center rounded-full border border-ink-600 bg-ink-800 font-display text-sm text-volt-400 transition-colors hover:border-volt-400"

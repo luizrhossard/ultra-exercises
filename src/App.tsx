@@ -3,6 +3,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { AppProvider, useApp } from "./store";
 import BottomNav from "./components/BottomNav";
 import Sidebar from "./components/Sidebar";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { IconBolt } from "./components/Icons";
 
 const Auth = lazy(() => import("./screens/Auth"));
@@ -119,7 +120,9 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <AppProvider>
-        <Shell />
+        <ErrorBoundary>
+          <Shell />
+        </ErrorBoundary>
       </AppProvider>
     </MotionConfig>
   );

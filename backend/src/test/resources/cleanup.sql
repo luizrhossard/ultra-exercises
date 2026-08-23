@@ -1,2 +1,2 @@
 -- Limpa dados de usuário entre execuções de teste (dados de seed de catálogo são preservados).
-truncate table routine_items, training_session_items, training_sessions, routines, user_sport, readiness_checkins, app_user cascade;
+truncate table routine_items, training_session_items, training_sessions, routines, user_sport, readiness_checkins, recovery_code, app_user cascade;

@@ -6,6 +6,7 @@ import { useApp } from "../store";
 import { SportIcon, IconBolt, IconCheck } from "../components/Icons";
 import { SectionLabel } from "../components/ui";
 import ReadinessCard from "../components/ReadinessCard";
+import TwoFactorSettings from "../components/TwoFactorSettings";
 
 export default function Profile() {
   const { profile, setName, toggleSport, resetAll, toast } = useApp();
@@ -106,6 +107,9 @@ export default function Profile() {
         </div>
       </section>
 
+      {/* security: two-factor authentication [UE-24] */}
+      <TwoFactorSettings />
+
       {/* how relevance works */}
       <section className="mt-7 rounded-2xl border border-ink-700 bg-ink-850 p-4">
         <div className="flex items-center gap-2">
@@ -161,7 +165,7 @@ export default function Profile() {
           )}
         </div>
         <p className="mt-4 text-center text-[10px] uppercase tracking-[0.2em] text-fog-mute">
-          Forja · MVP navegável · dados locais
+          Ultra Exercises · MVP navegável · dados locais
         </p>
       </section>
     </div>

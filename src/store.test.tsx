@@ -56,7 +56,7 @@ describe("store + cache", () => {
     localStorage.setItem("forja:token:v1", "token-antigo");
     setCache(userCacheKey("token-antigo"), "routines", [1], CACHE_TTL.routines);
     vi.mocked(api.me).mockResolvedValue({ email: "antigo@x", name: "X", sports: [] });
-    vi.mocked(api.login).mockResolvedValue({ token: "token-novo", email: "novo@x", name: "N" });
+    vi.mocked(api.login).mockResolvedValue({ mfaRequired: false, token: "token-novo", email: "novo@x", name: "N" });
 
     render(
       <AppProvider>
