@@ -104,7 +104,7 @@ function SessionSheet({ session, onClose, onChange }: { session: ApiSession | nu
   };
   const finish = async () => {
     if (!token || !session) return;
-    try { await api.patchSession(token, session.id, { status: "COMPLETED", durationMinutes: Number(duration), sessionRpe: Number(rpe) }); toast("Sessão concluída e salva."); onClose(); }
+    try { await api.patchSession(token, session.id, { status: "COMPLETED", durationMinutes: Number(duration), sessionRpe: Number(rpe) }); invalidate(userCacheKey(token), /progress/); toast("Sessão concluída e salva."); onClose(); }
     catch { toast("Não foi possível concluir a sessão."); }
   };
   return <Sheet open={!!session} onClose={onClose} title={session ? `Executando · ${session.sportName}` : ""}>{session && <div className="space-y-3 pb-4">{session.items.map((item) => <SessionItem key={item.exerciseId} item={item} saving={saving === item.exerciseId} onSave={updateItem} />)}<div className="grid grid-cols-2 gap-3 rounded-xl border border-ink-700 p-3"><label className="text-[11px] text-fog-mute">Duração (min)<input value={duration} onChange={(e) => setDuration(e.target.value)} type="number" min="1" max="600" className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-fog outline-none" /></label><label className="text-[11px] text-fog-mute">RPE da sessão<input value={rpe} onChange={(e) => setRpe(e.target.value)} type="number" min="1" max="10" className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-fog outline-none" /></label></div><button onClick={() => void finish()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3 font-bold uppercase text-ink-950"><IconCheck size={16} /> Concluir sessão</button></div>}</Sheet>;

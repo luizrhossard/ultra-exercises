@@ -217,3 +217,9 @@ export const IconFlame = (p: P) => (
     <path d="M12 2.8s6.2 4.6 6.2 10a6.2 6.2 0 0 1-12.4 0c0-2.2 1-4.2 2.4-5.8.2 1.4.9 2.4 2 2.9C10 7.6 10.6 5 12 2.8z" />
   </svg>
 );
+
+export const IconTrend = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M3.6 16.8l5-5 3.6 3.6 8.2-8.2M15.6 7.2h4.8V12" />
+  </svg>
+);

@@ -77,6 +77,7 @@ export function useCachedQuery<T>(options: UseCachedQueryOptions<T>): UseCachedQ
           setData((current) => (sameValue(current, remote) ? current : remote));
           setStale(false);
           setError(false);
+          setLoading(false);
         })
         .catch(() => {
           if (fallback === undefined) {

@@ -8,6 +8,7 @@ import {
   IconBolt,
   IconClipboard,
   IconRadar,
+  IconTrend,
   IconUser,
   SportIcon,
 } from "./Icons";
@@ -15,6 +16,7 @@ import {
 const NAV: { id: Tab; label: string; hint: string; icon: (p: { size?: number }) => React.ReactNode }[] = [
   { id: "explorar", label: "Explorar", hint: "Feed por relevância", icon: (p) => <IconRadar {...p} /> },
   { id: "rotinas", label: "Rotinas", hint: "Gerador + salvas", icon: (p) => <IconClipboard {...p} /> },
+  { id: "progresso", label: "Progresso", hint: "Resumo e histórico", icon: (p) => <IconTrend {...p} /> },
   { id: "perfil", label: "Perfil", hint: "Esportes e dados", icon: (p) => <IconUser {...p} /> },
 ];
 

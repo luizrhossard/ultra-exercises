@@ -32,6 +32,7 @@ describe("navegação sem a aba Projeto", () => {
     );
     expect(screen.getByLabelText("Explorar")).toBeInTheDocument();
     expect(screen.getByLabelText("Rotinas")).toBeInTheDocument();
+    expect(screen.getByLabelText("Progresso")).toBeInTheDocument();
     expect(screen.getByLabelText("Perfil")).toBeInTheDocument();
     expect(screen.queryByText("Projeto")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Projeto")).not.toBeInTheDocument();
