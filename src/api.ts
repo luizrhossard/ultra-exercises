@@ -36,6 +36,23 @@ export type ApiWeekBlock = { sessionsCompleted: number; totalDurationMinutes: nu
 export type ApiWeeklySummary = { periodStart: string; periodEnd: string; current: ApiWeekBlock; previous: ApiWeekBlock };
 export type ApiReadinessPoint = { date: string; readiness: number };
 export type ApiReadinessTrend = { periodDays: number; items: ApiReadinessPoint[] };
+// ---- Histórico avançado [UE-30] ----
+export type HistoryFilters = {
+  q?: string | null;
+  exerciseId?: number | null;
+  muscle?: string | null;
+  intensity?: "LEVE" | "MODERADA" | "ALTA" | null;
+  from?: string | null;
+  to?: string | null;
+};
+export type ApiHistoryExerciseOption = { id: number; name: string };
+export type ApiHistoryStats = {
+  totalSessions: number;
+  completedSessions: number;
+  totalDurationMinutes: number;
+  totalVolumeKg: number | null;
+  averageRpe: number | null;
+};
 
 /** Origem da falha: resposta HTTP, rede indisponível ou timeout local. */
 export type ApiErrorKind = "http" | "network" | "timeout";
@@ -181,8 +198,29 @@ export const api = {
   patchSession: (token: string, sessionId: number, body: { status?: string; durationMinutes?: number; sessionRpe?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
   patchSessionItem: (token: string, sessionId: number, exerciseId: number, body: { completedSets?: number; completedReps?: string; loadKg?: number; itemRpe?: number; painLevel?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}/items/${exerciseId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
   // ---- Progresso [UE-44] ----
-  progressSessions: (token: string, page: number, size = 20) =>
-    request<ApiProgressSessionsPage>(`/progress/sessions?page=${page}&size=${size}`, {}, token),
+  progressSessions: (token: string, page: number, size = 20, filters: HistoryFilters = {}) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (filters.q) params.set("q", filters.q);
+    if (filters.exerciseId != null) params.set("exerciseId", String(filters.exerciseId));
+    if (filters.muscle) params.set("muscle", filters.muscle);
+    if (filters.intensity) params.set("intensity", filters.intensity);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    return request<ApiProgressSessionsPage>(`/progress/sessions?${params.toString()}`, {}, token);
+  },
+  progressHistoryExercises: (token: string) =>
+    request<ApiHistoryExerciseOption[]>("/progress/history-exercises", {}, token),
+  progressHistoryStats: (token: string, filters: HistoryFilters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.q) params.set("q", filters.q);
+    if (filters.exerciseId != null) params.set("exerciseId", String(filters.exerciseId));
+    if (filters.muscle) params.set("muscle", filters.muscle);
+    if (filters.intensity) params.set("intensity", filters.intensity);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    const qs = params.toString();
+    return request<ApiHistoryStats>(`/progress/history-stats${qs ? `?${qs}` : ""}`, {}, token);
+  },
   progressWeeklySummary: (token: string) => request<ApiWeeklySummary>("/progress/weekly-summary", {}, token),
   progressReadinessTrend: (token: string, days: number) =>
     request<ApiReadinessTrend>(`/progress/readiness-trend?days=${days}`, {}, token),

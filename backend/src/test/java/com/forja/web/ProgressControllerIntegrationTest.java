@@ -11,6 +11,11 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -46,24 +51,28 @@ class ProgressControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    /** Sessão concluída via fluxo público: perfil -> gerar rotina -> criar sessão -> preencher item -> concluir. */
-    private long seedCompletedSession(String token, double loadKg, int sets, int rpe,
-                                      int painLevel, int durationMinutes) throws Exception {
-        saveProfile(token);
+    /** Gera uma rotina para o esporte 1 e devolve o id. */
+    private long generateRoutine(String token) throws Exception {
         String routine = mvc.perform(post("/api/routines/generate")
                         .header("Authorization", bearer(token))
                         .contentType("application/json").content("{\"sportId\":1}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Number routineId = JsonPath.read(routine, "$.id");
+        return ((Number) JsonPath.read(routine, "$.id")).longValue();
+    }
 
-        String session = mvc.perform(post("/api/routines/" + routineId.intValue() + "/sessions")
+    /** Cria a sessão a partir da rotina e devolve o corpo completo (itens incluídos). */
+    private String createSessionBody(String token, long routineId) throws Exception {
+        return mvc.perform(post("/api/routines/" + routineId + "/sessions")
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Number sessionId = JsonPath.read(session, "$.id");
-        Number exerciseId = JsonPath.read(session, "$.items[0].exerciseId");
+    }
 
+    /** Registra o item, inicia e conclui a sessão. */
+    private void completeSession(String token, Number sessionId, Number exerciseId,
+                                 double loadKg, int sets, int rpe, int painLevel,
+                                 int durationMinutes) throws Exception {
         mvc.perform(patch("/api/sessions/" + sessionId.intValue() + "/items/" + exerciseId.intValue())
                         .header("Authorization", bearer(token))
                         .contentType("application/json")
@@ -79,6 +88,16 @@ class ProgressControllerIntegrationTest {
                         .content("{\"status\":\"COMPLETED\",\"durationMinutes\":%d,\"sessionRpe\":%d}"
                                 .formatted(durationMinutes, rpe)))
                 .andExpect(status().isOk());
+    }
+
+    /** Sessão concluída via fluxo público: perfil -> gerar rotina -> criar sessão -> preencher item -> concluir. */
+    private long seedCompletedSession(String token, double loadKg, int sets, int rpe,
+                                      int painLevel, int durationMinutes) throws Exception {
+        saveProfile(token);
+        String session = createSessionBody(token, generateRoutine(token));
+        Number sessionId = JsonPath.read(session, "$.id");
+        Number exerciseId = JsonPath.read(session, "$.items[0].exerciseId");
+        completeSession(token, sessionId, exerciseId, loadKg, sets, rpe, painLevel, durationMinutes);
         return sessionId.longValue();
     }
 
@@ -256,5 +275,178 @@ class ProgressControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.current.sessionsCompleted").value(0))
                 .andExpect(jsonPath("$.current.averageReadiness").doesNotExist());
+    }
+
+    @Test
+    void advancedFiltersNarrowTheHistory() throws Exception {
+        String token = TestUsers.register(mvc, "progress-adv@forja.com");
+        saveProfile(token);
+
+        String body1 = createSessionBody(token, generateRoutine(token));
+        Number id1 = JsonPath.read(body1, "$.id");
+        Set<Long> ex1 = new HashSet<>();
+        Map<Long, String> names = new HashMap<>();
+        for (Object o : (List<?>) JsonPath.read(body1, "$.items[*]")) {
+            Map<?, ?> it = (Map<?, ?>) o;
+            long eid = ((Number) it.get("exerciseId")).longValue();
+            ex1.add(eid);
+            names.put(eid, (String) it.get("exerciseName"));
+        }
+        completeSession(token, id1, ex1.iterator().next(), 100, 3, 8, 1, 58);
+
+        String body2 = createSessionBody(token, generateRoutine(token));
+        Number id2 = JsonPath.read(body2, "$.id");
+        Set<Long> ex2 = new HashSet<>();
+        for (Object o : (List<?>) JsonPath.read(body2, "$.items[*]")) {
+            Map<?, ?> it = (Map<?, ?>) o;
+            long eid = ((Number) it.get("exerciseId")).longValue();
+            ex2.add(eid);
+            names.put(eid, (String) it.get("exerciseName"));
+        }
+        completeSession(token, id2, ex2.iterator().next(), 50, 2, 6, 0, 42);
+
+        // Filtro por exercício: esperado calculado a partir dos conjuntos capturados.
+        long target = ex1.iterator().next();
+        int expectedForTarget = (ex1.contains(target) ? 1 : 0) + (ex2.contains(target) ? 1 : 0);
+        mvc.perform(get("/api/progress/sessions").param("exerciseId", String.valueOf(target))
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(expectedForTarget));
+        mvc.perform(get("/api/progress/sessions").param("exerciseId", "999999")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(0));
+
+        // Busca textual por nome de exercício e por termo inexistente.
+        String targetName = names.get(target);
+        mvc.perform(get("/api/progress/sessions").param("q", targetName)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(expectedForTarget));
+        mvc.perform(get("/api/progress/sessions").param("q", "zzz-inexistente")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(0));
+
+        // Intensidade por faixa de RPE: sessão 1 = 8 (ALTA), sessão 2 = 6 (MODERADA).
+        mvc.perform(get("/api/progress/sessions").param("intensity", "ALTA")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(1));
+        mvc.perform(get("/api/progress/sessions").param("intensity", "moderada")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(1));
+        mvc.perform(get("/api/progress/sessions").param("intensity", "LEVE")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(0));
+
+        // Grupo muscular: músculo do exercício alvo; esperado = sessões com qualquer
+        // exercício que contenha esse músculo (calculado via detalhe público).
+        String muscle = musclesOf(target).get(0);
+        int expectedMuscle = (sessionHasMuscle(ex1, muscle) ? 1 : 0)
+                + (sessionHasMuscle(ex2, muscle) ? 1 : 0);
+        mvc.perform(get("/api/progress/sessions").param("muscle", muscle)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(expectedMuscle));
+
+        // Combinação de filtros: ALTA (só sessão 1) + músculo.
+        mvc.perform(get("/api/progress/sessions")
+                        .param("intensity", "ALTA").param("muscle", muscle)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(sessionHasMuscle(ex1, muscle) ? 1 : 0));
+    }
+
+    /** Músculos do exercício via endpoint público de detalhe. */
+    private List<String> musclesOf(long exerciseId) throws Exception {
+        return JsonPath.read(mvc.perform(get("/api/exercises/{id}", exerciseId))
+                .andReturn().getResponse().getContentAsString(), "$.muscles[*]");
+    }
+
+    /** true se qualquer exercício das sessões indicadas contém o músculo informado. */
+    private boolean sessionHasMuscle(Set<Long> exerciseIds, String muscle) throws Exception {
+        for (long eid : exerciseIds) {
+            for (Object m : musclesOf(eid)) {
+                if (((String) m).equalsIgnoreCase(muscle)) return true;
+            }
+        }
+        return false;
+    }
+
+    @Test
+    void historyExercisesListsDistinctTrainedExercises() throws Exception {
+        String tokenA = TestUsers.register(mvc, "progress-hx@forja.com");
+        seedCompletedSession(tokenA, 40, 2, 7, 0, 30);
+        seedCompletedSession(tokenA, 45, 3, 7, 0, 35);
+
+        mvc.perform(get("/api/progress/history-exercises").header("Authorization", bearer(tokenA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$[0].id").isNumber())
+                .andExpect(jsonPath("$[0].name").isNotEmpty());
+
+        // Isolamento: usuário sem histórico recebe lista vazia.
+        String tokenB = TestUsers.register(mvc, "progress-hx-empty@forja.com");
+        mvc.perform(get("/api/progress/history-exercises").header("Authorization", bearer(tokenB)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mvc.perform(get("/api/progress/history-exercises"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void historyStatsAggregatesPeriod() throws Exception {
+        String token = TestUsers.register(mvc, "progress-stats@forja.com");
+        seedCompletedSession(token, 100, 3, 8, 1, 58); // volume 300
+        seedCompletedSession(token, 50, 2, 6, 0, 42);  // volume 100
+        createSessionBody(token, generateRoutine(token)); // PLANNED extra
+
+        var today = LocalDate.now();
+        mvc.perform(get("/api/progress/history-stats")
+                        .param("from", today.toString()).param("to", today.toString())
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalSessions").value(3))
+                .andExpect(jsonPath("$.completedSessions").value(2))
+                .andExpect(jsonPath("$.totalDurationMinutes").value(100))
+                .andExpect(jsonPath("$.totalVolumeKg").value(400.0))
+                .andExpect(jsonPath("$.averageRpe").value(7.0));
+
+        mvc.perform(get("/api/progress/history-stats")
+                        .param("from", "2020-01-01").param("to", "2020-01-31")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalSessions").value(0))
+                .andExpect(jsonPath("$.completedSessions").value(0))
+                .andExpect(jsonPath("$.averageRpe").doesNotExist());
+
+        mvc.perform(get("/api/progress/history-stats")
+                        .param("from", "2024-01-01").param("to", "2030-12-31")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void invalidFilterParamsFollowErrorContract() throws Exception {
+        String token = TestUsers.register(mvc, "progress-filter-invalid@forja.com");
+
+        mvc.perform(get("/api/progress/sessions").param("intensity", "FORTE")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+
+        mvc.perform(get("/api/progress/sessions").param("q", "x".repeat(81))
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+
+        mvc.perform(get("/api/progress/sessions").param("exerciseId", "-1")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
     }
 }

@@ -7,12 +7,17 @@ import com.forja.domain.TrainingSessionItem;
 import com.forja.repository.AppUserRepository;
 import com.forja.repository.ReadinessCheckinRepository;
 import com.forja.repository.TrainingSessionRepository;
+import com.forja.repository.TrainingSessionSpecs;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,14 +33,20 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * [UE-42] Progresso do atleta: histórico paginado de sessões, resumo semanal e
- * tendência de prontidão. Todo acesso parte do usuário autenticado (JWT) — nunca
- * de identificador recebido pelo cliente. Observabilidade fica no evento http do
- * RequestLoggingFilter (método/path/status/duração) com traceId no MDC; nenhum
- * dado sensível (RPE, dor, notas, payloads) é registrado em logs.
+ * tendência de prontidão. [UE-30] Histórico ganha filtros avançados (período,
+ * exercício, grupo muscular, intensidade, busca textual), estatísticas por
+ * período e lista de exercícios treinados. Todo acesso parte do usuário
+ * autenticado (JWT) — nunca de identificador recebido pelo cliente.
+ * Observabilidade fica no evento http do RequestLoggingFilter (método/path/
+ * status/duração) com traceId no MDC; nenhum dado sensível (RPE, dor, notas,
+ * payloads) é registrado em logs.
  */
 @RestController
 @RequestMapping("/api/progress")
@@ -48,6 +59,8 @@ public class ProgressController {
     static final int DEFAULT_TREND_DAYS = 30;
     static final int MIN_TREND_DAYS = 7;
     static final int MAX_TREND_DAYS = 90;
+    /** Limite de janela das estatísticas por período. */
+    static final long MAX_STATS_DAYS = 366;
 
     private final TrainingSessionRepository sessions;
     private final ReadinessCheckinRepository checkins;
@@ -71,7 +84,15 @@ public class ProgressController {
 
     record ReadinessTrendDto(int periodDays, List<ReadinessPointDto> items) {}
 
-    /** Histórico paginado; janela opcional por data de agendamento; ordenação fixa (mais recente primeiro). */
+    record HistoryExerciseDto(Long id, String name) {}
+
+    record HistoryStatsDto(long totalSessions, long completedSessions, long totalDurationMinutes,
+                           BigDecimal totalVolumeKg, Double averageRpe) {}
+
+    /** Faixa de RPE por intensidade: LEVE 1–4 · MODERADA 5–7 · ALTA 8–10. */
+    private record RpeBand(int min, int max) {}
+
+    /** Histórico paginado com filtros opcionais; ordenação fixa (mais recente primeiro). */
     @GetMapping("/sessions")
     @Transactional(readOnly = true)
     SessionsPageDto sessions(
@@ -79,22 +100,73 @@ public class ProgressController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) int size,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) @Size(max = 80) String q,
+            @RequestParam(required = false) @Positive Long exerciseId,
+            @RequestParam(required = false) @Size(max = 40) String muscle,
+            @RequestParam(required = false) @Pattern(regexp = "(?i)leve|moderada|alta") String intensity,
             Authentication auth) {
         if (from != null && to != null && from.isAfter(to)) {
             throw new IllegalArgumentException("Período inválido: 'from' deve ser anterior ou igual a 'to'.");
         }
         var user = currentUser(auth);
         var zone = ZoneId.systemDefault();
-        var start = from != null ? from.atStartOfDay(zone).toInstant() : Instant.EPOCH;
-        var end = to != null
-                ? to.plusDays(1).atStartOfDay(zone).toInstant()
-                : LocalDate.of(2999, 12, 31).atStartOfDay(zone).toInstant();
-        Page<TrainingSession> result = sessions.findByUserIdAndScheduledAtGreaterThanEqualAndScheduledAtLessThan(
-                user.getId(), start, end,
+        var band = rpeBand(intensity);
+        var spec = historySpec(user.getId(), q, exerciseId, muscle, band, from, to, zone);
+        Page<TrainingSession> result = sessions.findAll(spec,
                 PageRequest.of(page, size, Sort.by(Sort.Order.desc("scheduledAt"), Sort.Order.desc("id"))));
         List<SessionItemDto> items = result.getContent().stream().map(ProgressController::toItem).toList();
         return new SessionsPageDto(items, result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages(), result.hasNext());
+    }
+
+    /** Exercícios distintos presentes no histórico do atleta (fonte do filtro de exercício). */
+    @GetMapping("/history-exercises")
+    @Transactional(readOnly = true)
+    List<HistoryExerciseDto> historyExercises(Authentication auth) {
+        var user = currentUser(auth);
+        return sessions.findDistinctExerciseOptions(user.getId()).stream()
+                .map(row -> new HistoryExerciseDto(((Number) row[0]).longValue(), (String) row[1]))
+                .toList();
+    }
+
+    /** Estatísticas resumidas do período, respeitando os mesmos filtros do histórico. */
+    @GetMapping("/history-stats")
+    @Transactional(readOnly = true)
+    HistoryStatsDto historyStats(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) @Size(max = 80) String q,
+            @RequestParam(required = false) @Positive Long exerciseId,
+            @RequestParam(required = false) @Size(max = 40) String muscle,
+            @RequestParam(required = false) @Pattern(regexp = "(?i)leve|moderada|alta") String intensity,
+            Authentication auth) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new IllegalArgumentException("Período inválido: 'from' deve ser anterior ou igual a 'to'.");
+        }
+        if (from != null && to != null && ChronoUnit.DAYS.between(from, to) > MAX_STATS_DAYS) {
+            throw new IllegalArgumentException("Período máximo de 1 ano.");
+        }
+        var user = currentUser(auth);
+        var zone = ZoneId.systemDefault();
+        var band = rpeBand(intensity);
+        List<TrainingSession> matched = sessions
+                .findAll(historySpec(user.getId(), q, exerciseId, muscle, band, from, to, zone));
+
+        var completed = matched.stream().filter(s -> s.getStatus() == SessionStatus.COMPLETED).toList();
+        long duration = completed.stream()
+                .map(TrainingSession::getDurationMinutes)
+                .filter(java.util.Objects::nonNull)
+                .mapToLong(Integer::longValue).sum();
+        BigDecimal volume = BigDecimal.ZERO;
+        double rpeSum = 0;
+        long rpeCount = 0;
+        for (var s : completed) {
+            volume = volume.add(volumeOf(s.getItems()));
+            if (s.getSessionRpe() != null) { rpeSum += s.getSessionRpe(); rpeCount++; }
+        }
+        return new HistoryStatsDto(matched.size(), completed.size(), duration,
+                volume.setScale(2, RoundingMode.HALF_UP),
+                rpeCount == 0 ? null : round1(rpeSum / rpeCount));
     }
 
     /** Semana atual (seg–dom) e a anterior, para variação na interface. */
@@ -125,6 +197,24 @@ public class ProgressController {
     }
 
     // ---- helpers ----
+
+    /** Compõe os filtros opcionais do histórico; partes nulas são ignoradas. */
+    private Specification<TrainingSession> historySpec(Long userId, String q, Long exerciseId,
+                                                       String muscle, RpeBand band,
+                                                       LocalDate from, LocalDate to, ZoneId zone) {
+        List<Specification<TrainingSession>> parts = new ArrayList<>();
+        parts.add(TrainingSessionSpecs.ownedBy(userId));
+        parts.add(TrainingSessionSpecs.scheduledBetween(
+                from != null ? from.atStartOfDay(zone).toInstant() : null,
+                to != null ? to.plusDays(1).atStartOfDay(zone).toInstant() : null));
+        parts.add(TrainingSessionSpecs.matchesText(normalize(q)));
+        parts.add(exerciseId != null ? TrainingSessionSpecs.hasExercise(exerciseId) : null);
+        parts.add(normalize(muscle) != null ? TrainingSessionSpecs.hasMuscle(normalize(muscle)) : null);
+        parts.add(band != null ? TrainingSessionSpecs.rpeBetween(band.min(), band.max()) : null);
+        return parts.stream().filter(Objects::nonNull)
+                .reduce(Specification::and)
+                .orElse((root, query, cb) -> cb.conjunction());
+    }
 
     private WeekBlockDto weekBlock(Long userId, LocalDate weekStart) {
         var zone = ZoneId.systemDefault();
@@ -179,6 +269,22 @@ public class ProgressController {
 
     private static Double round1(double value) {
         return Math.round(value * 10.0) / 10.0;
+    }
+
+    private static String normalize(String value) {
+        if (value == null) return null;
+        var trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static RpeBand rpeBand(String intensity) {
+        if (intensity == null) return null;
+        return switch (intensity.toLowerCase()) {
+            case "leve" -> new RpeBand(1, 4);
+            case "moderada" -> new RpeBand(5, 7);
+            case "alta" -> new RpeBand(8, 10);
+            default -> null;
+        };
     }
 
     private AppUser currentUser(Authentication auth) {
