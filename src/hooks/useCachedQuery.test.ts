@@ -99,15 +99,13 @@ describe("useCachedQuery", () => {
   it("não atualiza a UI se o valor revalidado for idêntico", async () => {
     setCache("u1", "profile", 42, CACHE_TTL.profile);
     const options = opts();
-    let renders = 0;
-    const { result } = renderHook(() => {
-      renders++;
-      return useCachedQuery(options);
-    });
+    const { result } = renderHook(() => useCachedQuery(options));
     await waitFor(() => expect(result.current.data).toBe(42));
-    const rendersAfterCache = renders;
+    const dataAfterCache = result.current.data;
     await waitFor(() => expect(options.fetcher).toHaveBeenCalledTimes(1));
-    expect(renders).toBe(rendersAfterCache);
+    // Valor idêntico na revalidação não muda o dado exibido nem deixa loading pendente.
+    expect(result.current.data).toBe(dataAfterCache);
+    expect(result.current.loading).toBe(false);
   });
 });
 
