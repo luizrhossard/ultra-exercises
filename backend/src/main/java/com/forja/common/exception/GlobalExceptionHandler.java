@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -54,6 +55,14 @@ public class GlobalExceptionHandler {
     ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(400, "BAD_REQUEST", "Requisição inválida.", List.of(), currentTraceId()));
+    }
+
+    /** [UE-42] Query params com tipo/formato inválido (ex.: data fora do ISO) seguem o contrato ErrorResponse. */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.debug("Parâmetro inválido [traceId={}]: {}", currentTraceId(), ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "BAD_REQUEST", "Parâmetro inválido.", List.of(), currentTraceId()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

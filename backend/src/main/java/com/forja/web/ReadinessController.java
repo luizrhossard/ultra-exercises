@@ -68,11 +68,9 @@ public class ReadinessController {
     }
 
     private static CheckinDto toDto(ReadinessCheckin c) {
-        int score = c.getSleepQuality() * 2 + (6 - c.getFatigue()) * 2 + (6 - c.getStress())
-                + (6 - c.getSoreness());
         boolean requiresReview = c.getPainLevel() >= 5 || c.getFatigue() >= 5 || c.getSoreness() >= 5;
         return new CheckinDto(c.getCheckinDate(), c.getSleepQuality(), c.getFatigue(), c.getStress(), c.getSoreness(),
-                c.getPainArea(), c.getPainLevel(), c.getNotes(), score, requiresReview);
+                c.getPainArea(), c.getPainLevel(), c.getNotes(), c.getReadinessScore(), requiresReview);
     }
 
     private static String blankToNull(String value) {

@@ -28,4 +28,9 @@ public class ReadinessCheckin {
     @Column(columnDefinition = "text") private String notes;
     @Column(name = "created_at", nullable = false, updatable = false) @Builder.Default private Instant createdAt = Instant.now();
     @Column(name = "updated_at", nullable = false) @Builder.Default private Instant updatedAt = Instant.now();
+
+    /** [UE-42] Score de prontidão derivado (6–30); mesma fórmula exibida no check-in diário. */
+    public int getReadinessScore() {
+        return sleepQuality * 2 + (6 - fatigue) * 2 + (6 - stress) + (6 - soreness);
+    }
 }
