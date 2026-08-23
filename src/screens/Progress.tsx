@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api, ApiError } from "../api";
 import type {
+  ApiAlertsResponse,
   ApiExerciseEvolution,
   ApiHistoryExerciseOption,
   ApiHistoryStats,
@@ -111,6 +112,11 @@ export default function Progress() {
       </p>
 
       <section className="mt-7">
+        <SectionLabel>Alertas · descanso</SectionLabel>
+        <AlertsCard token={token} />
+      </section>
+
+      <section className="mt-7">
         <SectionLabel>Semana atual · resumo</SectionLabel>
         <WeeklySummary query={summaryQuery} />
       </section>
@@ -145,6 +151,132 @@ export default function Progress() {
         <SectionLabel>Histórico de treinos</SectionLabel>
         <History token={token} />
       </section>
+    </div>
+  );
+}
+
+// ---- Alertas de descanso [UE-28] ----
+
+function AlertsCard({ token }: { token: string | null }) {
+  const userKey = token ? userCacheKey(token) : "";
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedRecently, setSavedRecently] = useState(false);
+  const [form, setForm] = useState({ maxSessionsPerWeek: "5", minRestHours: "48" });
+
+  const query = useCachedQuery<ApiAlertsResponse>({
+    userKey,
+    key: "progress/alerts",
+    ttl: CACHE_TTL.readiness,
+    fetcher: () => api.alerts(token as string),
+    enabled: Boolean(token),
+  });
+
+  // Bloco auxiliar: enquanto carrega/falha, permanece invisível.
+  if (!token || query.loading || query.error || !query.data) return null;
+  const d = query.data;
+
+  const toggleEditing = () => {
+    const next = !editing;
+    if (next) {
+      setForm({
+        maxSessionsPerWeek: String(d.maxSessionsPerWeek),
+        minRestHours: String(d.minRestHours),
+      });
+    }
+    setEditing(next);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.updateAlertSettings(token, {
+        enabled: true,
+        maxSessionsPerWeek: Number(form.maxSessionsPerWeek) || undefined,
+        minRestHours: Number(form.minRestHours) || undefined,
+      });
+      setSavedRecently(true);
+      window.setTimeout(() => setSavedRecently(false), 2000);
+      query.refresh();
+    } catch {
+      // falha silenciosa no bloco auxiliar
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-fog-dim">
+          {d.enabled
+            ? `${d.alerts.length} alerta${d.alerts.length === 1 ? "" : "s"} de descanso`
+            : "Alertas desligados"}
+        </p>
+        <button
+          onClick={toggleEditing}
+          aria-expanded={editing}
+          className="text-[10px] font-bold uppercase tracking-[0.12em] text-volt-300"
+        >
+          {editing ? "Fechar" : "Sensibilidade"}
+        </button>
+      </div>
+
+      {editing && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <label className="block text-[9px] font-bold uppercase tracking-[0.14em] text-fog-mute">
+            Máx. treinos/semana
+            <input
+              type="number"
+              min={1}
+              max={14}
+              value={form.maxSessionsPerWeek}
+              onChange={(e) => setForm((f) => ({ ...f, maxSessionsPerWeek: e.target.value }))}
+              className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-[12px] text-fog outline-none focus:ring-1 focus:ring-volt-400/60"
+            />
+          </label>
+          <label className="block text-[9px] font-bold uppercase tracking-[0.14em] text-fog-mute">
+            Descanso mín. (h)
+            <input
+              type="number"
+              min={0}
+              max={96}
+              value={form.minRestHours}
+              onChange={(e) => setForm((f) => ({ ...f, minRestHours: e.target.value }))}
+              className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-[12px] text-fog outline-none focus:ring-1 focus:ring-volt-400/60"
+            />
+          </label>
+          <button
+            onClick={() => void save()}
+            disabled={saving}
+            className="col-span-2 rounded-lg border border-volt-400/50 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-volt-300 transition-colors hover:bg-volt-400/10 disabled:opacity-50"
+          >
+            {saving ? "Salvando…" : savedRecently ? "Salvo ✓" : "Salvar sensibilidade"}
+          </button>
+        </div>
+      )}
+
+      {!d.enabled ? (
+        <p className="mt-2 text-[11px] text-fog-mute">
+          Ligue a sensibilidade acima para receber alertas de descanso.
+        </p>
+      ) : d.alerts.length === 0 ? (
+        <p className="mt-2 text-[11px] text-fog-mute">Nada por aqui — seu descanso está em dia.</p>
+      ) : (
+        <ul className="mt-2 space-y-1.5">
+          {d.alerts.map((a, i) => (
+            <li
+              key={`${a.type}-${i}`}
+              className={`flex items-start gap-2 rounded-lg p-2 text-[11px] leading-relaxed ${
+                a.type === "FREQUENCY" ? "bg-[#ff5148]/10 text-[#ffb4ae]" : "bg-[#ff8a2a]/10 text-[#ffc79b]"
+              }`}
+            >
+              <span aria-hidden="true">⚠</span>
+              <span role="status">{a.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

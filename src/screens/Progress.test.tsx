@@ -22,6 +22,8 @@ vi.mock("../api", () => ({
     exerciseEvolution: vi.fn(),
     volumeTrend: vi.fn(),
     performanceComparison: vi.fn(),
+    alerts: vi.fn(),
+    updateAlertSettings: vi.fn(),
   },
 }));
 
@@ -96,6 +98,22 @@ beforeEach(() => {
     days: 30,
     current: { sessionsCompleted: 4, totalDurationMinutes: 240, totalVolumeKg: 12000, averageRpe: 7.5 },
     previous: { sessionsCompleted: 2, totalDurationMinutes: 120, totalVolumeKg: 6000, averageRpe: 7 },
+  });
+  vi.mocked(api.alerts).mockResolvedValue({
+    enabled: true,
+    maxSessionsPerWeek: 5,
+    minRestHours: 48,
+    alerts: [
+      {
+        type: "MUSCLE_REST",
+        message: "Grupo 'peitoral' treinado com apenas 4h de descanso desde a última vez (mínimo configurado: 48h).",
+      },
+    ],
+  });
+  vi.mocked(api.updateAlertSettings).mockResolvedValue({
+    enabled: true,
+    maxSessionsPerWeek: 1,
+    minRestHours: 48,
   });
 });
 
@@ -248,6 +266,31 @@ describe("tela Progresso [UE-44]", () => {
     renderScreen();
     await waitFor(() =>
       expect(screen.getByText(/Complete treinos para ver sua evolução/i)).toBeInTheDocument()
+    );
+  });
+
+  it("exibe alertas de descanso quando existem [UE-28]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByText(/peitoral/i)).toBeInTheDocument());
+    expect(screen.getByText(/1 alerta de descanso/i)).toBeInTheDocument();
+  });
+
+  it("salva a sensibilidade de alertas [UE-28]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole("button", { name: /sensibilidade/i }));
+    const inputs = screen.getAllByRole("spinbutton");
+    await userEvent.clear(inputs[0]);
+    await userEvent.type(inputs[0], "1");
+    await userEvent.click(screen.getByRole("button", { name: /salvar sensibilidade/i }));
+
+    await waitFor(() =>
+      expect(vi.mocked(api.updateAlertSettings)).toHaveBeenCalledWith("token-progress", {
+        enabled: true,
+        maxSessionsPerWeek: 1,
+        minRestHours: 48,
+      })
     );
   });
 });

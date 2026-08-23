@@ -72,6 +72,20 @@ export type ApiPerformanceComparison = {
 // ---- Compartilhamento de rotinas [UE-29] ----
 export type ApiSharedItem = { exerciseName: string; sets: number; reps: string; restTime: number };
 export type ApiSharedRoutine = { name: string; sportName: string; items: ApiSharedItem[] };
+// ---- Alertas inteligentes [UE-28] ----
+export type ApiAlertItem = { type: string; message: string };
+export type ApiAlertsResponse = {
+  enabled: boolean;
+  maxSessionsPerWeek: number;
+  minRestHours: number;
+  alerts: ApiAlertItem[];
+};
+export type ApiAlertSettings = { enabled: boolean; maxSessionsPerWeek: number; minRestHours: number };
+export type AlertSettingsInput = {
+  enabled: boolean;
+  maxSessionsPerWeek?: number;
+  minRestHours?: number;
+};
 
 /** Origem da falha: resposta HTTP, rede indisponível ou timeout local. */
 export type ApiErrorKind = "http" | "network" | "timeout";
@@ -255,6 +269,10 @@ export const api = {
     request<{ url: string }>(`/routines/${routineId}/share`, { method: "POST" }, token),
   sharedRoutine: (shareToken: string) =>
     request<ApiSharedRoutine>(`/share/${encodeURIComponent(shareToken)}`),
+  // ---- Alertas inteligentes [UE-28] ----
+  alerts: (token: string) => request<ApiAlertsResponse>("/alerts", {}, token),
+  updateAlertSettings: (token: string, body: AlertSettingsInput) =>
+    request<ApiAlertSettings>("/alerts/settings", { method: "PUT", body: JSON.stringify(body) }, token),
   progressWeeklySummary: (token: string) => request<ApiWeeklySummary>("/progress/weekly-summary", {}, token),
   progressReadinessTrend: (token: string, days: number) =>
     request<ApiReadinessTrend>(`/progress/readiness-trend?days=${days}`, {}, token),
