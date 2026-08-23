@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import QRCode from "qrcode";
+import { QRCodeSVG } from "qrcode.react";
 import { api, type ApiRoutine, type ApiSession, type ApiSport } from "../api";
 import { useApp } from "../store";
 import { Sheet } from "../components/ui";
@@ -19,7 +19,7 @@ export default function Routines() {
   const [session, setSession] = useState<ApiSession | null>(null);
   const [printRoutine, setPrintRoutine] = useState<ApiRoutine | null>(null);
   const [pngRoutine, setPngRoutine] = useState<ApiRoutine | null>(null);
-  const [qr, setQr] = useState<{ name: string; url: string; dataUrl: string } | null>(null);
+  const [qr, setQr] = useState<{ name: string; url: string } | null>(null);
   const pngRef = useRef<HTMLDivElement | null>(null);
 
   const userKey = token ? userCacheKey(token) : "";
@@ -73,10 +73,9 @@ export default function Routines() {
     if (!token) return;
     try {
       const { url } = await api.generateShareLink(token, routine.id);
-      const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 440 });
-      setQr({ name: routine.name, url, dataUrl });
+      setQr({ name: routine.name, url });
     } catch {
-      toast("Não foi possível gerar o QR Code.");
+      toast("Não foi possível gerar o link de compartilhamento.");
     }
   };
 
@@ -123,7 +122,9 @@ export default function Routines() {
     <Sheet open={!!qr} onClose={() => setQr(null)} title={qr ? `QR · ${qr.name}` : ""}>
       {qr && (
         <div className="flex flex-col items-center gap-3 pb-4">
-          <img src={qr.dataUrl} alt={`QR Code da rotina ${qr.name}`} data-testid="qr-image" className="h-[220px] w-[220px] rounded-xl bg-white p-2" />
+          <div data-testid="qr-code" className="rounded-xl bg-white p-3">
+            <QRCodeSVG value={qr.url} size={220} bgColor="#ffffff" fgColor="#101510" />
+          </div>
           <p className="break-all text-center text-[11px] text-fog-mute">{qr.url}</p>
           <button onClick={() => { void navigator.clipboard?.writeText(qr.url); toast("Link copiado."); }} className="rounded-lg border border-volt-400/50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-volt-300">Copiar link</button>
         </div>

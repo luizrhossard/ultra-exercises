@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
+import { QRCodeSVG } from "qrcode.react";
 import { api, ApiError } from "../api";
 import { useApp } from "../store";
 import { SectionLabel } from "./ui";
@@ -22,7 +22,6 @@ export default function TwoFactorSettings() {
   const [busy, setBusy] = useState(false);
   const [showDisable, setShowDisable] = useState(false);
   const [showRegen, setShowRegen] = useState(false);
-  const [qrSrc, setQrSrc] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -30,15 +29,6 @@ export default function TwoFactorSettings() {
       .then((s) => setEnabled(s.enabled))
       .catch(() => setEnabled(false));
   }, [token]);
-
-  useEffect(() => {
-    if (!setup) return;
-    let cancelled = false;
-    QRCode.toDataURL(setup.otpauthUri, { margin: 1, width: 200, color: { dark: "#0c1216", light: "#d4f53c" } })
-      .then((url) => { if (!cancelled) setQrSrc(url); })
-      .catch(() => { if (!cancelled) setQrSrc(""); });
-    return () => { cancelled = true; };
-  }, [setup]);
 
   if (enabled === null || !token) return null;
 
@@ -129,9 +119,13 @@ export default function TwoFactorSettings() {
             <li>Confirme com o código gerado pelo app.</li>
           </ol>
           <div className="mt-3 flex items-center justify-center rounded-xl bg-volt-400 p-3">
-            {qrSrc
-              ? <img src={qrSrc} alt={`QR Code de configuração do 2FA para Forja. Chave manual: ${setup.secret}`} width={180} height={180} />
-              : <span role="status" className="text-[11px] font-bold uppercase tracking-[0.14em]">Gerando…</span>}
+            <QRCodeSVG
+              value={setup.otpauthUri}
+              size={180}
+              bgColor="#d4f53c"
+              fgColor="#0c1216"
+              aria-label={`QR Code de configuração do 2FA para Forja. Chave manual: ${setup.secret}`}
+            />
           </div>
           <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-ink-800 px-3 py-2">
             <code className="truncate font-mono text-[12px] tracking-wider text-fog" aria-label="Chave manual">{setup.secret}</code>

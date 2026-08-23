@@ -23,8 +23,10 @@ vi.mock("../api", () => ({
   },
 }));
 
-vi.mock("qrcode", () => ({
-  default: { toDataURL: vi.fn(async () => "data:image/png;base64,QRCODE") },
+vi.mock("qrcode.react", () => ({
+  QRCodeSVG: (props: { value: string }) => (
+    <svg data-testid="qr-svg" role="img" aria-label={`QR Code para ${props.value}`} />
+  ),
 }));
 
 import { api } from "../api";
@@ -93,9 +95,7 @@ describe("exportação e compartilhamento de rotinas [UE-29]", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "QR" }));
 
-    await waitFor(() =>
-      expect(screen.getByTestId("qr-image")).toHaveAttribute("src", "data:image/png;base64,QRCODE")
-    );
+    await waitFor(() => expect(screen.getByTestId("qr-svg")).toBeInTheDocument());
     expect(vi.mocked(api.generateShareLink)).toHaveBeenCalledWith("token-routines", 7);
     expect(screen.getByText(/compartilhada\/abc123/)).toBeInTheDocument();
   });
