@@ -12,7 +12,7 @@ Este projeto é composto por duas partes principais: o **Frontend** (React + Vit
 
 ## 🧪 Testes
 
-### Backend (45 testes: 28 unitários + 17 de integração)
+### Backend (86 testes: unitários + integração)
 
 Os testes de integração usam um Postgres dedicado (`db-test`, porta **5434**),
 subido via Docker Compose. É **pré-requisito**:
@@ -27,7 +27,7 @@ Depois, na pasta `backend/`:
 mvn clean test
 ```
 
-### Frontend (37 testes)
+### Frontend (58 testes)
 
 ```powershell
 npm test
@@ -39,6 +39,17 @@ npm test
 
 - Swagger UI: `http://localhost:8085/swagger-ui/index.html` (backend no ar)
 - Resumo do contrato: [docs/api/openapi.md](docs/api/openapi.md)
+
+---
+
+## 📈 Progresso do atleta [UE-40]
+
+A aba **Progresso** substituiu a antiga aba técnica "Projeto" e dá ao atleta resumo
+semanal, histórico paginado de treinos e tendência de prontidão — sempre isolados
+por usuário autenticado.
+
+- Feature e UX: [docs/features/progress.md](docs/features/progress.md)
+- Contrato dos endpoints: [docs/api/progress-endpoints.md](docs/api/progress-endpoints.md)
 
 ---
 
