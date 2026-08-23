@@ -449,4 +449,102 @@ class ProgressControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
     }
+
+    @Test
+    void exerciseEvolutionMergesSameDayMaxLoads() throws Exception {
+        String token = TestUsers.register(mvc, "progress-evo@forja.com");
+        saveProfile(token);
+
+        String body1 = createSessionBody(token, generateRoutine(token));
+        Number id1 = JsonPath.read(body1, "$.id");
+        long target = ((Number) ((List<?>) JsonPath.read(body1, "$.items[*].exerciseId")).get(0)).longValue();
+        completeSession(token, id1, target, 50, 3, 8, 0, 40);
+
+        // Sessão 2 garantindo o mesmo exercício via item adicional na rotina.
+        long rid2 = generateRoutine(token);
+        mvc.perform(post("/api/routines/" + rid2 + "/items")
+                        .header("Authorization", bearer(token))
+                        .contentType("application/json")
+                        .content("{\"exerciseId\":" + target + "}"))
+                .andExpect(status().isOk());
+        String body2 = createSessionBody(token, rid2);
+        Number id2 = JsonPath.read(body2, "$.id");
+        completeSession(token, id2, target, 60, 3, 8, 0, 45);
+
+        mvc.perform(get("/api/progress/exercise-evolution")
+                        .param("exerciseId", String.valueOf(target))
+                        .param("months", "6")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exerciseId").value((int) target))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].maxLoadKg").value(60.0));
+
+        mvc.perform(get("/api/progress/exercise-evolution")
+                        .param("exerciseId", "999999")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(0));
+
+        mvc.perform(get("/api/progress/exercise-evolution")
+                        .param("exerciseId", String.valueOf(target))
+                        .param("months", "13")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void volumeTrendBucketsCompletedSessions() throws Exception {
+        String token = TestUsers.register(mvc, "progress-vol@forja.com");
+        seedCompletedSession(token, 100, 3, 8, 0, 50); // volume 300
+        seedCompletedSession(token, 50, 2, 6, 0, 30);  // volume 100
+
+        var expectedWeekStart = LocalDate.now().with(java.time.DayOfWeek.MONDAY).toString();
+        mvc.perform(get("/api/progress/volume-trend")
+                        .param("granularity", "week").param("months", "3")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.granularity").value("week"))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].periodStart").value(expectedWeekStart))
+                .andExpect(jsonPath("$.items[0].totalVolumeKg").value(400.0));
+
+        var expectedMonthStart = LocalDate.now().withDayOfMonth(1).toString();
+        mvc.perform(get("/api/progress/volume-trend")
+                        .param("granularity", "month").param("months", "6")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].periodStart").value(expectedMonthStart))
+                .andExpect(jsonPath("$.items[0].totalVolumeKg").value(400.0));
+
+        mvc.perform(get("/api/progress/volume-trend")
+                        .param("granularity", "bimestral")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void performanceComparisonComparesWindows() throws Exception {
+        String token = TestUsers.register(mvc, "progress-cmp@forja.com");
+        seedCompletedSession(token, 100, 3, 8, 0, 58); // volume 300
+        seedCompletedSession(token, 50, 2, 6, 0, 42);  // volume 100
+
+        mvc.perform(get("/api/progress/performance-comparison")
+                        .param("days", "30")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.days").value(30))
+                .andExpect(jsonPath("$.current.sessionsCompleted").value(2))
+                .andExpect(jsonPath("$.current.totalDurationMinutes").value(100))
+                .andExpect(jsonPath("$.current.totalVolumeKg").value(400.0))
+                .andExpect(jsonPath("$.current.averageRpe").value(7.0))
+                .andExpect(jsonPath("$.previous.sessionsCompleted").value(0))
+                .andExpect(jsonPath("$.previous.averageRpe").doesNotExist());
+
+        mvc.perform(get("/api/progress/performance-comparison")
+                        .param("days", "5")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest());
+    }
 }

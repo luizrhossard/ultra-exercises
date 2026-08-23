@@ -19,6 +19,9 @@ vi.mock("../api", () => ({
     progressSessions: vi.fn(),
     progressHistoryExercises: vi.fn(),
     progressHistoryStats: vi.fn(),
+    exerciseEvolution: vi.fn(),
+    volumeTrend: vi.fn(),
+    performanceComparison: vi.fn(),
   },
 }));
 
@@ -75,6 +78,24 @@ beforeEach(() => {
     totalDurationMinutes: 320,
     totalVolumeKg: 21000,
     averageRpe: 7.2,
+  });
+  vi.mocked(api.exerciseEvolution).mockResolvedValue({
+    exerciseId: 1,
+    months: 6,
+    items: [
+      { date: "2026-08-20", maxLoadKg: 60 },
+      { date: "2026-08-22", maxLoadKg: 70 },
+    ],
+  });
+  vi.mocked(api.volumeTrend).mockResolvedValue({
+    granularity: "week",
+    months: 6,
+    items: [{ periodStart: "2026-08-17", totalVolumeKg: 400 }],
+  });
+  vi.mocked(api.performanceComparison).mockResolvedValue({
+    days: 30,
+    current: { sessionsCompleted: 4, totalDurationMinutes: 240, totalVolumeKg: 12000, averageRpe: 7.5 },
+    previous: { sessionsCompleted: 2, totalDurationMinutes: 120, totalVolumeKg: 6000, averageRpe: 7 },
   });
 });
 
@@ -194,5 +215,39 @@ describe("tela Progresso [UE-44]", () => {
     const clearButtons = screen.getAllByRole("button", { name: /limpar filtros/i });
     await userEvent.click(clearButtons[0]);
     await waitFor(() => expect(screen.getByText("Treino A — Peito")).toBeInTheDocument());
+  });
+
+  it("dashboard exibe gráficos de carga, volume e comparativo [UE-27]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByLabelText(/Carga máxima/i)).toBeInTheDocument());
+    expect(screen.getByLabelText(/Volume semanal/i)).toBeInTheDocument();
+    expect(screen.getByText(/Comparativo · últimos 30 dias/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /exportar png/i }).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("trocar exercício da evolução dispara requisição com o id [UE-27]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByLabelText(/Exercício da evolução/i)).toBeInTheDocument());
+    await userEvent.selectOptions(screen.getByLabelText(/Exercício da evolução/i), "2");
+    await waitFor(() =>
+      expect(vi.mocked(api.exerciseEvolution).mock.calls.some((c) => c[1] === 2)).toBe(true)
+    );
+  });
+
+  it("alternar granularidade do volume dispara requisição month [UE-27]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByRole("button", { name: /^meses$/i })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("button", { name: /^meses$/i }));
+    await waitFor(() =>
+      expect(vi.mocked(api.volumeTrend).mock.calls.some((c) => c[1] === "month")).toBe(true)
+    );
+  });
+
+  it("dashboard mostra estado vazio para atleta sem treinos [UE-27]", async () => {
+    vi.mocked(api.progressHistoryExercises).mockResolvedValue([]);
+    renderScreen();
+    await waitFor(() =>
+      expect(screen.getByText(/Complete treinos para ver sua evolução/i)).toBeInTheDocument()
+    );
   });
 });

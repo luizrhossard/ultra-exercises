@@ -89,6 +89,19 @@ public class ProgressController {
     record HistoryStatsDto(long totalSessions, long completedSessions, long totalDurationMinutes,
                            BigDecimal totalVolumeKg, Double averageRpe) {}
 
+    record EvolutionPointDto(LocalDate date, BigDecimal maxLoadKg) {}
+
+    record ExerciseEvolutionDto(Long exerciseId, int months, List<EvolutionPointDto> items) {}
+
+    record VolumeBucketDto(LocalDate periodStart, BigDecimal totalVolumeKg) {}
+
+    record VolumeTrendDto(String granularity, int months, List<VolumeBucketDto> items) {}
+
+    record PerformanceBlockDto(long sessionsCompleted, long totalDurationMinutes,
+                               BigDecimal totalVolumeKg, Double averageRpe) {}
+
+    record PerformanceComparisonDto(int days, PerformanceBlockDto current, PerformanceBlockDto previous) {}
+
     /** Faixa de RPE por intensidade: LEVE 1–4 · MODERADA 5–7 · ALTA 8–10. */
     private record RpeBand(int min, int max) {}
 
@@ -169,6 +182,73 @@ public class ProgressController {
                 rpeCount == 0 ? null : round1(rpeSum / rpeCount));
     }
 
+    /** [UE-27] Evolução de carga máxima por sessão para um exercício treinado pelo atleta. */
+    @GetMapping("/exercise-evolution")
+    @Transactional(readOnly = true)
+    ExerciseEvolutionDto exerciseEvolution(
+            @RequestParam @Positive Long exerciseId,
+            @RequestParam(defaultValue = "6") @Min(1) @Max(12) int months,
+            Authentication auth) {
+        var user = currentUser(auth);
+        var zone = ZoneId.systemDefault();
+        var completed = completedBetween(user.getId(), LocalDate.now().minusMonths(months),
+                LocalDate.now().plusDays(1), zone);
+        var byDate = new java.util.TreeMap<LocalDate, BigDecimal>();
+        for (var s : completed) {
+            BigDecimal max = null;
+            for (var item : s.getItems()) {
+                if (item.getExercise().getId().equals(exerciseId) && item.getLoadKg() != null) {
+                    max = max == null ? item.getLoadKg() : max.max(item.getLoadKg());
+                }
+            }
+            if (max != null) {
+                byDate.merge(sessionDate(s, zone), max, BigDecimal::max);
+            }
+        }
+        var items = byDate.entrySet().stream()
+                .map(e -> new EvolutionPointDto(e.getKey(), e.getValue().setScale(2, RoundingMode.HALF_UP)))
+                .toList();
+        return new ExerciseEvolutionDto(exerciseId, months, items);
+    }
+
+    /** [UE-27] Volume total de treinos concluídos agrupado por semana ou mês. */
+    @GetMapping("/volume-trend")
+    @Transactional(readOnly = true)
+    VolumeTrendDto volumeTrend(
+            @RequestParam(defaultValue = "week") @Pattern(regexp = "(?i)week|month") String granularity,
+            @RequestParam(defaultValue = "6") @Min(1) @Max(12) int months,
+            Authentication auth) {
+        var user = currentUser(auth);
+        var zone = ZoneId.systemDefault();
+        boolean monthly = granularity.equalsIgnoreCase("month");
+        var completed = completedBetween(user.getId(), LocalDate.now().minusMonths(months),
+                LocalDate.now().plusDays(1), zone);
+        var byBucket = new java.util.TreeMap<LocalDate, BigDecimal>();
+        for (var s : completed) {
+            var d = sessionDate(s, zone);
+            var bucketStart = monthly ? d.withDayOfMonth(1) : d.with(DayOfWeek.MONDAY);
+            byBucket.merge(bucketStart, volumeOf(s.getItems()), BigDecimal::add);
+        }
+        var items = byBucket.entrySet().stream()
+                .map(e -> new VolumeBucketDto(e.getKey(), e.getValue().setScale(2, RoundingMode.HALF_UP)))
+                .toList();
+        return new VolumeTrendDto(monthly ? "month" : "week", months, items);
+    }
+
+    /** [UE-27] Comparativo dos últimos N dias contra o período anterior equivalente. */
+    @GetMapping("/performance-comparison")
+    @Transactional(readOnly = true)
+    PerformanceComparisonDto performanceComparison(
+            @RequestParam(defaultValue = "30") @Min(7) @Max(90) int days,
+            Authentication auth) {
+        var user = currentUser(auth);
+        var zone = ZoneId.systemDefault();
+        var end = LocalDate.now().plusDays(1); // limite exclusivo
+        var current = performanceBlock(user.getId(), end.minusDays(days), end, zone);
+        var previous = performanceBlock(user.getId(), end.minusDays(days * 2L), end.minusDays(days), zone);
+        return new PerformanceComparisonDto(days, current, previous);
+    }
+
     /** Semana atual (seg–dom) e a anterior, para variação na interface. */
     @GetMapping("/weekly-summary")
     @Transactional(readOnly = true)
@@ -214,6 +294,38 @@ public class ProgressController {
         return parts.stream().filter(Objects::nonNull)
                 .reduce(Specification::and)
                 .orElse((root, query, cb) -> cb.conjunction());
+    }
+
+    /** Sessões concluídas com completed_at na janela [from, to). */
+    private List<TrainingSession> completedBetween(Long userId, LocalDate fromInclusive,
+                                                   LocalDate toExclusiveEnd, ZoneId zone) {
+        return sessions.findByUserIdAndStatusAndCompletedAtGreaterThanEqualAndCompletedAtLessThan(
+                userId, SessionStatus.COMPLETED,
+                fromInclusive.atStartOfDay(zone).toInstant(),
+                toExclusiveEnd.atStartOfDay(zone).toInstant());
+    }
+
+    /** Data de referência da sessão: conclusão quando existir, senão agendamento. */
+    private static LocalDate sessionDate(TrainingSession s, ZoneId zone) {
+        var instant = s.getCompletedAt() != null ? s.getCompletedAt() : s.getScheduledAt();
+        return instant.atZone(zone).toLocalDate();
+    }
+
+    private PerformanceBlockDto performanceBlock(Long userId, LocalDate fromInclusive,
+                                                 LocalDate toExclusiveEnd, ZoneId zone) {
+        var completed = completedBetween(userId, fromInclusive, toExclusiveEnd, zone);
+        long duration = 0;
+        double rpeSum = 0;
+        long rpeCount = 0;
+        BigDecimal volume = BigDecimal.ZERO;
+        for (var s : completed) {
+            if (s.getDurationMinutes() != null) duration += s.getDurationMinutes();
+            if (s.getSessionRpe() != null) { rpeSum += s.getSessionRpe(); rpeCount++; }
+            volume = volume.add(volumeOf(s.getItems()));
+        }
+        return new PerformanceBlockDto(completed.size(), duration,
+                volume.setScale(2, RoundingMode.HALF_UP),
+                rpeCount == 0 ? null : round1(rpeSum / rpeCount));
     }
 
     private WeekBlockDto weekBlock(Long userId, LocalDate weekStart) {
