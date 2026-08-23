@@ -17,6 +17,8 @@ vi.mock("../api", () => ({
     progressWeeklySummary: vi.fn(),
     progressReadinessTrend: vi.fn(),
     progressSessions: vi.fn(),
+    progressHistoryExercises: vi.fn(),
+    progressHistoryStats: vi.fn(),
   },
 }));
 
@@ -63,6 +65,17 @@ beforeEach(() => {
   vi.mocked(api.progressWeeklySummary).mockResolvedValue(summary);
   vi.mocked(api.progressReadinessTrend).mockResolvedValue(trend);
   vi.mocked(api.progressSessions).mockResolvedValue(page0);
+  vi.mocked(api.progressHistoryExercises).mockResolvedValue([
+    { id: 1, name: "Agachamento" },
+    { id: 2, name: "Supino" },
+  ]);
+  vi.mocked(api.progressHistoryStats).mockResolvedValue({
+    totalSessions: 7,
+    completedSessions: 5,
+    totalDurationMinutes: 320,
+    totalVolumeKg: 21000,
+    averageRpe: 7.2,
+  });
 });
 
 function renderScreen() {
@@ -111,7 +124,7 @@ describe("tela Progresso [UE-44]", () => {
     await userEvent.click(screen.getByRole("button", { name: /carregar mais/i }));
 
     await waitFor(() => expect(screen.getByText("Treino C")).toBeInTheDocument());
-    expect(vi.mocked(api.progressSessions).mock.calls[1]).toEqual(["token-progress", 1, 20]);
+    expect(vi.mocked(api.progressSessions).mock.calls[1]).toEqual(["token-progress", 1, 20, {}]);
     expect(screen.getAllByText("Treino A — Peito").length).toBe(1);
     expect(screen.queryByRole("button", { name: /carregar mais/i })).not.toBeInTheDocument();
   });
@@ -137,5 +150,49 @@ describe("tela Progresso [UE-44]", () => {
     await waitFor(() => expect(vi.mocked(api.progressSessions)).not.toHaveBeenCalled());
     expect(vi.mocked(api.progressWeeklySummary)).not.toHaveBeenCalled();
     expect(vi.mocked(api.progressReadinessTrend)).not.toHaveBeenCalled();
+  });
+
+  it("exibe barra de filtros e estatísticas do período [UE-30]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByLabelText("Buscar")).toBeInTheDocument());
+    expect(screen.getByLabelText("Exercício")).toBeInTheDocument();
+    expect(screen.getByLabelText("Grupo muscular")).toBeInTheDocument();
+    expect(screen.getByLabelText("Intensidade")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Treinos no período")).toBeInTheDocument());
+    expect(screen.getByText("Concluídos")).toBeInTheDocument();
+  });
+
+  it("busca textual dispara requisição com o termo após o debounce [UE-30]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByText("Treino A — Peito")).toBeInTheDocument());
+    await userEvent.type(screen.getByPlaceholderText(/rotina, esporte/i), "supino");
+    await waitFor(() =>
+      expect(vi.mocked(api.progressSessions).mock.calls.some((c) => c[3]?.q === "supino")).toBe(true)
+    );
+  });
+
+  it("selecionar intensidade dispara requisição com o filtro [UE-30]", async () => {
+    renderScreen();
+    await waitFor(() => expect(screen.getByText("Treino A — Peito")).toBeInTheDocument());
+    await userEvent.selectOptions(screen.getByLabelText("Intensidade"), "ALTA");
+    await waitFor(() =>
+      expect(vi.mocked(api.progressSessions).mock.calls.some((c) => c[3]?.intensity === "ALTA")).toBe(true)
+    );
+  });
+
+  it("sem resultados com filtros ativos oferece limpar filtros [UE-30]", async () => {
+    const emptyPage = { ...page0, items: [], totalItems: 0, totalPages: 0, hasNext: false };
+    vi.mocked(api.progressSessions).mockImplementation((_t, _p, _s, filters) =>
+      Promise.resolve(filters?.q ? emptyPage : page0)
+    );
+    renderScreen();
+    await waitFor(() => expect(screen.getByText("Treino A — Peito")).toBeInTheDocument());
+
+    await userEvent.type(screen.getByPlaceholderText(/rotina, esporte/i), "nada");
+    await waitFor(() => expect(screen.getByText(/Nenhum treino encontrado/i)).toBeInTheDocument());
+
+    const clearButtons = screen.getAllByRole("button", { name: /limpar filtros/i });
+    await userEvent.click(clearButtons[0]);
+    await waitFor(() => expect(screen.getByText("Treino A — Peito")).toBeInTheDocument());
   });
 });

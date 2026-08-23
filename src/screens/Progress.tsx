@@ -1,15 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api, ApiError } from "../api";
-import type { ApiProgressSession, ApiProgressSessionsPage, ApiReadinessTrend, ApiWeeklySummary } from "../api";
+import type {
+  ApiHistoryExerciseOption,
+  ApiHistoryStats,
+  ApiProgressSession,
+  ApiProgressSessionsPage,
+  ApiReadinessTrend,
+  ApiWeeklySummary,
+  HistoryFilters,
+} from "../api";
+import { MUSCLE_LABEL } from "../types";
+import type { MuscleKey } from "../types";
 import { useApp } from "../store";
 import { CACHE_TTL, userCacheKey } from "../cache";
 import { useCachedQuery } from "../hooks/useCachedQuery";
 import { SectionLabel } from "../components/ui";
-import { IconRefresh } from "../components/Icons";
+import { IconRefresh, IconX } from "../components/Icons";
 
 const TREND_OPTIONS = [7, 30, 90] as const;
 const PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 350;
 
 const STATUS_LABEL: Record<ApiProgressSession["status"], string> = {
   PLANNED: "Planejada",
@@ -17,6 +28,38 @@ const STATUS_LABEL: Record<ApiProgressSession["status"], string> = {
   COMPLETED: "Concluída",
   SKIPPED: "Pulada",
 };
+
+const INTENSITY_OPTIONS = [
+  { value: "LEVE", label: "Leve" },
+  { value: "MODERADA", label: "Moderada" },
+  { value: "ALTA", label: "Alta" },
+] as const;
+
+interface FilterState {
+  q: string;
+  exerciseId: string;
+  muscle: string;
+  intensity: string;
+  from: string;
+  to: string;
+}
+
+const EMPTY_FILTERS: FilterState = { q: "", exerciseId: "", muscle: "", intensity: "", from: "", to: "" };
+
+function toApiFilters(f: FilterState): HistoryFilters {
+  const out: HistoryFilters = {};
+  if (f.q.trim()) out.q = f.q.trim();
+  if (f.exerciseId) out.exerciseId = Number(f.exerciseId);
+  if (f.muscle) out.muscle = f.muscle;
+  if (f.intensity) out.intensity = f.intensity as HistoryFilters["intensity"];
+  if (f.from) out.from = f.from;
+  if (f.to) out.to = f.to;
+  return out;
+}
+
+function hasActiveFilters(f: FilterState): boolean {
+  return Object.values(f).some((v) => v.trim() !== "");
+}
 
 function fmt(n: number): string {
   return n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
@@ -27,7 +70,8 @@ function shortDate(iso: string): string {
 }
 
 /** [UE-44] Tela de progresso do atleta: resumo semanal, tendência de prontidão e histórico paginado.
- *  Exibe somente métricas calculadas sobre dados reais do backend; nada técnico interno. */
+ *  [UE-30] Histórico com filtros avançados (busca, exercício, grupo muscular, intensidade, período),
+ *  estatísticas do período e timeline visual. Exibe somente métricas sobre dados reais do backend. */
 export default function Progress() {
   const { token } = useApp();
   const userKey = token ? userCacheKey(token) : "";
@@ -241,9 +285,12 @@ function ReadinessTrend({
   );
 }
 
-// ---- Histórico paginado ----
+// ---- Histórico com filtros avançados [UE-30] ----
 
 function History({ token }: { token: string | null }) {
+  const userKey = token ? userCacheKey(token) : "";
+  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [items, setItems] = useState<ApiProgressSession[]>([]);
   const [pageInfo, setPageInfo] = useState<ApiProgressSessionsPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -258,14 +305,42 @@ function History({ token }: { token: string | null }) {
     };
   }, []);
 
+  // Busca textual com debounce para não disparar requisição por tecla.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQ(filters.q), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [filters.q]);
+
+  const exercisesQuery = useCachedQuery<ApiHistoryExerciseOption[]>({
+    userKey,
+    key: "progress/history-exercises",
+    ttl: CACHE_TTL.progress,
+    fetcher: () => api.progressHistoryExercises(token as string),
+    enabled: Boolean(token),
+  });
+
+  const activeFilters: HistoryFilters = useMemo(
+    () => toApiFilters({ ...filters, q: debouncedQ }),
+    [filters, debouncedQ]
+  );
+  const activeKey = JSON.stringify(activeFilters);
+
+  const statsQuery = useCachedQuery<ApiHistoryStats>({
+    userKey,
+    key: `progress/history-stats:${activeKey}`,
+    ttl: CACHE_TTL.progress,
+    fetcher: () => api.progressHistoryStats(token as string, activeFilters),
+    enabled: Boolean(token),
+  });
+
   const load = useCallback(
-    async (page: number, replace: boolean) => {
+    async (page: number, replace: boolean, f: HistoryFilters) => {
       if (!token) return;
       if (replace) setLoading(true);
       else setLoadingMore(true);
       setError("none");
       try {
-        const data = await api.progressSessions(token, page, PAGE_SIZE);
+        const data = await api.progressSessions(token, page, PAGE_SIZE, f);
         if (!mounted.current) return;
         setItems((prev) => {
           if (replace) return data.items;
@@ -287,15 +362,15 @@ function History({ token }: { token: string | null }) {
   );
 
   useEffect(() => {
-    // Carga inicial: o seed síncrono do estado de carga é intencional (mesmo padrão
-    // documentado em useCachedQuery); o fetch em si roda em callbacks assíncronos.
+    // Recarrega ao montar e sempre que o conjunto de filtros efetivo muda.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load(0, true);
-  }, [load]);
+    void load(0, true, activeFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeKey]);
 
   const retry = () => {
-    if (pageInfo && pageInfo.page > 0) void load(pageInfo.page + 1, false);
-    else void load(0, true);
+    if (pageInfo && pageInfo.page > 0) void load(pageInfo.page + 1, false, activeFilters);
+    else void load(0, true, activeFilters);
   };
 
   if (loading) {
@@ -321,43 +396,192 @@ function History({ token }: { token: string | null }) {
     );
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-4 text-center">
-        <p className="text-[12px] leading-relaxed text-fog-dim">
-          Você ainda não registrou treinos concluídos. Complete sua primeira sessão para começar a acompanhar sua evolução.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <ul className="mt-3 space-y-2">
-        {items.map((s) => (
-          <SessionRow key={s.id} session={s} />
-        ))}
-      </ul>
-      {pageInfo?.hasNext ? (
-        <button
-          onClick={() => pageInfo && void load(pageInfo.page + 1, false)}
-          disabled={loadingMore}
-          className="mx-auto mt-3 block rounded-lg border border-volt-400/50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-volt-300 transition-colors hover:bg-volt-400/10 disabled:opacity-50"
-        >
-          {loadingMore ? "Carregando…" : "Carregar mais"}
-        </button>
+      <FilterBar
+        filters={filters}
+        onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
+        onClear={() => setFilters(EMPTY_FILTERS)}
+        exercises={exercisesQuery.data ?? []}
+      />
+      <PeriodStats query={statsQuery} />
+      {items.length === 0 ? (
+        hasActiveFilters(filters) ? (
+          <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-4 text-center">
+            <p className="text-[12px] text-fog-dim">Nenhum treino encontrado para os filtros aplicados.</p>
+            <button
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setDebouncedQ("");
+              }}
+              className="mx-auto mt-2 flex items-center gap-1 rounded-md border border-ink-600 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-fog-dim transition-colors hover:border-volt-400 hover:text-volt-300"
+            >
+              <IconX size={11} /> Limpar filtros
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-4 text-center">
+            <p className="text-[12px] leading-relaxed text-fog-dim">
+              Você ainda não registrou treinos concluídos. Complete sua primeira sessão para começar a acompanhar sua evolução.
+            </p>
+          </div>
+        )
       ) : (
-        <p className="mt-3 text-center text-[10px] uppercase tracking-[0.14em] text-fog-mute">
-          Fim do histórico · {pageInfo?.totalItems ?? items.length} sessões
-        </p>
+        <>
+          <ol className="relative mt-3 space-y-2 border-l border-ink-700 pl-5">
+            {items.map((s) => (
+              <li key={s.id} className="relative">
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-[27px] top-4 h-2.5 w-2.5 rounded-full border-2 border-ink-950 bg-volt-400"
+                />
+                <SessionRow session={s} />
+              </li>
+            ))}
+          </ol>
+          {pageInfo?.hasNext ? (
+            <button
+              onClick={() => pageInfo && void load(pageInfo.page + 1, false, activeFilters)}
+              disabled={loadingMore}
+              className="mx-auto mt-3 block rounded-lg border border-volt-400/50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-volt-300 transition-colors hover:bg-volt-400/10 disabled:opacity-50"
+            >
+              {loadingMore ? "Carregando…" : "Carregar mais"}
+            </button>
+          ) : (
+            <p className="mt-3 text-center text-[10px] uppercase tracking-[0.14em] text-fog-mute">
+              Fim do histórico · {pageInfo?.totalItems ?? items.length} sessões
+            </p>
+          )}
+        </>
       )}
     </>
   );
 }
 
+function FilterBar({
+  filters,
+  onChange,
+  onClear,
+  exercises,
+}: {
+  filters: FilterState;
+  onChange: (patch: Partial<FilterState>) => void;
+  onClear: () => void;
+  exercises: ApiHistoryExerciseOption[];
+}) {
+  const inputCls =
+    "mt-1 block w-full rounded-lg bg-ink-800 p-2 text-[12px] text-fog outline-none focus:ring-1 focus:ring-volt-400/60";
+  const labelCls = "block text-[9px] font-bold uppercase tracking-[0.14em] text-fog-mute";
+  return (
+    <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <label className={labelCls}>
+          Buscar
+          <input
+            value={filters.q}
+            onChange={(e) => onChange({ q: e.target.value })}
+            placeholder="Rotina, esporte, exercício…"
+            className={inputCls}
+          />
+        </label>
+        <label className={labelCls}>
+          Exercício
+          <select
+            value={filters.exerciseId}
+            onChange={(e) => onChange({ exerciseId: e.target.value })}
+            className={inputCls}
+          >
+            <option value="">Todos</option>
+            {exercises.map((ex) => (
+              <option key={ex.id} value={ex.id}>
+                {ex.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={labelCls}>
+          Grupo muscular
+          <select
+            value={filters.muscle}
+            onChange={(e) => onChange({ muscle: e.target.value })}
+            className={inputCls}
+          >
+            <option value="">Todos</option>
+            {(Object.keys(MUSCLE_LABEL) as MuscleKey[]).map((k) => (
+              <option key={k} value={k}>
+                {MUSCLE_LABEL[k]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={labelCls}>
+          Intensidade
+          <select
+            value={filters.intensity}
+            onChange={(e) => onChange({ intensity: e.target.value })}
+            className={inputCls}
+          >
+            <option value="">Todas</option>
+            {INTENSITY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={labelCls}>
+          De
+          <input
+            type="date"
+            value={filters.from}
+            onChange={(e) => onChange({ from: e.target.value })}
+            className={inputCls}
+          />
+        </label>
+        <label className={labelCls}>
+          Até
+          <input
+            type="date"
+            value={filters.to}
+            onChange={(e) => onChange({ to: e.target.value })}
+            className={inputCls}
+          />
+        </label>
+      </div>
+      {hasActiveFilters(filters) && (
+        <button
+          onClick={onClear}
+          className="mt-2 inline-flex items-center gap-1 rounded-md border border-ink-600 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-fog-dim transition-colors hover:border-volt-400 hover:text-volt-300"
+        >
+          <IconX size={11} /> Limpar filtros
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PeriodStats({ query }: { query: ReturnType<typeof useCachedQuery<ApiHistoryStats>> }) {
+  // Bloco auxiliar: falha silenciosa para não competir com o erro do histórico.
+  if (query.loading || query.error || !query.data) return null;
+  const s = query.data;
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <MetricCard label="Treinos no período" value={fmt(s.totalSessions)} delta={null} />
+      <MetricCard label="Concluídos" value={fmt(s.completedSessions)} delta={null} />
+      <MetricCard label="Duração total" value={`${fmt(s.totalDurationMinutes)} min`} delta={null} />
+      <MetricCard
+        label="Volume total"
+        value={s.totalVolumeKg != null ? `${fmt(s.totalVolumeKg)} kg` : "—"}
+        delta={null}
+      />
+      <MetricCard label="RPE médio" value={s.averageRpe != null ? fmt(s.averageRpe) : "—"} delta={null} />
+    </div>
+  );
+}
+
 function SessionRow({ session: s }: { session: ApiProgressSession }) {
   return (
-    <li className="rounded-xl border border-ink-700 bg-ink-850 p-3">
+    <div className="rounded-xl border border-ink-700 bg-ink-850 p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-[13px] font-bold text-fog">{s.routineName ?? s.sportName}</p>
@@ -405,7 +629,7 @@ function SessionRow({ session: s }: { session: ApiProgressSession }) {
           </div>
         )}
       </dl>
-    </li>
+    </div>
   );
 }
 
