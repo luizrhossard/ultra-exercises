@@ -11,3 +11,8 @@ backend/.factorypath
 backend/.project
 backend/.settings/
 .env
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
