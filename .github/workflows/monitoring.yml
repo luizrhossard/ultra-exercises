@@ -1,0 +1,80 @@
+name: Monitoring
+
+# [UE-33] Uptime e latência dos ambientes publicados (alvo 99,9%).
+# URLs vêm dos secrets STAGING_URL e PRODUCTION_URL (raiz do ambiente,
+# ex.: https://staging.exemplo.com). Sem secret configurado, o job registra
+# aviso e sai limpo — não gera falso negativo enquanto a hospedagem real
+# não existe. Em falha ou latência acima do threshold, notifica Slack/Teams.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: monitoring
+  cancel-in-progress: false
+
+jobs:
+  uptime:
+    name: Uptime · health e latência
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checar health e latência dos ambientes
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          LATENCY_THRESHOLD_MS: "2000"
+        run: |
+          FAIL=0
+          check() {
+            local label="$1" base="$2"
+            if [ -z "$base" ]; then
+              echo "::warning::$label: URL não configurada (secret ausente) — checagem pulada."
+              return 0
+            fi
+            local url="${base%/}/actuator/health"
+            local start end ms http body
+            start=$(date +%s%3N)
+            http=$(curl -sf -o /tmp/health.json -w "%{http_code}" --max-time 10 "$url") || http="000"
+            end=$(date +%s%3N)
+            ms=$((end - start))
+            body=$(cat /tmp/health.json 2>/dev/null || echo "{}")
+            echo "- **$label**: HTTP \`$http\` em \`${ms}ms\` (\`$body\`)"
+            if [ "$http" != "200" ]; then
+              echo "::error::$label DOWN — HTTP $http em $url"
+              FAIL=1
+            elif [ "$ms" -gt "$LATENCY_THRESHOLD_MS" ]; then
+              echo "::warning::$label latência acima do threshold: ${ms}ms > ${LATENCY_THRESHOLD_MS}ms"
+            fi
+          }
+          {
+            echo "## Monitoramento de uptime — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          check "Staging" "$STAGING_URL" >> "$GITHUB_STEP_SUMMARY"
+          check "Staging" "$STAGING_URL"
+          check "Produção" "$PRODUCTION_URL" >> "$GITHUB_STEP_SUMMARY"
+          check "Produção" "$PRODUCTION_URL"
+          exit $FAIL
+
+      - name: Notificar Slack (downtime)
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then echo "SLACK_WEBHOOK_URL não configurado — pulando."; exit 0; fi
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"🚨 Uptime ALERTA: ambiente fora do ar ou lento.\n$RUN_URL\"}" \
+            "$WEBHOOK"
+
+      - name: Notificar Teams (downtime)
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then echo "TEAMS_WEBHOOK_URL não configurado — pulando."; exit 0; fi
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"🚨 Uptime ALERTA: ambiente fora do ar ou lento.\n$RUN_URL\"}" \
+            "$WEBHOOK"

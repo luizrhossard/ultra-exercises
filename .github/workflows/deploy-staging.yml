@@ -1,0 +1,77 @@
+name: Deploy Staging
+
+# [UE-31] Deploy automático em staging após o CI passar na develop.
+# O environment "staging" publica sem aprovação; o job roda só quando o
+# workflow CI conclui com sucesso em um push da branch develop.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [develop]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy-staging:
+    name: Staging · publicar artefato do CI
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'develop'
+    environment: staging
+    steps:
+      - name: Baixar artefato buildado pelo CI
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Inspecionar artefato
+        run: |
+          echo "Artefato do run ${{ github.event.workflow_run.id }}:"
+          ls -la
+
+      - name: Publicar em staging (placeholder)
+        run: |
+          echo "=== [UE-31] Deploy para STAGING ==="
+          echo "Origem: CI #${{ github.event.workflow_run.run_number }} na develop"
+          echo "TODO: plugar aqui o comando real de deploy da hospedagem escolhida."
+
+      - name: Resumo do job
+        run: |
+          {
+            echo "## Deploy Staging"
+            echo "- Origem: CI \`${{ github.event.workflow_run.head_sha }}\` na \`develop\`"
+            echo "- Artefato: \`frontend-dist\` (run \`${{ github.event.workflow_run.id }}\`)"
+            echo "- Próximo passo: apontar o placeholder para a hospedagem real"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  notify:
+    name: Notificar Slack/Teams
+    needs: [deploy-staging]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar para Slack
+        env:
+          WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          STATUS: ${{ needs.deploy-staging.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then echo "SLACK_WEBHOOK_URL não configurado — pulando."; exit 0; fi
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Deploy STAGING: $STATUS\n$RUN_URL\"}" \
+            "$WEBHOOK"
+      - name: Enviar para Teams
+        env:
+          WEBHOOK: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          STATUS: ${{ needs.deploy-staging.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then echo "TEAMS_WEBHOOK_URL não configurado — pulando."; exit 0; fi
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Deploy STAGING: $STATUS\n$RUN_URL\"}" \
+            "$WEBHOOK"

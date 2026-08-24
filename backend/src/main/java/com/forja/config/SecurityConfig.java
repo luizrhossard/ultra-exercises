@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/api/sports/**", "/api/exercises/**",
                                 "/api/share/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // [UE-33] Health público para monitores de uptime; métricas/prometheus continuam autenticados.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().authenticated())
                 .headers(headers -> {
                     headers.contentTypeOptions(withDefaults -> {});

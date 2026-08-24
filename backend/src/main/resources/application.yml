@@ -32,6 +32,25 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
 
+# [UE-33] Observabilidade: health público para monitores de uptime;
+# métricas e prometheus exigem autenticação (ver SecurityConfig).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      # Sem detalhes no health público (não vaza topologia para a internet);
+      # diagnóstico detalhado fica no /actuator/metrics autenticado.
+      show-details: never
+  health:
+    probes:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 forja:
   jwt:
     # troque por um segredo real (32+ caracteres) via variável de ambiente
