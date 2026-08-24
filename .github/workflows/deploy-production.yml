@@ -1,0 +1,84 @@
+name: Deploy Production
+
+# [UE-31] Deploy em produção exige aprovação manual: o environment
+# "production" deve ter required reviewers configurado no repositório
+# (Settings → Environments → production). Disparado por tag v* ou manualmente.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    name: Produção · publicar release
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Build de produção a partir da ref aprovada
+        run: npm run build
+
+      - name: Publicar artefato da release
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-production-${{ github.sha }}
+          path: dist/
+          retention-days: 90
+
+      - name: Publicar em produção (placeholder)
+        run: |
+          echo "=== [UE-31] Deploy para PRODUÇÃO ==="
+          echo "Ref: ${{ github.ref_name }} @ ${{ github.sha }}"
+          echo "Aprovado via environment 'production' (required reviewers)."
+          echo "TODO: plugar aqui o comando real de deploy da hospedagem escolhida."
+
+      - name: Resumo do job
+        run: |
+          {
+            echo "## Deploy Produção"
+            echo "- Ref: \`${{ github.ref_name }}\` @ \`${{ github.sha }}\`"
+            echo "- Aprovação: environment \`production\`"
+            echo "- Artefato: \`frontend-dist-production-${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  notify:
+    name: Notificar Slack/Teams
+    needs: [deploy-production]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar para Slack
+        env:
+          WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          STATUS: ${{ needs.deploy-production.result }}
+          REF: ${{ github.ref_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then echo "SLACK_WEBHOOK_URL não configurado — pulando."; exit 0; fi
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Deploy PRODUÇÃO ($REF): $STATUS\n$RUN_URL\"}" \
+            "$WEBHOOK"
+      - name: Enviar para Teams
+        env:
+          WEBHOOK: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          STATUS: ${{ needs.deploy-production.result }}
+          REF: ${{ github.ref_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then echo "TEAMS_WEBHOOK_URL não configurado — pulando."; exit 0; fi
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Deploy PRODUÇÃO ($REF): $STATUS\n$RUN_URL\"}" \
+            "$WEBHOOK"
