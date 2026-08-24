@@ -1,0 +1,68 @@
+# [UE-33] Regras de alerta do Forja API para Prometheus.
+# Aplicar com: promtool check rules prometheus-rules.yml
+# e referenciar em rule_files no prometheus.yml do servidor.
+#
+# Runbooks correspondentes em docs/runbooks/ — cada alerta aponta para o seu.
+groups:
+  - name: forja-api-disponibilidade
+    rules:
+      - alert: ForjaApiDown
+        expr: up{job="forja-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Forja API fora do ar ({{ $labels.instance }})"
+          description: "O Prometheus não consegue coletar métricas da instância há mais de 1 minuto."
+          runbook: "docs/runbooks/service-down.md"
+
+      - alert: ForjaApiHighErrorRate
+        expr: >
+          sum(rate(http_server_requests_seconds_count{application="forja-api", status=~"5.."}[5m]))
+          / sum(rate(http_server_requests_seconds_count{application="forja-api"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taxa de erro 5xx acima de 5% por 5 minutos"
+          description: "Erros internos sustentados indicam falha de aplicação ou dependência."
+          runbook: "docs/runbooks/high-error-rate.md"
+
+      - alert: ForjaApiHighLatencyP95
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket{application="forja-api"}[5m])) by (le)
+          ) > 1.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latência p95 acima de 1,5s por 10 minutos"
+          description: "Usuários percebendo lentidão generalizada; investigar consultas e pool."
+          runbook: "docs/runbooks/high-latency.md"
+
+  - name: forja-api-recursos
+    rules:
+      - alert: ForjaDbConnectionPoolSaturated
+        expr: >
+          hikaricp_connections_active{application="forja-api"}
+          / hikaricp_connections_max{application="forja-api"} > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pool Hikari acima de 90% de utilização"
+          description: "Risco de esgotamento de conexões; vazamento ou carga acima do previsto."
+          runbook: "docs/runbooks/db-pool-saturation.md"
+
+      - alert: ForjaJvmHeapPressure
+        expr: >
+          jvm_memory_used_bytes{application="forja-api", area="heap"}
+          / jvm_memory_max_bytes{application="forja-api", area="heap"} > 0.9
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Heap JVM acima de 90% por 15 minutos"
+          description: "Pressão de memória sustentada; risco de GC thrashing e OOM."
+          runbook: "docs/runbooks/jvm-memory-pressure.md"
