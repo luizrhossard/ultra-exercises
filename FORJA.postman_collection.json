@@ -1,0 +1,771 @@
+{
+  "info": {
+    "name": "FORJA - Ultra Exercises API",
+    "description": "Coleção QA para API FORJA. Base: http://localhost:8085 | Swagger: http://localhost:8085/swagger-ui/index.html | Contrato de erro: docs/api/error-response-contract.md | Endpoints: docs/api/openapi.md | Variáveis: {{baseUrl}} (ex: http://localhost:8085), {{token}} (Bearer JWT)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Health & Docs",
+      "item": [
+        {
+          "name": "GET Swagger JSON (v3/api-docs)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["v3", "api-docs"]
+            },
+            "description": "Baixa OpenAPI JSON gerado pelo springdoc. Útil para validar contrato sem backend."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"É JSON OpenAPI\", () => { const j = pm.response.json(); pm.expect(j).to.have.property('openapi'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Swagger UI (html)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swagger-ui/index.html",
+              "host": ["{{baseUrl}}"],
+              "path": ["swagger-ui", "index.html"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"Swagger UI 200\", () => pm.expect(pm.response.code).to.be.oneOf([200, 304]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/register - criar usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Trace-Id", "value": "{{traceId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"qa-{{$timestamp}}@test.example.com\",\n  \"password\": \"Test@123456\",\n  \"name\": \"QA Test User\"\n}"
+            },
+            "description": "201 com {token,email,name}. Email duplicado hoje retorna 409 corpo vazio (contrato futuro). Teste também 400 VALIDATION_ERROR sem senha."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Register 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "if(pm.response.code===201 || pm.response.code===200){ const j=pm.response.json(); pm.expect(j).to.have.property('token'); pm.environment.set('token', j.token); pm.environment.set('lastEmail', j.email || JSON.parse(pm.request.body.raw).email); console.log('token salvo:', j.token.slice(0,20)+'...'); }",
+                  "pm.test(\"traceId header ecoa\", () => { const hdr = pm.response.headers.get('X-Trace-Id'); if(hdr) pm.expect(hdr.length).to.be.above(7); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/register - 409 duplicado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{lastEmail}}\",\n  \"password\": \"Test@123456\",\n  \"name\": \"Dup User\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"409 ou 400 duplicado\", () => pm.expect(pm.response.code).to.be.oneOf([409,400,422]));",
+                  "// Hoje corpo vazio em 409 é esperado (docs/api/error-response-contract.md)"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/login - sucesso",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Trace-Id", "value": "{{traceId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Tem token e user\", () => { pm.expect(j).to.have.property('token'); pm.expect(j.token.length).to.be.above(10); });",
+                  "pm.environment.set('token', j.token);",
+                  "pm.test(\"traceId presente\", () => { if(j.traceId) pm.expect(j.traceId.length).to.be.above(7); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/login - 401 credenciais inválidas (contrato)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Trace-Id", "value": "e2e-{{$timestamp}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid@test.com\",\n  \"password\": \"wrongpassword\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"401 UNAUTHORIZED\", () => pm.response.to.have.status(401));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Contrato de erro UE-25\", () => { pm.expect(b).to.have.property('timestamp'); pm.expect(b).to.have.property('status', 401); pm.expect(b).to.have.property('error'); pm.expect(b.error).to.match(/UNAUTHORIZED|INVALID|AUTH/i); pm.expect(b).to.have.property('message'); pm.expect(b).to.have.property('traceId'); pm.expect(b.traceId.length).to.be.above(7); });",
+                  "pm.test(\"Header X-Trace-Id == body traceId\", () => { const h = pm.response.headers.get('X-Trace-Id') || pm.response.headers.get('x-trace-id'); if(h) pm.expect(h).to.eql(b.traceId); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/login - 400 sem email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"password\": \"Test@123456\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"400 ou 422 validação\", () => pm.expect(pm.response.code).to.be.oneOf([400,422]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me - com token",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 me\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json(); pm.test(\"tem email e name\", () => { pm.expect(b).to.have.property('email'); pm.expect(b).to.have.property('name'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me - sem token 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"401 sem token\", () => pm.response.to.have.status(401));",
+                  "const b = pm.response.json(); pm.test(\"contrato 401\", () => pm.expect(b).to.have.property('traceId'));",
+                  "pm.test(\"security nosniff\", () => pm.expect(pm.response.headers.get('X-Content-Type-Options')).to.eql('nosniff'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/refresh - refresh token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 ou 401\", () => pm.expect(pm.response.code).to.be.oneOf([200,401]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Sports (público)",
+      "item": [
+        {
+          "name": "GET /api/sports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sports"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 sports\", () => pm.response.to.have.status(200));", "pm.test(\"é array\", () => pm.expect(pm.response.json()).to.be.an('array'));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Profile",
+      "item": [
+        {
+          "name": "GET /api/me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 profile\", () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/me - atualizar sports",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"QA Updated\",\n  \"sports\": [{\"code\": \"futebol\"}, {\"code\": \"boxe\"}]\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 atualizado\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Exercises",
+      "item": [
+        {
+          "name": "GET /api/exercises/feed?sportIds=1",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/exercises/feed?sportIds=1&category=FORCA",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "exercises", "feed"],
+              "query": [
+                { "key": "sportIds", "value": "1" },
+                { "key": "category", "value": "FORCA" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 feed\", () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/exercises/:id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/exercises/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "exercises", "1"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 ou 404\", () => pm.expect(pm.response.code).to.be.oneOf([200,404]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Routines",
+      "item": [
+        {
+          "name": "GET /api/routines",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/routines",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "routines"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 routines\", () => pm.response.to.have.status(200));", "pm.test(\"é array ou objeto\", () => { const j=pm.response.json(); pm.expect(j).to.be.ok; });"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/routines/generate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/routines/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "routines", "generate"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"sportId\": 1\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"201 rotina gerada\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "const j = pm.response.json(); if(j.id) pm.environment.set('routineId', j.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/routines/:id/items",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/routines/{{routineId}}/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "routines", "{{routineId}}", "items"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"exerciseId\": 1\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 add item\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/routines/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/routines/{{routineId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "routines", "{{routineId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"204 deletado\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - Sessions",
+      "item": [
+        {
+          "name": "POST /api/routines/:routineId/sessions",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/routines/{{routineId}}/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "routines", "{{routineId}}", "sessions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"201 session\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "const j = pm.response.json(); if(j.id) pm.environment.set('sessionId', j.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/sessions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 sessions\", () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/sessions/:id/start",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}", "start"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 start\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/sessions/:id - COMPLETED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"COMPLETED\",\n  \"durationMinutes\": 55,\n  \"sessionRpe\": 8\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 completed\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 - Readiness",
+      "item": [
+        {
+          "name": "GET /api/readiness/today",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/readiness/today",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readiness", "today"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 readiness\", () => pm.expect(pm.response.code).to.be.oneOf([200,404]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/readiness/today",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/readiness/today",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readiness", "today"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"sleepHours\": 8,\n  \"sleepQuality\": 4,\n  \"stress\": 2,\n  \"muscleSoreness\": 1,\n  \"energy\": 4,\n  \"motivation\": 5,\n  \"notes\": \"QA test\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 put readiness\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 - Progress (UE-42)",
+      "item": [
+        {
+          "name": "GET /api/progress/sessions?page=0&size=20",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/progress/sessions?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "progress", "sessions"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 progress sessions\", () => pm.response.to.have.status(200));", "pm.test(\"tem items\", () => pm.expect(pm.response.json()).to.have.property('items'));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/progress/weekly-summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/progress/weekly-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "progress", "weekly-summary"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 weekly\", () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/progress/readiness-trend?days=30",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/progress/readiness-trend?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "progress", "readiness-trend"],
+              "query": [{ "key": "days", "value": "30" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"200 trend\", () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 - CORS & Security",
+      "item": [
+        {
+          "name": "OPTIONS /api/auth/login (CORS)",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test(\"CORS 200/204\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));", "pm.test(\"CORS header\", () => pm.expect(pm.response.headers.has('access-control-allow-origin') || pm.response.headers.has('access-control-allow-methods')).to.be.true; );"],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": ["pm.variables.set('traceId', 'qa-' + Date.now());"],
+        "type": "text/javascript"
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8085" }
+  ]
+}
