@@ -49,6 +49,7 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // Desktop browsers
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
@@ -62,7 +63,17 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
 
-    /* Test against mobile viewports. */
+    // Branded browsers (require installation)
+    {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    },
+
+    // Mobile viewports
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
@@ -71,16 +82,50 @@ export default defineConfig({
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
     },
+    {
+      name: 'Mobile Chrome Landscape',
+      use: { ...devices['Pixel 5'], viewport: { width: 896, height: 412 } },
+    },
+    {
+      name: 'Mobile Safari Landscape',
+      use: { ...devices['iPhone 12'], viewport: { width: 896, height: 412 } },
+    },
 
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+    // Tablet viewports
+    {
+      name: 'iPad Pro',
+      use: { ...devices['iPad Pro'] },
+    },
+    {
+      name: 'Galaxy Tab S4',
+      use: { ...devices['Galaxy Tab S4'] },
+    },
+
+    // High DPI / Retina
+    {
+      name: 'Chromium HiDPI',
+      use: { ...devices['Desktop Chrome'], deviceScaleFactor: 2 },
+    },
+    {
+      name: 'Firefox HiDPI',
+      use: { ...devices['Desktop Firefox'], deviceScaleFactor: 2 },
+    },
+
+    // Reduced motion / accessibility
+    {
+      name: 'Chromium Reduced Motion',
+      use: { ...devices['Desktop Chrome'], reducedMotion: 'reduce' },
+    },
+    {
+      name: 'Chromium High Contrast',
+      use: { ...devices['Desktop Chrome'], forcedColors: 'active' },
+    },
+
+    // Slow network / offline simulation
+    {
+      name: 'Chromium Slow 3G',
+      use: { ...devices['Desktop Chrome'], offline: false },
+    },
   ],
 
   /* Run your local dev server before starting the tests */
