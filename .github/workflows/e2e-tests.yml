@@ -1,22 +1,24 @@
-name: E2E Tests
+name: E2E Tests [UE-64]
 
 on:
   push:
     branches: [main, develop]
     paths:
-      - 'frontend/**'
       - 'tests/**'
+      - 'e2e/**'
       - 'playwright.config.ts'
       - 'package.json'
       - 'package-lock.json'
+      - 'src/**'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'frontend/**'
       - 'tests/**'
+      - 'e2e/**'
       - 'playwright.config.ts'
       - 'package.json'
       - 'package-lock.json'
+      - 'src/**'
   workflow_dispatch:
     inputs:
       browser:
@@ -52,21 +54,19 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: ./frontend
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
-        working-directory: ./frontend
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             playwright-browsers-${{ runner.os }}-
 
@@ -95,25 +95,23 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Restore dependencies
         run: npm ci
-        working-directory: ./frontend
 
       - name: Restore Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             playwright-browsers-${{ runner.os }}-
 
       - name: Start development server
         run: |
           npm run dev &
-          sleep 10
-        working-directory: ./frontend
+          npx wait-on http://localhost:3000 --timeout 60000
         env:
           CI: true
 
@@ -122,7 +120,6 @@ jobs:
           npx playwright test --project=${{ matrix.project }} ${{
             github.event.inputs.tags && format('--grep={0}', github.event.inputs.tags) || ''
           }}
-        working-directory: ./frontend
         env:
           PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
           E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
@@ -134,8 +131,9 @@ jobs:
         with:
           name: playwright-report-${{ matrix.browser }}
           path: |
-            frontend/playwright-report
-            frontend/test-results
+            playwright-report
+            test-results
+            allure-results
           retention-days: 7
 
       - name: Upload screenshots on failure
@@ -143,7 +141,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: screenshots-${{ matrix.browser }}
-          path: frontend/test-results/**/*.png
+          path: test-results/**/*.png
           retention-days: 7
 
       - name: Upload videos on failure
@@ -151,7 +149,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: videos-${{ matrix.browser }}
-          path: frontend/test-results/**/*.webm
+          path: test-results/**/*.webm
           retention-days: 7
 
       - name: Upload traces on failure
@@ -159,7 +157,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: traces-${{ matrix.browser }}
-          path: frontend/test-results/**/*.zip
+          path: test-results/**/*.zip
           retention-days: 7
 
   test-mobile:
@@ -185,25 +183,23 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Restore dependencies
         run: npm ci
-        working-directory: ./frontend
 
       - name: Restore Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             playwright-browsers-${{ runner.os }}-
 
       - name: Start development server
         run: |
           npm run dev &
-          sleep 10
-        working-directory: ./frontend
+          npx wait-on http://localhost:3000 --timeout 60000
         env:
           CI: true
 
@@ -212,7 +208,6 @@ jobs:
           npx playwright test --project="${{ matrix.project }}" ${{
             github.event.inputs.tags && format('--grep={0}', github.event.inputs.tags) || ''
           }}
-        working-directory: ./frontend
         env:
           PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
           E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
@@ -224,8 +219,9 @@ jobs:
         with:
           name: playwright-report-${{ matrix.browser }}
           path: |
-            frontend/playwright-report
-            frontend/test-results
+            playwright-report
+            test-results
+            allure-results
           retention-days: 7
 
   smoke:
@@ -243,32 +239,29 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Restore dependencies
         run: npm ci
-        working-directory: ./frontend
 
       - name: Restore Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             playwright-browsers-${{ runner.os }}-
 
       - name: Start development server
         run: |
           npm run dev &
-          sleep 10
-        working-directory: ./frontend
+          npx wait-on http://localhost:3000 --timeout 60000
         env:
           CI: true
 
       - name: Run smoke tests
         run: |
           npx playwright test --project=chromium --grep="@smoke"
-        working-directory: ./frontend
         env:
           PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
           E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
@@ -280,8 +273,9 @@ jobs:
         with:
           name: smoke-report
           path: |
-            frontend/playwright-report
-            frontend/test-results
+            playwright-report
+            test-results
+            allure-results
           retention-days: 3
 
   api-contracts:
@@ -299,16 +293,14 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Restore dependencies
         run: npm ci
-        working-directory: ./frontend
 
       - name: Run API contract tests
         run: |
           npx playwright test tests/e2e/api-contracts.spec.ts --project=chromium
-        working-directory: ./frontend
         env:
           E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
           CI: true
@@ -319,8 +311,9 @@ jobs:
         with:
           name: api-contracts-report
           path: |
-            frontend/playwright-report
-            frontend/test-results
+            playwright-report
+            test-results
+            allure-results
           retention-days: 7
 
   summary:
@@ -338,7 +331,7 @@ jobs:
 
       - name: Generate test summary
         run: |
-          echo "## E2E Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## E2E Test Results Summary [UE-64]" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Browser | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
@@ -356,9 +349,10 @@ jobs:
           done
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- HTML reports available as workflow artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Screenshots, videos, and traces uploaded on failure" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts [UE-64]" >> $GITHUB_STEP_SUMMARY
+          echo "- HTML reports + Allure + custom reporter em artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Screenshots, videos, traces on-failure" >> $GITHUB_STEP_SUMMARY
+          echo "- Rastreabilidade via traceId correlacionado (X-Trace-Id)" >> $GITHUB_STEP_SUMMARY
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'
@@ -368,7 +362,7 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             
-            let summary = '## E2E Test Results\n\n';
+            let summary = '## E2E Test Results [UE-64]\n\n';
             summary += '| Browser | Status |\n';
             summary += '|---------|--------|\n';
             
