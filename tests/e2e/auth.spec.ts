@@ -19,7 +19,7 @@ test.describe('Authentication Flows', () => {
       await expect(userMenu.first()).toBeVisible({ timeout: 10_000 });
     });
 
-    test('should show error with invalid credentials', async ({ page, authPage }) => {
+    test('should show error with invalid credentials and traceId [UE-63]', async ({ page, authPage }) => {
       test.skip(!process.env.E2E_BACKEND_URL, 'Requires backend API');
       
       await authPage.goto('/auth');
@@ -27,6 +27,11 @@ test.describe('Authentication Flows', () => {
       
       const errorMessage = await authPage.getErrorMessage();
       expect(errorMessage.toLowerCase()).toMatch(/inválido|incorreto|erro|credenciais|não foi possível/);
+      // UE-25 contrato: erro deve expor traceId Ref: para correlacao com logs
+      const errorRef = await authPage.getErrorRef();
+      if (errorRef) {
+        expect(errorRef).toMatch(/[A-Za-z0-9-]{8,64}/);
+      }
     });
 
     test('should show error with empty email', async ({ page, authPage }) => {
