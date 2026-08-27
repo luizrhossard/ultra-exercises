@@ -1,0 +1,387 @@
+name: E2E Tests [UE-64]
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'tests/**'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'tests/**'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/**'
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Browser to run tests on'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - chromium
+          - firefox
+          - webkit
+      tags:
+        description: 'Test tags to run (e.g., @smoke, @regression)'
+        required: false
+        default: ''
+        type: string
+
+env:
+  PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL || 'http://localhost:3000' }}
+  E2E_BACKEND_URL: ${{ secrets.E2E_BACKEND_URL }}
+
+jobs:
+  install:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-${{ runner.os }}-
+
+  test:
+    name: Run E2E Tests
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        include:
+          - browser: chromium
+            project: chromium
+          - browser: firefox
+            project: firefox
+          - browser: webkit
+            project: webkit
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Restore dependencies
+        run: npm ci
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-${{ runner.os }}-
+
+      - name: Start development server
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000 --timeout 60000
+        env:
+          CI: true
+
+      - name: Run Playwright tests
+        run: |
+          npx playwright test --project=${{ matrix.project }} ${{
+            github.event.inputs.tags && format('--grep={0}', github.event.inputs.tags) || ''
+          }}
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
+          E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
+          CI: true
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: |
+            playwright-report
+            test-results
+            allure-results
+          retention-days: 7
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.browser }}
+          path: test-results/**/*.png
+          retention-days: 7
+
+      - name: Upload videos on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-${{ matrix.browser }}
+          path: test-results/**/*.webm
+          retention-days: 7
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: traces-${{ matrix.browser }}
+          path: test-results/**/*.zip
+          retention-days: 7
+
+  test-mobile:
+    name: Run Mobile E2E Tests
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [mobile-chrome, mobile-safari]
+        include:
+          - browser: mobile-chrome
+            project: 'Mobile Chrome'
+          - browser: mobile-safari
+            project: 'Mobile Safari'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Restore dependencies
+        run: npm ci
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-${{ runner.os }}-
+
+      - name: Start development server
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000 --timeout 60000
+        env:
+          CI: true
+
+      - name: Run Playwright mobile tests
+        run: |
+          npx playwright test --project="${{ matrix.project }}" ${{
+            github.event.inputs.tags && format('--grep={0}', github.event.inputs.tags) || ''
+          }}
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
+          E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
+          CI: true
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: |
+            playwright-report
+            test-results
+            allure-results
+          retention-days: 7
+
+  smoke:
+    name: Smoke Tests
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Restore dependencies
+        run: npm ci
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-${{ runner.os }}-
+
+      - name: Start development server
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000 --timeout 60000
+        env:
+          CI: true
+
+      - name: Run smoke tests
+        run: |
+          npx playwright test --project=chromium --grep="@smoke"
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
+          E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
+          CI: true
+
+      - name: Upload smoke test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: |
+            playwright-report
+            test-results
+            allure-results
+          retention-days: 3
+
+  api-contracts:
+    name: API Contract Tests
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: env.E2E_BACKEND_URL != ''
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Restore dependencies
+        run: npm ci
+
+      - name: Run API contract tests
+        run: |
+          npx playwright test tests/e2e/api-contracts.spec.ts --project=chromium
+        env:
+          E2E_BACKEND_URL: ${{ env.E2E_BACKEND_URL }}
+          CI: true
+
+      - name: Upload API contract test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-contracts-report
+          path: |
+            playwright-report
+            test-results
+            allure-results
+          retention-days: 7
+
+  summary:
+    name: Test Summary
+    needs: [test, test-mobile, smoke, api-contracts]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: playwright-report-*
+          merge-multiple: true
+
+      - name: Generate test summary
+        run: |
+          echo "## E2E Test Results Summary [UE-64]" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Check each browser result
+          for dir in artifacts/playwright-report-*; do
+            if [ -d "$dir" ]; then
+              browser=$(basename "$dir" | sed 's/playwright-report-//')
+              if [ -f "$dir/index.html" ]; then
+                echo "| $browser | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "| $browser | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts [UE-64]" >> $GITHUB_STEP_SUMMARY
+          echo "- HTML reports + Allure + custom reporter em artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Screenshots, videos, traces on-failure" >> $GITHUB_STEP_SUMMARY
+          echo "- Rastreabilidade via traceId correlacionado (X-Trace-Id)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let summary = '## E2E Test Results [UE-64]\n\n';
+            summary += '| Browser | Status |\n';
+            summary += '|---------|--------|\n';
+            
+            const artifactsDir = 'artifacts';
+            if (fs.existsSync(artifactsDir)) {
+              const dirs = fs.readdirSync(artifactsDir);
+              for (const dir of dirs) {
+                if (dir.startsWith('playwright-report-')) {
+                  const browser = dir.replace('playwright-report-', '');
+                  const reportPath = path.join(artifactsDir, dir, 'index.html');
+                  const status = fs.existsSync(reportPath) ? '✅ Passed' : '❌ Failed';
+                  summary += `| ${browser} | ${status} |\n`;
+                }
+              }
+            }
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
