@@ -25,6 +25,8 @@ export default defineConfig({
     ['json', { outputFile: 'test-results/results.json' }],
     ['junit', { outputFile: 'test-results/results.xml' }],
     ['github'], // GitHub Actions annotation reporter
+    ['allure-playwright', { outputFolder: 'allure-results' }], // Allure reporter
+    ['./tests/reporters/custom-reporter.ts', { outputDir: 'test-results/custom' }], // Custom reporter
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
