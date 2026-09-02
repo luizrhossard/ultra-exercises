@@ -4,6 +4,14 @@ dist/
 build/
 *.log
 
+# Local tooling / generated metadata
+.slim/
+.ignore
+allure-results/
+playwright-report/
+test-results/
+coverage/
+
 # Java / Eclipse
 backend/target/
 backend/.classpath
@@ -11,8 +19,3 @@ backend/.factorypath
 backend/.project
 backend/.settings/
 .env
-
-# Test artifacts
-coverage/
-playwright-report/
-test-results/

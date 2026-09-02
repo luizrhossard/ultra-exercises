@@ -1,0 +1,54 @@
+{
+  "info": {
+    "name": "Oracle Cloud Banking API - QA Test Suite",
+    "description": "Suíte automatizada de testes de API conectada ao Oracle Cloud (OCI ATP)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /ords/admin/contas - Listar Contas Bancárias (Oracle OCI)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://g74b79147a3e7c9-bancoqa.adb.sa-saopaulo-1.oraclecloudapps.com/ords/admin/contas/",
+          "protocol": "https",
+          "host": [
+            "g74b79147a3e7c9-bancoqa",
+            "adb",
+            "sa-saopaulo-1",
+            "oraclecloudapps",
+            "com"
+          ],
+          "path": ["ords", "admin", "contas", ""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"CT-01: Status code é 200 OK (Banco OCI Online)\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"CT-02: Retornou lista de contas bancárias\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property(\"items\");",
+              "    pm.expect(jsonData.items.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test(\"CT-03: Conta 1 possui titular e saldo financeiro correto\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    const conta1 = jsonData.items[0];",
+              "    pm.expect(conta1.titular).to.eql(\"Cliente QA Positivo\");",
+              "    pm.expect(conta1.saldo).to.be.at.least(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"attachments":[],"errors":[{"message":"beforeEach hook failed: Error: Test is skipped: Requires backend API","trace":"Error: Test is skipped: Requires backend API\n    at C:\\Users\\luizr\\OneDrive\\Documentos\\programas-git\\ultra-exercises\\ultra-exercises\\tests\\e2e\\test-data-management.spec.ts:9:10","timestamp":1787941943681}]}
