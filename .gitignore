@@ -16,3 +16,4 @@ backend/.settings/
 coverage/
 playwright-report/
 test-results/
+allure-results/
