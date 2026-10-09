@@ -372,6 +372,119 @@
         { "sport": "boxe", "score": 3 },
         { "sport": "natacao", "score": 3 }
       ]
+    },
+    {
+      "name": "Rotação Externa de Ombro com Elástico", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Elástico de resistência leve + toalha",
+      "muscles": ["manguito rotador", "deltoides", "trapezio"],
+      "steps": [
+        "Prenda o elástico na altura do cotovelo e fique de lado para a ancoragem.",
+        "Cotovelo colado ao tronco a 90°, com uma toalha enrolada entre braço e costela.",
+        "Gire o antebraço para fora em 2 s sem afastar o cotovelo do corpo, escápula encaixada para trás e para baixo.",
+        "Volte em 3 s controlando a tensão. 3 séries de 15 de cada lado, carga leve e sem dor."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Prevenção do ombro de nadador: os rotadores externos equilibram o volume enorme de rotação interna da braçada e mantêm a cabeça do úmero centrada." },
+        { "sport": "volei", "score": 4, "why": "Freia o braço após o ataque — a fase excêntrica onde o manguito mais sofre." },
+        { "sport": "tenis", "score": 4, "why": "Desacelera o braço depois do saque e do forehand, protegendo o ombro dominante." }
+      ]
+    },
+    {
+      "name": "Rotação Interna de Ombro com Elástico", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Elástico de resistência leve + toalha",
+      "muscles": ["manguito rotador", "peitoral", "dorsais"],
+      "steps": [
+        "Elástico na altura do cotovelo, ancoragem do lado do braço que vai trabalhar.",
+        "Cotovelo a 90° colado ao tronco, toalha enrolada entre braço e costela.",
+        "Leve o antebraço em direção ao abdômen em 2 s, sem girar o tronco junto.",
+        "Retorne em 3 s até a posição neutra. 3 séries de 15 de cada lado, sem dor."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 4, "why": "Prevenção do ombro de nadador: subescapular forte e controlado estabiliza a entrada da mão e a fase de agarre sem sobrecarregar o tendão." },
+        { "sport": "tenis", "score": 4, "why": "Rotação interna é o motor da aceleração do saque — treinada de forma controlada, protege o ombro." },
+        { "sport": "volei", "score": 3 }
+      ]
+    },
+    {
+      "name": "Puxada de Braçada com Elástico", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Elástico tubular com manoplas (stretch cord)",
+      "muscles": ["dorsais", "triceps", "deltoides", "core"],
+      "steps": [
+        "Prenda o elástico à frente na altura do quadril; incline o tronco a ~45° com coluna neutra e core travado.",
+        "Braços estendidos à frente simulando a entrada da mão, cotovelo alto e escápula ativa.",
+        "Puxe imitando a braçada de crawl: agarre com cotovelo alto, puxe sob o corpo e empurre até a coxa.",
+        "Retorne controlado. Alterne braços em 3–4 séries de 30–45 s mantendo o padrão técnico."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Replica fora d'água o padrão exato da braçada (agarre com cotovelo alto, puxada e finalização), fortalecendo a fase propulsiva." },
+        { "sport": "jiu-jitsu", "score": 2 }
+      ]
+    },
+    {
+      "name": "Nado com Paraquedas de Resistência", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Piscina + paraquedas de natação",
+      "muscles": ["dorsais", "deltoides", "triceps", "core", "gluteos"],
+      "steps": [
+        "Prenda o cinto do paraquedas na cintura e posicione o paraquedas atrás dos pés.",
+        "Nade crawl em esforço forte por 25 m, mantendo alinhamento de corpo e rotação de tronco.",
+        "Priorize a pegada da água: cotovelo alto e braçada longa, sem encurtar o movimento.",
+        "Descanse 30–45 s e repita 6–8 vezes; termine com 50 m soltos sem o paraquedas."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Nado com resistência: sobrecarga direta no gesto esportivo, aumentando força por braçada sem alterar a técnica." }
+      ]
+    },
+    {
+      "name": "Nado com Pull Buoy e Palmar", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Piscina + pull buoy + palmar",
+      "muscles": ["dorsais", "deltoides", "triceps", "peitoral", "core"],
+      "steps": [
+        "Prenda o pull buoy entre as coxas e calce palmares de tamanho moderado.",
+        "Nade crawl sem pernada, mantendo o quadril alto com o core firme.",
+        "Foque na entrada limpa da mão, no agarre com cotovelo alto e na finalização até a coxa.",
+        "Faça 6–10 × 50 m com 20 s de pausa; interrompa ao primeiro sinal de dor no ombro."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Força específica de braçada: isola membros superiores e aumenta a carga por puxada com o pull buoy e o palmar." }
+      ]
+    },
+    {
+      "name": "Prancha Streamline com Rotação", "category": "CORE", "difficulty": "INTERMEDIARIO", "equipment": "Peso corporal",
+      "muscles": ["core", "obliquos", "deltoides", "gluteos"],
+      "steps": [
+        "Deite de barriga para baixo em posição de streamline: braços estendidos acima da cabeça, mãos sobrepostas.",
+        "Eleve levemente braços e pernas, contraindo glúteos e abdômen para formar uma linha reta.",
+        "Gire o corpo inteiro como um bloco até ficar de lado, simulando a rotação do crawl, e segure 2 s.",
+        "Volte ao centro e gire para o outro lado. 3 séries de 40 s sem perder o alinhamento."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Core de rotação e estabilidade em streamline: o tronco gira como um bloco enquanto o corpo se mantém alinhado, como no crawl e no costas." },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Mobilidade de Ombro com Bastão", "category": "MOBILIDADE", "difficulty": "INICIANTE", "equipment": "Bastão ou cabo de vassoura",
+      "muscles": ["deltoides", "manguito rotador", "peitoral", "dorsais"],
+      "steps": [
+        "Segure o bastão com pegada bem aberta à frente do quadril, braços estendidos.",
+        "Leve o bastão por cima da cabeça até atrás do corpo em um arco lento, sem dobrar os cotovelos.",
+        "Retorne pelo mesmo caminho mantendo costelas para baixo e sem arquear a lombar.",
+        "Faça 2 séries de 10–12 repetições; estreite a pegada aos poucos conforme a amplitude melhora."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Amplitude de flexão e rotação de ombro para a recuperação e a entrada da mão, reduzindo compensações que levam ao impacto do ombro." },
+        { "sport": "volei", "score": 3 },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Mobilidade de Tornozelo em Flexão Plantar", "category": "MOBILIDADE", "difficulty": "INICIANTE", "equipment": "Colchonete",
+      "muscles": ["panturrilhas", "tibial anterior", "tornozelo"],
+      "steps": [
+        "Ajoelhe sobre o colchonete com o peito dos pés apoiado no chão, dedos apontando para trás.",
+        "Sente lentamente sobre os calcanhares até sentir o alongamento na frente do tornozelo.",
+        "Segure 20–30 s e, se possível, eleve levemente os joelhos para aprofundar.",
+        "Finalize com 15 círculos de tornozelo para cada lado. 2 séries."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 4, "why": "Tornozelo com flexão plantar ampla transforma o pé numa nadadeira: pernada mais eficiente e menos arrasto." },
+        { "sport": "corrida", "score": 2 }
+      ]
     }
   ]
 }
