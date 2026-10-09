@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import type { ApiFeedItem } from "../api";
-import { buildFeedItem, buildFeedItems, categoryFromApi, linksFromApi, rankLocalFeed } from "./feed";
+import { buildFeedItem, buildFeedItems, categoryFromApi, difficultyToLevel, linksFromApi, rankLocalFeed } from "./feed";
 import { EXERCISES } from "./exercises";
 
 const futebolItem: ApiFeedItem = {
   exerciseId: 3,
   name: "Agachamento Búlgaro",
   category: "FORCA",
+  difficulty: "INTERMEDIARIO",
   equipment: "Halteres + banco",
   muscles: ["quadriceps", "gluteos", "core"],
   bestScore: 5,
@@ -27,6 +28,20 @@ describe("categoryFromApi", () => {
 
   it("retorna undefined para categoria desconhecida", () => {
     expect(categoryFromApi("ZUMBA")).toBeUndefined();
+  });
+});
+
+describe("difficultyToLevel [UE-49]", () => {
+  it("mapeia as três dificuldades oficiais para o nível local", () => {
+    expect(difficultyToLevel("INICIANTE")).toBe(1);
+    expect(difficultyToLevel("INTERMEDIARIO")).toBe(2);
+    expect(difficultyToLevel("AVANCADO")).toBe(3);
+  });
+
+  it("retorna undefined para valor ausente ou desconhecido (fallback do catálogo)", () => {
+    expect(difficultyToLevel(undefined)).toBeUndefined();
+    expect(difficultyToLevel(null)).toBeUndefined();
+    expect(difficultyToLevel("XPTO")).toBeUndefined();
   });
 });
 
@@ -53,6 +68,17 @@ describe("buildFeedItem", () => {
     expect(ex.category).toBe("Força");
     expect(ex.tempo).toBe("3-1-1");
     expect(ex.steps.length).toBeGreaterThan(0);
+    expect(ex.level).toBe(2);
+  });
+
+  it("usa a dificuldade oficial da API como nível do card [UE-49]", () => {
+    expect(buildFeedItem(futebolItem).level).toBe(2);
+    expect(buildFeedItem({ ...futebolItem, difficulty: "AVANCADO" }).level).toBe(3);
+    expect(buildFeedItem({ ...futebolItem, difficulty: "INICIANTE" }).level).toBe(1);
+  });
+
+  it("cai para o nível do catálogo local quando a dificuldade vem inválida/ausente", () => {
+    const ex = buildFeedItem({ ...futebolItem, difficulty: "XPTO" as ApiFeedItem["difficulty"] });
     expect(ex.level).toBe(2);
   });
 

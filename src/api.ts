@@ -14,10 +14,13 @@ export type Readiness = {
   painArea: string | null; painLevel: number; notes: string | null; readinessScore: number; requiresReview: boolean;
 };
 export type ApiSport = { id: number; code: string; name: string; description: string | null };
+/** Dificuldade do exercício [UE-49]: INICIANTE / INTERMEDIARIO / AVANCADO. */
+export type ApiDifficulty = "INICIANTE" | "INTERMEDIARIO" | "AVANCADO";
 export type ApiFeedItem = {
   exerciseId: number;
   name: string;
   category: "FORCA" | "PLIOMETRIA" | "CORE" | "CONDICIONAMENTO" | "MOBILIDADE" | "ESPECIFICO";
+  difficulty: ApiDifficulty;
   equipment: string | null;
   muscles: string[];
   bestScore: number;

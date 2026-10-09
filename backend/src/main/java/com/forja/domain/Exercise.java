@@ -29,6 +29,10 @@ public class Exercise {
     @Column(nullable = false, length = 24)
     private ExerciseCategory category;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private ExerciseDifficulty difficulty;
+
     @Column(length = 120)
     private String equipment;
 

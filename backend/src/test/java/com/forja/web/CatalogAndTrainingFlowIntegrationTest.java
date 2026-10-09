@@ -45,7 +45,8 @@ class CatalogAndTrainingFlowIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThan(0)))
                 .andExpect(jsonPath("$[0].name").isNotEmpty())
-                .andExpect(jsonPath("$[0].bestScore").isNumber());
+                .andExpect(jsonPath("$[0].bestScore").isNumber())
+                .andExpect(jsonPath("$[0].difficulty").isNotEmpty());
     }
 
     @Test
@@ -70,6 +71,7 @@ class CatalogAndTrainingFlowIntegrationTest {
         mvc.perform(get("/api/exercises/{id}", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").isNotEmpty())
+                .andExpect(jsonPath("$.difficulty").isNotEmpty())
                 .andExpect(jsonPath("$.steps").isArray())
                 .andExpect(jsonPath("$.links").isArray());
 

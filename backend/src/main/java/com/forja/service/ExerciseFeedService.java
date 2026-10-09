@@ -1,6 +1,7 @@
 package com.forja.service;
 
 import com.forja.domain.ExerciseCategory;
+import com.forja.domain.ExerciseDifficulty;
 import com.forja.domain.ExerciseSport;
 import com.forja.repository.ExerciseSportRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ExerciseFeedService {
             Long exerciseId,
             String name,
             ExerciseCategory category,
+            ExerciseDifficulty difficulty,
             String equipment,
             List<String> muscles,
             int bestScore,
@@ -73,6 +75,7 @@ public class ExerciseFeedService {
                 exercise.getId(),
                 exercise.getName(),
                 exercise.getCategory(),
+                exercise.getDifficulty(),
                 exercise.getEquipment(),
                 List.copyOf(exercise.getMuscleGroups()),
                 best,

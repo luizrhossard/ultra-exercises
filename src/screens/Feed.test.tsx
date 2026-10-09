@@ -56,6 +56,7 @@ describe("Feed — exploração de exercícios", () => {
         exerciseId: 999,
         name: "Exercício Remoto",
         category: "CORE",
+        difficulty: "INICIANTE",
         equipment: "Barra",
         muscles: ["core"],
         bestScore: 5,
@@ -67,6 +68,26 @@ describe("Feed — exploração de exercícios", () => {
     render(<Feed />);
     expect(await screen.findByText("Exercício Remoto")).toBeInTheDocument();
     expect(api.exercisesFeed).toHaveBeenCalledWith([1]);
+  });
+
+  it("exibe a tag de dificuldade vinda da API no card [UE-49]", async () => {
+    vi.mocked(api.exercisesFeed).mockResolvedValue([
+      {
+        exerciseId: 999,
+        name: "Exercício Remoto",
+        category: "CORE",
+        difficulty: "INTERMEDIARIO",
+        equipment: "Barra",
+        muscles: ["core"],
+        bestScore: 5,
+        strongCount: 2,
+        scoreBySport: { futebol: 5 },
+        rationaleBySport: { futebol: "Transferência direta." },
+      },
+    ]);
+    render(<Feed />);
+    expect(await screen.findByText("Exercício Remoto")).toBeInTheDocument();
+    expect(screen.getByText("Intermediário")).toBeInTheDocument();
   });
 
   it("abre o player ao clicar em um exercício", async () => {

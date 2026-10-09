@@ -8,7 +8,7 @@ import { FullConfig } from '@playwright/test';
 export default async function globalSetup(config: FullConfig) {
   console.log('🚀 [UE-61] Starting Playwright global setup...');
 
-  const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
+  const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000';
   const backendURL = process.env.E2E_BACKEND_URL || '';
   console.log(`📍 Base URL: ${baseURL}`);
   console.log(`🔗 Backend URL: ${backendURL || 'mock (sem backend externo)'}`);
