@@ -42,6 +42,33 @@ export default async function globalSetup(config: FullConfig) {
     console.warn('⚠️ Frontend ainda não respondeu em globalSetup - webServer do playwright cuidará do boot');
   }
 
+  // [UE-52 E2E] Usuários fixos precisam de esporte cadastrado para entrar no shell
+  // (o app só sai do onboarding quando o perfil tem esportes). Feito via API, idempotente.
+  if (backendURL) {
+    const { TEST_USERS } = await import('./utils/test-data');
+    for (const user of [TEST_USERS.standard, TEST_USERS.admin]) {
+      try {
+        const login = await fetch(`${backendURL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user.email, password: user.password }),
+        });
+        if (!login.ok) {
+          console.warn(`[UE-52 E2E] login falhou para ${user.email}: ${login.status}`);
+          continue;
+        }
+        const { token } = await login.json();
+        await fetch(`${backendURL}/api/me`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ name: user.name, sports: [{ code: 'futebol', level: 'RECREATIONAL' }] }),
+        });
+      } catch (error) {
+        console.warn(`[UE-52 E2E] onboarding falhou para ${user.email}:`, error);
+      }
+    }
+  }
+
   // Prepara storageState vazio para reuso entre testes (UE-61 infra)
   const storageStatePath = path.resolve(process.cwd(), 'test-results/storageState.json');
   if (!fs.existsSync(storageStatePath)) {
