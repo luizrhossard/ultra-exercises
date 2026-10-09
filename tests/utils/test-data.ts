@@ -70,28 +70,31 @@ export const TEST_WORKOUTS = {
 /**
  * API endpoints for test data setup/teardown
  */
+/**
+ * Endpoints reais do backend (backend/src/main/java/com/forja/web).
+ * Treino = rotina: o backend não tem CRUD de "workout"; a rotina é gerada por esporte.
+ */
 export const API_ENDPOINTS = {
   auth: {
     login: '/api/auth/login',
     register: '/api/auth/register',
-    logout: '/api/auth/logout',
-    refresh: '/api/auth/refresh',
-    me: '/api/auth/me',
+    me: '/api/me',
+  },
+  sports: {
+    list: '/api/sports',
   },
   workouts: {
-    list: '/api/workouts',
-    create: '/api/workouts',
-    get: (id: string) => `/api/workouts/${id}`,
-    update: (id: string) => `/api/workouts/${id}`,
-    delete: (id: string) => `/api/workouts/${id}`,
+    list: '/api/routines',
+    create: '/api/routines/generate',
+    delete: (id: string) => `/api/routines/${id}`,
   },
   exercises: {
     list: '/api/exercises',
-    search: '/api/exercises/search',
+    search: '/api/exercises',
   },
   progress: {
-    history: '/api/progress/history',
-    stats: '/api/progress/stats',
+    history: '/api/progress/sessions',
+    stats: '/api/progress/weekly-summary',
   },
 };
 

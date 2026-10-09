@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { TAB_BY_PATH, tabButton } from '../utils/app-shell';
 
 export abstract class BasePage {
   protected readonly page: Page;
@@ -9,9 +10,23 @@ export abstract class BasePage {
     this.baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
   }
 
+  /**
+   * Navega para uma tela do app. O frontend não tem rotas por URL: caminhos conhecidos
+   * (ex.: '/routines') abrem a raiz e clicam na aba correspondente. Ver app-shell.ts.
+   */
   async goto(path: string = ''): Promise<void> {
-    await this.page.goto(`${this.baseURL}${path}`);
+    const tab = TAB_BY_PATH[path];
+    // SPA sem rotas: caminhos conhecidos abrem a raiz e clicam na aba; '/auth' também é a raiz (gate de login).
+    const target = tab ? '/' : path === '/auth' ? '/' : path;
+    await this.page.goto(`${this.baseURL}${target}`);
     await this.page.waitForLoadState('networkidle');
+    if (tab) {
+      // A sidebar monta após o carregamento do perfil: espera o botão em vez de pular o clique.
+      const button = tabButton(this.page, tab);
+      await expect(button).toBeVisible({ timeout: 15_000 });
+      await button.click();
+      await this.page.waitForLoadState('networkidle');
+    }
   }
 
   async waitForElement(locator: Locator, timeout = 10_000): Promise<void> {

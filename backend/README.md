@@ -12,13 +12,27 @@ Relação N:N `exercise × sport` com `relevance_score` (1–5) + rationale.
 
 ## Rodando
 
+### Docker (recomendado)
+
 ```bash
-docker compose up -d db          # sobe o PostgreSQL
-./mvnw spring-boot:run           # Flyway migra + DataSeeder popula a base
+docker compose up -d --build api  # builda e sobe API + PostgreSQL
+docker compose logs -f api        # acompanha os logs
+docker compose down               # para tudo
 ```
 
-A API responde em `http://localhost:8080`. O build do frontend (Vite) pode ser
-servido de `src/main/resources/static` ou do dev server em `:5173` (CORS já liberado).
+O serviço `api` espera o db ficar healthy antes de subir; Flyway migra e o
+DataSeeder popula a base automaticamente no primeiro start.
+
+### Local (dev com recarga)
+
+```bash
+docker compose up -d db           # sobe o PostgreSQL
+./mvnw spring-boot:run            # Flyway migra + DataSeeder popula a base
+```
+
+A API responde em `http://localhost:8085` (Swagger em `/swagger-ui.html`).
+O build do frontend (Vite) pode ser servido de `src/main/resources/static`
+ou do dev server em `:5173` (CORS já liberado).
 
 ## Endpoints principais
 

@@ -83,6 +83,13 @@ public class GlobalExceptionHandler {
                         List.of(), currentTraceId()));
     }
 
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
+        log.info("Conflito de negócio [traceId={}]", currentTraceId());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "CONFLICT", ex.getMessage(), List.of(), currentTraceId()));
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     ResponseEntity<ErrorResponse> handleNotFound(NoSuchElementException ex) {
         log.info("Recurso não encontrado [traceId={}]", currentTraceId());

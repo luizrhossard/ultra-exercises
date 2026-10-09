@@ -108,12 +108,27 @@ export class TestDataManager {
 
   // ============ Workout Management ============
 
-  async createTestWorkout(workoutData?: Partial<{ name: string; description: string; exercises: any[] }>): Promise<any> {
-    const workout = workoutData || TEST_WORKOUTS.basic;
-    
+  /** Id do primeiro esporte cadastrado (a rotina é gerada para um esporte foco). */
+  private async getFirstSportId(): Promise<number> {
+    const response = await this.request.get(`${this.baseURL}${API_ENDPOINTS.sports.list}`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok()) {
+      throw new Error(`Failed to list sports: ${response.statusText()}`);
+    }
+    const sports = await response.json();
+    return sports[0].id;
+  }
+
+  /**
+   * Cria um "treino" no backend, que é uma rotina gerada para um esporte.
+   * Nome e exercícios são definidos pelo gerador; o parâmetro _workoutData é ignorado.
+   */
+  async createTestWorkout(_workoutData?: Partial<{ name: string; description: string; exercises: any[] }>): Promise<any> {
+    const sportId = await this.getFirstSportId();
     const response = await this.request.post(`${this.baseURL}${API_ENDPOINTS.workouts.create}`, {
       headers: this.getHeaders(),
-      data: workout,
+      data: { sportId },
     });
 
     if (!response.ok()) {
@@ -138,8 +153,9 @@ export class TestDataManager {
     return workouts;
   }
 
+  /** O backend não tem GET /routines/{id}: busca na lista do usuário autenticado. */
   async getTestWorkout(id: string): Promise<any> {
-    const response = await this.request.get(`${this.baseURL}${API_ENDPOINTS.workouts.get(id)}`, {
+    const response = await this.request.get(`${this.baseURL}${API_ENDPOINTS.workouts.list}`, {
       headers: this.getHeaders(),
     });
 
@@ -147,20 +163,12 @@ export class TestDataManager {
       throw new Error(`Failed to get workout: ${response.statusText()}`);
     }
 
-    return response.json();
-  }
-
-  async updateTestWorkout(id: string, data: any): Promise<any> {
-    const response = await this.request.put(`${this.baseURL}${API_ENDPOINTS.workouts.update(id)}`, {
-      headers: this.getHeaders(),
-      data,
-    });
-
-    if (!response.ok()) {
-      throw new Error(`Failed to update workout: ${response.statusText()}`);
+    const routines = await response.json();
+    const found = routines.find((r: any) => String(r.id) === String(id));
+    if (!found) {
+      throw new Error(`Workout ${id} not found`);
     }
-
-    return response.json();
+    return found;
   }
 
   async deleteTestWorkout(id: string): Promise<void> {
@@ -184,10 +192,18 @@ export class TestDataManager {
 
   // ============ Exercise Management ============
 
+  /**
+   * Busca no catálogo pelo feed (existe em develop). O endpoint de lista GET /api/exercises
+   * só existe a partir da UE-49, então a busca usa /api/exercises/feed com todos os esportes.
+   */
   async searchExercises(query: string): Promise<any[]> {
-    const response = await this.request.get(`${this.baseURL}${API_ENDPOINTS.exercises.search}`, {
+    const sportsResponse = await this.request.get(`${this.baseURL}${API_ENDPOINTS.sports.list}`, {
       headers: this.getHeaders(),
-      params: { q: query },
+    });
+    const sportIds = (await sportsResponse.json()).map((s: any) => s.id);
+    const response = await this.request.get(`${this.baseURL}${API_ENDPOINTS.exercises.search}/feed`, {
+      headers: this.getHeaders(),
+      params: { sportIds: sportIds.join(','), q: query },
     });
 
     if (!response.ok()) {
@@ -208,7 +224,9 @@ export class TestDataManager {
       throw new Error(`Failed to get progress history: ${response.statusText()}`);
     }
 
-    return response.json();
+    // /api/progress/sessions devolve uma página: { items, page, size, totalItems, ... }
+    const body = await response.json();
+    return body.items;
   }
 
   async getProgressStats(): Promise<any> {
