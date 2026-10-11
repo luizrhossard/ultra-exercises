@@ -15,7 +15,8 @@ export type MuscleKey =
   | "panturrilhas"
   | "adutores"
   | "abdutores"
-  | "flexores";
+  | "flexores"
+  | "cervicais";
 
 export type Category =
   | "Força"
@@ -77,6 +78,7 @@ export const MUSCLE_LABEL: Record<MuscleKey, string> = {
   adutores: "Adutores",
   abdutores: "Abdutores",
   flexores: "Flexores de quadril",
+  cervicais: "Cervicais",
 };
 
 export const CATEGORY_ACCENT: Record<Category, string> = {

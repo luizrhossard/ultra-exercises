@@ -245,6 +245,149 @@
       ]
     },
     {
+      "name": "Isometria Cervical com Harness", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Harness cervical leve ou resistência manual",
+      "muscles": ["cervicais", "trapezio"],
+      "steps": [
+        "Mantenha a coluna neutra e aplique resistência muito leve com o harness ou com a mão de um parceiro.",
+        "Resista sem mover a cabeça para frente, para trás e para cada lado, mantendo o queixo alinhado.",
+        "Segure cada direção por 5–10 s, respirando normalmente e sem fazer ponte sobre a cabeça.",
+        "Faça 2 séries por direção e interrompa ao sentir dor, formigamento ou tontura."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "Isometria cervical progressiva para ajudar a manter a cabeça estável durante os deslocamentos e contatos do boxe." }
+      ]
+    },
+    {
+      "name": "Soco no Landmine", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Barra + suporte landmine",
+      "muscles": ["peitoral", "deltoides", "triceps", "obliquos", "core"],
+      "steps": [
+        "Fique em base de luta ao lado da barra, segurando a extremidade com uma mão junto ao ombro.",
+        "Empurre a barra para frente e para cima como um direto, girando quadril e tronco sem perder a base.",
+        "Controle o retorno até a guarda antes de repetir; mantenha a carga leve o bastante para acelerar com técnica.",
+        "Faça 3 séries de 6–8 repetições por lado, alternando a mão da frente e a de trás."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "Combina a extensão do soco com a transferência de força do chão, quadril e tronco para o braço." }
+      ]
+    },
+    {
+      "name": "Condicionamento de Boxe em Rounds 3:1", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Timer + saco ou corda de batalha",
+      "muscles": ["deltoides", "peitoral", "core", "quadriceps", "panturrilhas"],
+      "steps": [
+        "Ajuste o timer para 3 min de trabalho e 1 min de descanso completo.",
+        "Durante o round, alterne combinações no saco, deslocamentos e esquivas em blocos curtos sem abandonar a guarda.",
+        "Use a pausa de 1 min para caminhar, respirar e recuperar antes do próximo round.",
+        "Comece com 3 rounds e aumente gradualmente até 5, mantendo a qualidade dos golpes."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "Reproduz a estrutura de 3 minutos de combate por 1 minuto de intervalo e treina a manutenção do ritmo entre rounds." }
+      ]
+    },
+    {
+      "name": "Sombra de Boxe com Elástico", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Faixa elástica leve com ancoragem segura",
+      "muscles": ["deltoides", "peitoral", "triceps", "core"],
+      "steps": [
+        "Prenda a faixa atrás do corpo em uma ancoragem estável e segure as pontas sem tensionar demais os ombros.",
+        "Faça combinações de sombra com resistência leve, estendendo os golpes sem travar os cotovelos.",
+        "Retorne cada mão à guarda contra a tensão da faixa e mantenha o tronco girando com controle.",
+        "Trabalhe em blocos de 30–45 s, descanse e repita por 3 séries; pare se a faixa perder estabilidade."
+      ],
+      "links": [
+        { "sport": "boxe", "score": 5, "why": "A resistência elástica leve desafia a aceleração e o retorno à guarda no padrão da sombra de boxe." }
+      ]
+    },
+    {
+      "name": "Pegada de Kimono — Retenção de Lapela e Manga", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Kimono ou faixa de tecido resistente",
+      "muscles": ["antebracos", "biceps", "dorsais"],
+      "steps": [
+        "Segure a lapela com uma mão e a manga com a outra, usando uma pegada firme sem esmagar os dedos.",
+        "Mantenha os cotovelos próximos ao corpo enquanto um parceiro aplica puxões leves em direções variadas.",
+        "Resista por 15–20 s sem encolher os ombros e sem deixar o punho dobrar sob a carga.",
+        "Descanse e repita 3 vezes; alterne os lados e aumente a resistência gradualmente."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "Desenvolve retenção de pegada de lapela e manga contra tentativas de quebra e controle do adversário." }
+      ]
+    },
+    {
+      "name": "Sprawl Reativo e Defesa de Queda", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Espaço livre + sinal do parceiro",
+      "muscles": ["gluteos", "quadriceps", "core", "peitoral", "dorsais"],
+      "steps": [
+        "Comece em base de luta, mãos à frente e coluna neutra; combine previamente um sinal com o parceiro.",
+        "Ao sinal, leve os quadris para trás e para baixo enquanto as pernas recuam, sem apoiar o peso no pescoço.",
+        "Mantenha as mãos controlando os ombros do parceiro ou marque a defesa sem impacto e recupere a base.",
+        "Faça 3 séries de 4–6 repetições com pausa suficiente para preservar velocidade e alinhamento."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "Treina a resposta de sprawl para interromper a entrada de queda e retornar à base de combate." }
+      ]
+    },
+    {
+      "name": "Ponte Isométrica de Quadril para Grappling", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Peso corporal + tatame",
+      "muscles": ["gluteos", "core", "obliquos"],
+      "steps": [
+        "Deite de costas no tatame, pés apoiados e joelhos flexionados, mantendo o queixo recolhido.",
+        "Empurre o chão com os pés e eleve o quadril até formar uma linha estável entre ombros e joelhos.",
+        "Segure a posição por 10–20 s sem arquear excessivamente a lombar e desça com controle.",
+        "Faça 3–4 repetições, alternando a direção da ponte para praticar a geração de espaço do quadril."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "A isometria de extensão do quadril fortalece a ponte usada para criar espaço e iniciar fugas no solo." }
+      ]
+    },
+    {
+      "name": "Levantada Técnica de Jiu-Jitsu", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Peso corporal + tatame",
+      "muscles": ["quadriceps", "gluteos", "core", "deltoides"],
+      "steps": [
+        "Comece sentado em posição defensiva, uma mão protegendo o rosto e a outra apoiada atrás do quadril.",
+        "Apoie o pé oposto à mão no chão e eleve o quadril, mantendo a perna livre entre você e o oponente imaginário.",
+        "Recue a perna livre para ficar em base sem cruzar os pés nem expor as costas.",
+        "Retorne ao solo com controle e pratique 3 séries de 5 repetições por lado."
+      ],
+      "links": [
+        { "sport": "jiu-jitsu", "score": 5, "why": "Pratica a levantada defensiva do solo para recuperar a base sem oferecer as costas ou perder proteção." }
+      ]
+    },
+    {
+      "name": "Skip A — Técnica de Passada", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Espaço plano de 10 m",
+      "muscles": ["flexores", "gluteos", "quadriceps", "panturrilhas", "core"],
+      "steps": [
+        "Comece marchando no lugar, tronco alto, tornozelo ativo e braços alternados como na corrida.",
+        "Eleve um joelho de cada vez e faça uma impulsão curta, aterrissando sob o quadril sem saltar para frente.",
+        "Avance em passadas curtas por 10 m, mantendo o ritmo e o contato leve com o chão.",
+        "Iniciante: 2 passagens de 10 m; priorize coordenação e postura, não velocidade máxima."
+      ],
+      "links": [
+        { "sport": "corrida", "score": 5, "why": "Ensina coordenação de braços e pernas, postura alta e apoio sob o centro de massa na mecânica da passada." }
+      ]
+    },
+    {
+      "name": "Dribbling de Corrida", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Espaço plano de 10 m",
+      "muscles": ["panturrilhas", "quadriceps", "flexores", "core"],
+      "steps": [
+        "Fique alto, com tornozelos ativos e joelhos pouco flexionados; comece com contatos alternados quase no mesmo lugar.",
+        "Faça passos muito curtos e rápidos, tocando o chão perto da projeção do quadril sem chutar os pés à frente.",
+        "Avance em linha reta por 10 m, mantendo amplitude baixa, ombros soltos e ritmo uniforme.",
+        "Iniciante: 2 passagens de 10 m com recuperação completa; pare antes de perder leveza e controle."
+      ],
+      "links": [
+        { "sport": "corrida", "score": 5, "why": "Refina a frequência e a colocação do pé sob o corpo com passos curtos, sem exigir velocidade alta." }
+      ]
+    },
+    {
+      "name": "Pogos Bilaterais de Baixa Amplitude", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Peso corporal + superfície plana e aderente",
+      "muscles": ["panturrilhas", "quadriceps", "gluteos", "core"],
+      "steps": [
+        "Fique em pé com os pés paralelos, joelhos levemente flexionados e braços relaxados.",
+        "Faça pequenos saltos verticais usando tornozelos, com pouca altura e aterrissagem controlada.",
+        "Mantenha os joelhos alinhados e o tronco estável; interrompa se os contatos ficarem pesados ou ruidosos.",
+        "Iniciante: 2 séries de 8 contatos, descansando 90 s entre séries; aumente apenas conforme a progressão documentada."
+      ],
+      "links": [
+        { "sport": "corrida", "score": 5, "why": "Introduz rigidez elástica do tornozelo e contatos reativos de baixa amplitude com volume inicial reduzido." }
+      ]
+    },
+    {
       "name": "Deslocamento Lateral com Faixa", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Mini band",
       "muscles": ["abdutores", "gluteos", "quadriceps", "core"],
       "steps": [
@@ -258,6 +401,71 @@
         { "sport": "basquete", "score": 4, "why": "Deslizar na defesa sem cruzar os pés — padrão treinado aqui de forma isolada." },
         { "sport": "tenis", "score": 4, "why": "Ajustes laterais curtos antes da batida dependem dessa ativação de quadril." },
         { "sport": "futebol", "score": 3 }
+      ]
+    },
+    {
+      "name": "Arremesso de Med Ball no Padrão do Saque", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Med ball leve (1–3 kg) + parede",
+      "muscles": ["gluteos", "obliquos", "core", "deltoides", "triceps"],
+      "steps": [
+        "Fique de lado para a parede, pés em base escalonada e bola junto ao ombro do braço dominante.",
+        "Carregue o tronco e o quadril como no saque, mantendo a bola atrás da cabeça sem forçar a lombar.",
+        "Estenda quadril e tronco e arremesse a bola acima da cabeça contra a parede, com movimento fluido.",
+        "Use uma bola leve, faça 5–6 repetições por lado e interrompa se houver dor no ombro."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 5, "why": "Treina a sequência de extensão e aceleração acima da cabeça do saque com carga leve e controle." }
+      ]
+    },
+    {
+      "name": "Split Step Reativo", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Peso corporal + sinal visual ou sonoro",
+      "muscles": ["panturrilhas", "quadriceps", "gluteos", "adutores", "core"],
+      "steps": [
+        "Assuma a posição de base do tênis, com joelhos flexionados e peso na parte da frente dos pés.",
+        "Faça um pequeno salto de preparação e aterrisse com os pés afastados pouco antes do sinal.",
+        "Ao ouvir ou ver o sinal, empurre o chão e dê o primeiro passo na direção indicada.",
+        "Retorne à base e repita por 4–6 séries curtas, mantendo aterrissagem silenciosa e estável."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 5, "why": "Replica o split step no tempo da resposta ao golpe adversário e conecta a aterrissagem à primeira passada." }
+      ]
+    },
+    {
+      "name": "Deslocamento em Oito na Quadra", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "4 cones",
+      "muscles": ["quadriceps", "gluteos", "adutores", "panturrilhas", "core"],
+      "steps": [
+        "Posicione quatro cones em dois pares diagonais e comece na marca central da quadra.",
+        "Desloque-se contornando os cones em formato de oito, alternando cruzadas e passadas laterais.",
+        "Abaixe o centro de gravidade para frear e empurre o chão para mudar de direção sem cruzar os pés na base.",
+        "Faça 3–4 percursos com pausa completa, priorizando controle nas frenagens e nos giros."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 5, "why": "Pratica aceleração, frenagem e mudança de direção nos ângulos diagonais que aparecem nos deslocamentos da quadra." }
+      ]
+    },
+    {
+      "name": "Extensão Excêntrica de Punho", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Halter leve (0,5–2 kg)",
+      "muscles": ["antebracos"],
+      "steps": [
+        "Apoie o antebraço na coxa ou em um banco, com a palma voltada para baixo e o punho além da borda.",
+        "Com a outra mão, ajude a elevar o halter até estender o punho sem tirar o antebraço do apoio.",
+        "Retire a ajuda e abaixe o peso lentamente por 3–4 s, dentro de uma amplitude confortável.",
+        "Faça 2–3 séries de 8–12 repetições leves; não execute sobre dor aguda."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 5, "why": "Fortalece de forma progressiva os extensores do punho, região frequentemente sobrecarregada no cotovelo do tenista." }
+      ]
+    },
+    {
+      "name": "Rotação Externa de Ombro com Faixa", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Faixa elástica leve",
+      "muscles": ["deltoides", "dorsais", "trapezio"],
+      "steps": [
+        "Prenda a faixa na altura do cotovelo e fique de lado para o ponto de ancoragem.",
+        "Mantenha o cotovelo junto ao tronco, dobrado a 90 graus, e o ombro relaxado.",
+        "Gire o antebraço para fora contra a faixa sem rodar o tronco ou afastar o cotovelo.",
+        "Retorne devagar; faça 2–3 séries de 12–15 repetições por lado com tensão leve e sem dor."
+      ],
+      "links": [
+        { "sport": "tenis", "score": 5, "why": "Trabalha o controle dos rotadores externos e o equilíbrio do ombro submetido a saques e golpes repetidos." }
       ]
     },
     {

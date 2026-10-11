@@ -50,7 +50,8 @@ public class RoutineController {
     }
 
     record RoutineDto(Long id, String name, String sportCode, String sportName,
-                      Instant createdAt, List<ItemDto> items) {
+                      Instant createdAt, List<ItemDto> items, Integer readinessScore,
+                      Boolean readinessAdjusted, Boolean requiresReview, String reviewRecommendation) {
     }
 
     @GetMapping
@@ -63,8 +64,8 @@ public class RoutineController {
     @PostMapping("/generate")
     @ResponseStatus(HttpStatus.CREATED)
     RoutineDto generate(@Valid @RequestBody GenerateRequest request, Authentication auth) {
-        var routine = generator.generate(auth.getName(), request.sportId());
-        return toDto(routine);
+        var result = generator.generateWithReadiness(auth.getName(), request.sportId());
+        return toDto(result);
     }
 
     /** [UE-29] Gera (uma vez) e devolve o link público de leitura da rotina para QR/compartilhamento. */
@@ -150,6 +151,16 @@ public class RoutineController {
     }
 
     private static RoutineDto toDto(Routine r) {
+        return toDto(r, null, null, null, null);
+    }
+
+    private static RoutineDto toDto(RoutineGeneratorService.GenerationResult result) {
+        return toDto(result.routine(), result.readinessScore(), result.readinessAdjusted(),
+                result.requiresReview(), result.reviewRecommendation());
+    }
+
+    private static RoutineDto toDto(Routine r, Integer readinessScore, Boolean readinessAdjusted,
+                                    Boolean requiresReview, String reviewRecommendation) {
         return new RoutineDto(
                 r.getId(),
                 r.getName(),
@@ -164,6 +175,10 @@ public class RoutineController {
                                 it.getSets(),
                                 it.getReps(),
                                 it.getRestTime()))
-                        .toList());
+                        .toList(),
+                readinessScore,
+                readinessAdjusted,
+                requiresReview,
+                reviewRecommendation);
     }
 }

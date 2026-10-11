@@ -29,7 +29,10 @@ export type ApiFeedItem = {
   rationaleBySport: Record<string, string>;
 };
 export type ApiRoutineItem = { exerciseId: number; exerciseName: string; position: number; sets: number; reps: string; restTime: number };
-export type ApiRoutine = { id: number; name: string; sportCode: string; sportName: string; createdAt: string; items: ApiRoutineItem[] };
+export type ApiRoutine = {
+  id: number; name: string; sportCode: string; sportName: string; createdAt: string; items: ApiRoutineItem[];
+  readinessScore?: number | null; readinessAdjusted?: boolean | null; requiresReview?: boolean | null; reviewRecommendation?: string | null;
+};
 export type ApiSessionItem = { exerciseId: number; exerciseName: string; position: number; prescribedSets: number; prescribedReps: string; prescribedRestTime: number; completedSets: number | null; completedReps: string | null; loadKg: number | null; itemRpe: number | null; painLevel: number | null; notes: string | null };
 export type ApiSession = { id: number; routineId: number | null; routineName: string | null; sportCode: string; sportName: string; status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "SKIPPED"; scheduledAt: string; startedAt: string | null; completedAt: string | null; durationMinutes: number | null; sessionRpe: number | null; notes: string | null; items: ApiSessionItem[] };
 // ---- Progresso [UE-44] ----
