@@ -76,13 +76,32 @@ class RoutineControllerTest {
     void generateDelegatesToServiceAndReturnsDto() {
         AppUser me = user(1L);
         Routine generated = routine(7L, me, sport(1L));
-        when(generator.generate("atleta@forja.com", 3L)).thenReturn(generated);
+        when(generator.generateWithReadiness("atleta@forja.com", 3L)).thenReturn(
+                new RoutineGeneratorService.GenerationResult(generated, null, false, false, null));
 
         var result = controller.generate(new RoutineController.GenerateRequest(3L), auth);
 
         assertThat(result.id()).isEqualTo(7L);
         assertThat(result.sportCode()).isEqualTo("futebol");
-        verify(generator).generate("atleta@forja.com", 3L);
+        assertThat(result.readinessAdjusted()).isFalse();
+        assertThat(result.requiresReview()).isFalse();
+        verify(generator).generateWithReadiness("atleta@forja.com", 3L);
+    }
+
+    @Test
+    void generateReturnsReviewRecommendationFromReadiness() {
+        AppUser me = user(1L);
+        Routine generated = routine(8L, me, sport(1L));
+        String recommendation = "Revise o treino com um profissional antes de iniciar.";
+        when(generator.generateWithReadiness("atleta@forja.com", 3L)).thenReturn(
+                new RoutineGeneratorService.GenerationResult(generated, 12, true, true, recommendation));
+
+        var result = controller.generate(new RoutineController.GenerateRequest(3L), auth);
+
+        assertThat(result.readinessScore()).isEqualTo(12);
+        assertThat(result.readinessAdjusted()).isTrue();
+        assertThat(result.requiresReview()).isTrue();
+        assertThat(result.reviewRecommendation()).isEqualTo(recommendation);
     }
 
     @Test

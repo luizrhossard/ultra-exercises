@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AppProvider } from "../store";
+import { AppProvider, useApp } from "../store";
 import Routines from "./Routines";
 
 vi.mock("../api", () => ({
@@ -111,8 +111,14 @@ function renderScreen() {
   return render(
     <AppProvider>
       <Routines />
+      <ToastCapture />
     </AppProvider>
   );
+}
+
+function ToastCapture() {
+  const { toasts } = useApp();
+  return <div aria-live="polite">{toasts.map((toast) => <span role="status" key={toast.id}>{toast.msg}</span>)}</div>;
 }
 
 async function expandFirstCard(user: ReturnType<typeof userEvent.setup>) {
@@ -148,8 +154,45 @@ describe("Routines — geração de treino", () => {
     await waitFor(() =>
       expect(api.generateRoutine).toHaveBeenCalledWith(currentToken, 1)
     );
+    expect(await screen.findByRole("status")).toHaveTextContent("Treino de Futebol criado.");
     // refresh da lista após gerar
     await waitFor(() => expect(api.routines).toHaveBeenCalledTimes(2));
+  });
+
+  it("informa que a rotina foi ajustada quando a prontidão está baixa", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.generateRoutine).mockResolvedValue({
+      ...routine,
+      readinessScore: 12,
+      readinessAdjusted: true,
+    });
+    renderScreen();
+    await screen.findByText("Gere sua primeira rotina acima.");
+
+    await user.click(screen.getByRole("button", { name: /Gerar para Futebol/ }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Treino de Futebol ajustado para sua prontidão de hoje.",
+    );
+  });
+
+  it("mostra a recomendação de revisão quando o check-in exige atenção", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.generateRoutine).mockResolvedValue({
+      ...routine,
+      readinessScore: 30,
+      readinessAdjusted: true,
+      requiresReview: true,
+      reviewRecommendation: "Revise a sessão com um profissional antes de iniciar.",
+    });
+    renderScreen();
+    await screen.findByText("Gere sua primeira rotina acima.");
+
+    await user.click(screen.getByRole("button", { name: /Gerar para Futebol/ }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Revise a sessão com um profissional antes de iniciar.",
+    );
   });
 
   it("não gera quando a chamada falha, mas mantém a tela utilizável", async () => {

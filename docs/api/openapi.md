@@ -57,7 +57,9 @@ Login com credenciais inválidas → 401 `UNAUTHORIZED`.
 ### Routines
 - `GET /api/routines` — minhas rotinas (mais recentes primeiro), com `items`.
 - `POST /api/routines/generate` `{sportId}` — "treino do dia": esporte foco pesa 2×,
-  cotas por categoria, até 7 exercícios (201).
+  cotas por categoria, até 7 exercícios (201). Considera o check-in do dia e devolve
+  `readinessScore`, `readinessAdjusted`, `requiresReview` e `reviewRecommendation`;
+  prontidão baixa reduz volume e prioriza mobilidade/técnica.
 - `POST /api/routines/{id}/items` `{exerciseId}` — adiciona item com preset da categoria
   (sem duplicar).
 - `PATCH /api/routines/{id}/items/{exerciseId}` `{sets?, restTime?}`.

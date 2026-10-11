@@ -88,10 +88,16 @@ export default function Routines() {
     if (!token || !focusSport) return;
     setGenerating(true);
     try {
-      await api.generateRoutine(token, focusSport.id);
+      const generated = await api.generateRoutine(token, focusSport.id);
       invalidate(userKey, /routines/);
       routinesQuery.refresh();
-      toast(`Treino de ${focusSport.name} criado.`);
+      if (generated.requiresReview && generated.reviewRecommendation) {
+        toast(generated.reviewRecommendation);
+      } else if (generated.readinessAdjusted) {
+        toast(`Treino de ${focusSport.name} ajustado para sua prontidão de hoje.`);
+      } else {
+        toast(`Treino de ${focusSport.name} criado.`);
+      }
     } catch { toast("Não foi possível gerar o treino."); }
     finally { setGenerating(false); }
   };

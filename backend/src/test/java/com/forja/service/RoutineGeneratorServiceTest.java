@@ -4,12 +4,15 @@ import com.forja.domain.AppUser;
 import com.forja.domain.Exercise;
 import com.forja.domain.ExerciseCategory;
 import com.forja.domain.ExerciseSport;
+import com.forja.domain.ReadinessCheckin;
 import com.forja.domain.Routine;
 import com.forja.domain.RoutineItem;
 import com.forja.domain.Sport;
+import com.forja.domain.SportLevel;
 import com.forja.domain.UserSport;
 import com.forja.repository.AppUserRepository;
 import com.forja.repository.ExerciseSportRepository;
+import com.forja.repository.ReadinessCheckinRepository;
 import com.forja.repository.RoutineRepository;
 import com.forja.repository.SportRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,16 +39,20 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RoutineGeneratorServiceTest {
 
+    private record ExpectedRunningDose(int sets, int distanceMeters, int contacts, int restSeconds) {
+    }
+
     @Mock AppUserRepository users;
     @Mock SportRepository sports;
     @Mock ExerciseSportRepository links;
+    @Mock ReadinessCheckinRepository checkins;
     @Mock RoutineRepository routines;
 
     RoutineGeneratorService service;
 
     @BeforeEach
     void setUp() {
-        service = new RoutineGeneratorService(users, sports, links, routines);
+        service = new RoutineGeneratorService(users, sports, links, checkins, routines);
     }
 
     private Sport sport(long id, String code, String name) {
@@ -69,11 +76,18 @@ class RoutineGeneratorServiceTest {
     }
 
     private Routine generateWith(AppUser user, Sport focus, List<ExerciseSport> pairs) {
+        return generateWithReadiness(user, focus, pairs, null).routine();
+    }
+
+    private RoutineGeneratorService.GenerationResult generateWithReadiness(
+            AppUser user, Sport focus, List<ExerciseSport> pairs, ReadinessCheckin checkin) {
         when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(user));
         when(sports.findById(focus.getId())).thenReturn(Optional.of(focus));
         when(links.findBySportIdIn(any())).thenReturn(pairs);
+        when(checkins.findByUserIdAndCheckinDate(user.getId(), LocalDate.now()))
+                .thenReturn(Optional.ofNullable(checkin));
         when(routines.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        return service.generate("atleta@forja.com", focus.getId());
+        return service.generateWithReadiness("atleta@forja.com", focus.getId());
     }
 
     @Test
@@ -159,6 +173,100 @@ class RoutineGeneratorServiceTest {
                 .filter(it -> it.getExercise().getId() == 2L).findFirst().orElseThrow();
         assertThat(item5.getSets()).isEqualTo(5); // preset FORCA 4 + 1
         assertThat(item3.getSets()).isEqualTo(4);
+    }
+
+    @Test
+    void runningTechniqueVolumeProgressesByAthleteSportLevel() {
+        Sport focus = sport(1L, "corrida", "Corrida");
+        Map<SportLevel, ExpectedRunningDose> doses = Map.of(
+                SportLevel.RECREATIONAL, new ExpectedRunningDose(2, 10, 8, 90),
+                SportLevel.AMATEUR, new ExpectedRunningDose(3, 12, 10, 75),
+                SportLevel.COMPETITIVE, new ExpectedRunningDose(3, 15, 12, 60),
+                SportLevel.PROFESSIONAL, new ExpectedRunningDose(4, 20, 15, 60));
+        List<String> distanceDrills = List.of("Skip A — Técnica de Passada", "Dribbling de Corrida");
+
+        for (var entry : doses.entrySet()) {
+            for (String drillName : distanceDrills) {
+                assertRunningDose(focus, entry.getKey(), drillName, entry.getValue(),
+                        entry.getValue().distanceMeters() + " m");
+            }
+            assertRunningDose(focus, entry.getKey(), "Pogos Bilaterais de Baixa Amplitude", entry.getValue(),
+                    entry.getValue().contacts() + " contatos");
+        }
+    }
+
+    @Test
+    void lowReadinessReducesRoutineVolumeAndPrioritizesMobilityAndTechnique() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        List<ExerciseSport> pairs = routineCandidates(focus);
+
+        var normal = generateWithReadiness(user, focus, pairs, null);
+        var low = generateWithReadiness(user, focus, pairs,
+                readiness(user, 2, 4, 4, 4, 0));
+
+        assertThat(normal.routine().getItems()).hasSize(7);
+        assertThat(low.routine().getItems()).hasSize(5);
+        assertThat(low.readinessScore()).isEqualTo(12);
+        assertThat(low.readinessAdjusted()).isTrue();
+        assertThat(low.requiresReview()).isFalse();
+        assertThat(low.reviewRecommendation()).isNull();
+        assertThat(low.routine().getItems()).extracting(item -> item.getExercise().getCategory())
+                .contains(ExerciseCategory.MOBILIDADE, ExerciseCategory.ESPECIFICO)
+                .doesNotContain(ExerciseCategory.PLIOMETRIA, ExerciseCategory.CONDICIONAMENTO);
+        assertThat(low.routine().getItems()).allSatisfy(item -> assertThat(item.getSets()).isLessThanOrEqualTo(2));
+    }
+
+    @Test
+    void reviewSignalReducesRoutineAndReturnsAnExplicitRecommendationEvenWithHighScore() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        var result = generateWithReadiness(user, focus, routineCandidates(focus),
+                readiness(user, 5, 1, 1, 1, 5));
+
+        assertThat(result.readinessScore()).isEqualTo(30);
+        assertThat(result.readinessAdjusted()).isTrue();
+        assertThat(result.requiresReview()).isTrue();
+        assertThat(result.reviewRecommendation()).contains("profissional");
+        assertThat(result.routine().getItems()).hasSize(5);
+    }
+
+    private List<ExerciseSport> routineCandidates(Sport focus) {
+        ExerciseCategory[] categories = {
+                ExerciseCategory.FORCA, ExerciseCategory.FORCA,
+                ExerciseCategory.PLIOMETRIA, ExerciseCategory.CORE,
+                ExerciseCategory.CONDICIONAMENTO, ExerciseCategory.ESPECIFICO,
+                ExerciseCategory.MOBILIDADE, ExerciseCategory.MOBILIDADE};
+        List<ExerciseSport> pairs = new ArrayList<>();
+        for (int i = 0; i < categories.length; i++) {
+            pairs.add(link(exercise(i + 1L, "Ex" + i, categories[i]), focus, 5));
+        }
+        return pairs;
+    }
+
+    private ReadinessCheckin readiness(AppUser user, int sleep, int fatigue, int stress, int soreness, int pain) {
+        return ReadinessCheckin.builder()
+                .user(user)
+                .checkinDate(LocalDate.now())
+                .sleepQuality(sleep)
+                .fatigue(fatigue)
+                .stress(stress)
+                .soreness(soreness)
+                .painLevel(pain)
+                .build();
+    }
+
+    private void assertRunningDose(Sport focus, SportLevel level, String drillName,
+                                   ExpectedRunningDose expected, String reps) {
+        AppUser user = userWithSports(focus);
+        user.getUserSports().get(0).setLevel(level);
+        Routine routine = generateWith(user, focus,
+                List.of(link(exercise(1L, drillName, ExerciseCategory.ESPECIFICO), focus, 5)));
+        RoutineItem item = routine.getItems().get(0);
+
+        assertThat(item.getSets()).isEqualTo(expected.sets());
+        assertThat(item.getReps()).isEqualTo(reps);
+        assertThat(item.getRestTime()).isEqualTo(expected.restSeconds());
     }
 
     @Test
