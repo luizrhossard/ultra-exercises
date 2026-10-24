@@ -120,10 +120,7 @@ public class RoutineGeneratorService {
             boolean newReviewSignal = requiresReview && !routine.isRequiresReview();
             boolean scoreChanged = checkin != null && !Objects.equals(routine.getReadinessScore(), readinessScore);
             if (newlyConservative || newReviewSignal || scoreChanged) {
-                if (newlyConservative) routine.getItems().forEach(item -> {
-                    item.setSets(Math.max(1, (item.getSets() + 1) / 2));
-                    item.setRestTime((int) Math.ceil(item.getRestTime() * 1.25));
-                });
+                if (newlyConservative) applyConservativeDose(routine);
                 if (checkin != null) routine.setReadinessScore(readinessScore);
                 routine.setReadinessAdjusted(routine.isReadinessAdjusted() || conservativeAdjustment);
                 routine.setRequiresReview(routine.isRequiresReview() || requiresReview);
@@ -294,6 +291,31 @@ public class RoutineGeneratorService {
         return requiresReview
                 ? "Seu check-in sinalizou dor, fadiga ou dor muscular elevados. O treino foi reduzido; revise a sessão com um profissional antes de iniciar."
                 : null;
+    }
+
+    private static void applyConservativeDose(Routine routine) {
+        Map<ExerciseCategory, Integer> limits = new EnumMap<>(ExerciseCategory.class);
+        LOW_READINESS_QUOTAS.forEach(quota -> limits.put(quota.getKey(), quota.getValue()));
+        Map<ExerciseCategory, Integer> selected = new EnumMap<>(ExerciseCategory.class);
+        Iterator<RoutineItem> items = routine.getItems().iterator();
+        int retained = 0;
+        while (items.hasNext()) {
+            RoutineItem item = items.next();
+            ExerciseCategory category = item.getExercise().getCategory();
+            int categoryCount = selected.getOrDefault(category, 0);
+            if (retained >= 5 || categoryCount >= limits.getOrDefault(category, 0)) {
+                items.remove();
+                continue;
+            }
+            selected.put(category, categoryCount + 1);
+            retained++;
+            item.setSets(Math.max(1, item.getSets() / 2));
+            item.setRestTime((int) Math.ceil(item.getRestTime() * 1.25));
+        }
+        routine.getItems().sort(Comparator.comparingInt(RoutineItem::getPosition));
+        for (int index = 0; index < routine.getItems().size(); index++) {
+            routine.getItems().get(index).setPosition(index);
+        }
     }
 
     private static int goalPriority(String goal, ExerciseCategory category) {

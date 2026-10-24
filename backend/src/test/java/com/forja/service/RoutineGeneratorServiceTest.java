@@ -307,7 +307,8 @@ class RoutineGeneratorServiceTest {
     void adjustsAnExistingProvisionalPlanWhenTodaysReadinessArrives() {
         Sport focus = sport(1L, "futebol", "Futebol");
         AppUser user = userWithSports(focus);
-        RoutineItem item = RoutineItem.builder().sets(4).restTime(60).build();
+        RoutineItem item = RoutineItem.builder().exercise(exercise(10L, "Agachamento", ExerciseCategory.FORCA))
+                .sets(4).restTime(60).build();
         Routine existing = Routine.builder().id(42L).user(user).sport(focus).planDate(LocalDate.now())
                 .items(new ArrayList<>(List.of(item))).build();
         when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(user));

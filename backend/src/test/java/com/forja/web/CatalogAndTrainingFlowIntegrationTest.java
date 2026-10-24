@@ -196,7 +196,7 @@ class CatalogAndTrainingFlowIntegrationTest {
                         .contentType("application/json")
                         .content("{\"sportId\":1}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.readinessScore").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.readinessScore").doesNotExist())
                 .andExpect(jsonPath("$.readinessAdjusted").value(false))
                 .andExpect(jsonPath("$.items.length()").value(7))
                 .andReturn().getResponse().getContentAsString();
