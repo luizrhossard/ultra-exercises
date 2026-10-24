@@ -4,6 +4,7 @@ import com.forja.domain.AppUser;
 import com.forja.domain.Routine;
 import com.forja.repository.AppUserRepository;
 import com.forja.repository.ExerciseRepository;
+import com.forja.repository.ExerciseSportRepository;
 import com.forja.repository.RoutineRepository;
 import com.forja.service.RoutineGeneratorService;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
@@ -31,18 +33,24 @@ public class RoutineController {
     private final RoutineGeneratorService generator;
     private final AppUserRepository users;
     private final ExerciseRepository exercises;
+    private final ExerciseSportRepository exerciseSports;
 
     /** [UE-29] Base pública do frontend montada no link/QR compartilhado. */
     @Value("${forja.share.base-url:http://localhost:3000}")
     private String baseUrl;
 
-    record GenerateRequest(@NotNull Long sportId) {
+    record GenerateRequest(@NotNull Long sportId, @jakarta.validation.constraints.FutureOrPresent LocalDate planDate) {
     }
 
     record AddItemRequest(@NotNull Long exerciseId) {
     }
 
-    record ItemPatch(Integer sets, Integer restTime) {
+    record ReplaceItemRequest(@NotNull Long replacementExerciseId) {}
+
+    record AlternativeDto(Long exerciseId, String exerciseName) {}
+
+    record ItemPatch(@jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(10) Integer sets,
+                     @jakarta.validation.constraints.Min(0) @jakarta.validation.constraints.Max(900) Integer restTime) {
     }
 
     record ItemDto(Long exerciseId, String exerciseName, int position,
@@ -50,7 +58,9 @@ public class RoutineController {
     }
 
     record RoutineDto(Long id, String name, String sportCode, String sportName,
-                      Instant createdAt, List<ItemDto> items) {
+                      Instant createdAt, List<ItemDto> items, Integer readinessScore,
+                      Boolean readinessAdjusted, Boolean requiresReview, String reviewRecommendation,
+                      String explanation, Boolean restDay) {
     }
 
     @GetMapping
@@ -63,8 +73,8 @@ public class RoutineController {
     @PostMapping("/generate")
     @ResponseStatus(HttpStatus.CREATED)
     RoutineDto generate(@Valid @RequestBody GenerateRequest request, Authentication auth) {
-        var routine = generator.generate(auth.getName(), request.sportId());
-        return toDto(routine);
+        var result = generator.generateWithReadiness(auth.getName(), request.sportId(), request.planDate());
+        return toDto(result);
     }
 
     /** [UE-29] Gera (uma vez) e devolve o link público de leitura da rotina para QR/compartilhamento. */
@@ -114,7 +124,7 @@ public class RoutineController {
     @Transactional
     ResponseEntity<RoutineDto> patchItem(@PathVariable Long id,
                                          @PathVariable Long exerciseId,
-                                         @RequestBody ItemPatch patch,
+                                         @Valid @RequestBody ItemPatch patch,
                                          Authentication auth) {
         return ownedRoutine(id, auth).map(routine -> {
             routine.getItems().stream()
@@ -127,6 +137,46 @@ public class RoutineController {
             routines.save(routine);
             return ResponseEntity.ok(toDto(routine));
         }).orElseThrow(() -> new NoSuchElementException("Rotina não encontrada"));
+    }
+
+    @GetMapping("/{id}/items/{exerciseId}/alternatives")
+    @Transactional(readOnly = true)
+    List<AlternativeDto> alternatives(@PathVariable Long id, @PathVariable Long exerciseId, Authentication auth) {
+        var routine = ownedRoutine(id, auth).orElseThrow(() -> new NoSuchElementException("Rotina não encontrada"));
+        var current = routine.getItems().stream().filter(item -> item.getExercise().getId().equals(exerciseId))
+                .findFirst().orElseThrow(() -> new NoSuchElementException("Exercício não encontrado na rotina"));
+        var usedIds = routine.getItems().stream().map(item -> item.getExercise().getId()).collect(java.util.stream.Collectors.toSet());
+        return exerciseSports.findBySportIdIn(List.of(routine.getSport().getId())).stream()
+                .map(link -> link.getExercise())
+                .filter(exercise -> exercise.getCategory() == current.getExercise().getCategory())
+                .filter(exercise -> !usedIds.contains(exercise.getId()))
+                .distinct()
+                .limit(10)
+                .map(exercise -> new AlternativeDto(exercise.getId(), exercise.getName()))
+                .toList();
+    }
+
+    @PutMapping("/{id}/items/{exerciseId}/replace")
+    @Transactional
+    RoutineDto replaceItem(@PathVariable Long id, @PathVariable Long exerciseId,
+                           @Valid @RequestBody ReplaceItemRequest request, Authentication auth) {
+        var routine = ownedRoutine(id, auth).orElseThrow(() -> new NoSuchElementException("Rotina não encontrada"));
+        var current = routine.getItems().stream().filter(item -> item.getExercise().getId().equals(exerciseId))
+                .findFirst().orElseThrow(() -> new NoSuchElementException("Exercício não encontrado na rotina"));
+        var replacement = exercises.findById(request.replacementExerciseId())
+                .orElseThrow(() -> new NoSuchElementException("Exercício alternativo não encontrado"));
+        boolean alreadyUsed = routine.getItems().stream()
+                .anyMatch(item -> item.getExercise().getId().equals(replacement.getId()));
+        if (alreadyUsed || replacement.getCategory() != current.getExercise().getCategory()
+                || exerciseSports.findByExerciseIdAndSportId(replacement.getId(), routine.getSport().getId()).isEmpty()) {
+            throw new IllegalArgumentException("Escolha um exercício alternativo disponível para este esporte e categoria.");
+        }
+        var replacementItem = com.forja.domain.RoutineItem.builder().routine(routine).exercise(replacement)
+                .position(current.getPosition()).sets(current.getSets()).reps(current.getReps())
+                .restTime(current.getRestTime()).build();
+        routine.getItems().remove(current);
+        routine.getItems().add(replacementItem);
+        return toDto(routines.save(routine));
     }
 
     @DeleteMapping("/{id}")
@@ -150,6 +200,23 @@ public class RoutineController {
     }
 
     private static RoutineDto toDto(Routine r) {
+        return toDto(r, r.getReadinessScore(), r.isReadinessAdjusted(), r.isRequiresReview(),
+                r.isRequiresReview() ? "Revise a sessão com um profissional antes de iniciar." : null,
+                r.getExplanation(), r.isRestDay());
+    }
+
+    private static RoutineDto toDto(RoutineGeneratorService.GenerationResult result) {
+        return toDto(result.routine(), result.readinessScore(), result.readinessAdjusted(),
+                result.requiresReview(), result.reviewRecommendation(), result.explanation(), result.routine().isRestDay());
+    }
+
+    private static RoutineDto toDto(Routine r, Integer readinessScore, Boolean readinessAdjusted,
+                                    Boolean requiresReview, String reviewRecommendation) {
+        return toDto(r, readinessScore, readinessAdjusted, requiresReview, reviewRecommendation, null, r.isRestDay());
+    }
+
+    private static RoutineDto toDto(Routine r, Integer readinessScore, Boolean readinessAdjusted,
+                                    Boolean requiresReview, String reviewRecommendation, String explanation, Boolean restDay) {
         return new RoutineDto(
                 r.getId(),
                 r.getName(),
@@ -164,6 +231,12 @@ public class RoutineController {
                                 it.getSets(),
                                 it.getReps(),
                                 it.getRestTime()))
-                        .toList());
+                        .toList(),
+                readinessScore,
+                readinessAdjusted,
+                requiresReview,
+                reviewRecommendation,
+                explanation,
+                restDay);
     }
 }

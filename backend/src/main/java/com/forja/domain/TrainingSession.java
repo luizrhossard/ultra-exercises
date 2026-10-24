@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class TrainingSession {
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "sport_id") private Sport sport;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) @Builder.Default private SessionStatus status = SessionStatus.PLANNED;
     @Column(name = "scheduled_at", nullable = false) @Builder.Default private Instant scheduledAt = Instant.now();
+    @Column(name = "plan_date") private LocalDate planDate;
     @Column(name = "started_at") private Instant startedAt;
     @Column(name = "completed_at") private Instant completedAt;
     @Column(name = "duration_minutes") private Integer durationMinutes;

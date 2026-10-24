@@ -16,10 +16,10 @@ re-executados nos fluxos de UI.
 
 | CT | Caso de Teste | Automação | Status |
 | --- | --- | --- | --- |
-| CT-01 | Cadastro com Dificuldade Válida (Caminho Feliz) | `ct01_seedClassifiesAllExercisesWithValidDifficulty` — os 22 exercícios do seed saem classificados (12 iniciante · 8 intermediário · 2 avançado) e a tag é exibida no card do frontend (unit: `Feed.test.tsx`) | ✅ Aprovado (adaptado: cadastro = seed curado) |
+| CT-01 | Cadastro com Dificuldade Válida (Caminho Feliz) | `ct01_seedClassifiesAllExercisesWithValidDifficulty` — os 38 exercícios do seed saem classificados (22 iniciante · 14 intermediário · 2 avançado) e a tag é exibida no card do frontend (unit: `Feed.test.tsx`) | ✅ Aprovado (adaptado: cadastro = seed curado) |
 | CT-02 | Validação de Campo Obrigatório (Cenário Negativo) | `ct02_invalidDifficultyIsRejectedWithContractError` — valor inválido é bloqueado com 400 `BAD_REQUEST` + `traceId`; coluna `NOT NULL` + `CHECK` no banco impede registro sem dificuldade | ✅ Aprovado (adaptado: sem formulário de cadastro, a validação é de contrato/DB) |
 | CT-03 | Edição e Atualização de Dificuldade | `ct03_detailMatchesCatalogDifficulty` — consistência entre catálogo e detalhe | ⚠️ Adaptado: sem CRUD de exercício na API; a edição por UI não existe ainda. Reexecutar quando houver story de administração |
-| CT-04 | Filtro no Catálogo / API de Exercícios | `ct04_filterByDifficultyReturnsOnlyMatches` — `GET /api/exercises?difficulty=AVANCADO` (2), combinado com `category` (3) e `q` (0); sem filtro (22) | ✅ Aprovado |
+| CT-04 | Filtro no Catálogo / API de Exercícios | `ct04_filterByDifficultyReturnsOnlyMatches` — `GET /api/exercises?difficulty=AVANCADO` (2), combinado com `category` (3) e `q` (0); sem filtro (38) | ✅ Aprovado |
 
 ## Camadas de verificação
 

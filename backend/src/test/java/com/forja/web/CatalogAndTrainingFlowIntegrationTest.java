@@ -145,6 +145,11 @@ class CatalogAndTrainingFlowIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         long sessionId = ((Number) JsonPath.read(sessionBody, "$.id")).longValue();
 
+        mvc.perform(post("/api/routines/{id}/sessions", routineId)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(sessionId));
+
         mvc.perform(post("/api/sessions/{id}/start", sessionId)
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
@@ -169,5 +174,73 @@ class CatalogAndTrainingFlowIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].status").value("COMPLETED"));
+
+        mvc.perform(post("/api/routines/{id}/sessions", routineId)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(sessionId))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+    }
+
+    @Test
+    void generatedRoutineAdjustsToTodaysReadinessAndReturnsReviewRecommendation() throws Exception {
+        String token = TestUsers.register(mvc, "prontidao-rotina@forja.com");
+        mvc.perform(put("/api/me")
+                        .header("Authorization", bearer(token))
+                        .contentType("application/json")
+                        .content("{\"name\":\"Atleta\",\"sports\":[{\"code\":\"futebol\",\"level\":\"RECREATIONAL\"}]}"))
+                .andExpect(status().isOk());
+
+        String regularRoutine = mvc.perform(post("/api/routines/generate")
+                        .header("Authorization", bearer(token))
+                        .contentType("application/json")
+                        .content("{\"sportId\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.readinessScore").doesNotExist())
+                .andExpect(jsonPath("$.readinessAdjusted").value(false))
+                .andExpect(jsonPath("$.items.length()").value(7))
+                .andReturn().getResponse().getContentAsString();
+
+        mvc.perform(put("/api/readiness/today")
+                        .header("Authorization", bearer(token))
+                        .contentType("application/json")
+                        .content("{\"sleepQuality\":2,\"fatigue\":4,\"stress\":4,\"soreness\":4,\"painArea\":\"\",\"painLevel\":0,\"notes\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readinessScore").value(12))
+                .andExpect(jsonPath("$.requiresReview").value(false));
+
+        String adjustedRoutine = mvc.perform(post("/api/routines/generate")
+                        .header("Authorization", bearer(token))
+                        .contentType("application/json")
+                        .content("{\"sportId\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.readinessScore").value(12))
+                .andExpect(jsonPath("$.readinessAdjusted").value(true))
+                .andExpect(jsonPath("$.requiresReview").value(false))
+                .andExpect(jsonPath("$.items.length()", org.hamcrest.Matchers.lessThan(7)))
+                .andExpect(jsonPath("$.items[*].sets", org.hamcrest.Matchers.everyItem(
+                        org.hamcrest.Matchers.lessThanOrEqualTo(2))))
+                .andReturn().getResponse().getContentAsString();
+
+        Object regularSets = JsonPath.read(regularRoutine, "$.items[*].sets");
+        Object adjustedSets = JsonPath.read(adjustedRoutine, "$.items[*].sets");
+        org.assertj.core.api.Assertions.assertThat(regularSets).isNotEqualTo(adjustedSets);
+
+        mvc.perform(put("/api/readiness/today")
+                        .header("Authorization", bearer(token))
+                        .contentType("application/json")
+                        .content("{\"sleepQuality\":5,\"fatigue\":1,\"stress\":1,\"soreness\":1,\"painArea\":\"joelho\",\"painLevel\":5,\"notes\":\"dor persistente\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readinessScore").value(30))
+                .andExpect(jsonPath("$.requiresReview").value(true));
+
+        mvc.perform(post("/api/routines/generate")
+                        .header("Authorization", bearer(token))
+                        .contentType("application/json")
+                        .content("{\"sportId\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.readinessAdjusted").value(true))
+                .andExpect(jsonPath("$.requiresReview").value(true))
+                .andExpect(jsonPath("$.reviewRecommendation", org.hamcrest.Matchers.containsString("profissional")));
     }
 }

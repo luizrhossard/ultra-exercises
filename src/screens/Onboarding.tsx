@@ -41,7 +41,7 @@ const [saving, setSaving] = useState(false);
           </p>
           <div className="mt-8 flex gap-3">
             {[
-              { v: "22", l: "Exercícios" },
+              { v: "38", l: "Exercícios" },
               { v: "8", l: "Esportes" },
               { v: "92", l: "Mapeamentos" },
             ].map((s) => (

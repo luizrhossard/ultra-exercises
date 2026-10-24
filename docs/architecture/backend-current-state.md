@@ -27,7 +27,7 @@ flowchart TB
 
     subgraph DB["PostgreSQL 16 (Docker, porta 5433)"]
         FLYWAY["Flyway V1__init + V2__athlete_monitoring"]
-        SEED["DataSeeder (seed/data.json — 22 exercícios · 8 esportes)"]
+        SEED["DataSeeder (seed/data.json — 38 exercícios · 8 esportes)"]
     end
 
     API -->|"HTTP /api/** (Bearer JWT)"| SEC
@@ -46,7 +46,7 @@ flowchart TB
 |---|---|
 | Frontend | React 18 + Vite 6 + Tailwind 4 + framer-motion; `src/api.ts` (único cliente HTTP); `src/store.tsx` (contexto global, token JWT, perfil); `src/cache.ts` + `src/hooks/useCachedQuery.ts` (cache SWR própria em localStorage); catálogo local `src/data/*` |
 | Backend | Spring Boot 3.3.5 (Java 21), Maven (`backend/pom.xml`), 7 controllers, 2 services, 8 repositories, entidades de domínio, JWT HS256 caseiro (`JwtService`), BCrypt, CORS restritivo |
-| Banco | PostgreSQL 16 via Docker (`backend/docker-compose.yml`, porta 5433); Flyway (`V1__init.sql`, `V2__athlete_monitoring.sql`); `DataSeeder` idempotente (`seed/data.json`: 22 exercícios, 8 esportes, pares exercise×sport score 1–5 + rationale) |
+| Banco | PostgreSQL 16 via Docker (`backend/docker-compose.yml`, porta 5433); Flyway (`V1__init.sql`, `V2__athlete_monitoring.sql`); `DataSeeder` idempotente (`seed/data.json`: 38 exercícios, 8 esportes, pares exercise×sport score 1–5 + rationale) |
 | Testes backend | 5 classes, 28 testes (JUnit 5 + Mockito + AssertJ) — unitários, sem contexto Spring |
 | Testes frontend | 4 arquivos, 26 testes (Vitest + Testing Library) |
 | CI/CD | Inexistente (`.github/` só tem hooks locais de tooling) |
@@ -88,7 +88,7 @@ flowchart TB
 
 | Domínio | Fonte oficial | Duplicado em |
 |---|---|---|
-| Catálogo de exercícios/esportes + relevância (score 1–5) | **PostgreSQL** (seed `data.json` + `exercise_sport`) | **`src/data/exercises.ts` + `sports.ts`** (cópia local de 22 exercícios; usada por Feed, Player, Profile, Project, Onboarding, Sidebar) |
+| Catálogo de exercícios/esportes + relevância (score 1–5) | **PostgreSQL** (seed `data.json` + `exercise_sport`) | **`src/data/exercises.ts` + `sports.ts`** (cópia local de 38 exercícios; usada por Feed, Player, Profile, Project, Onboarding, Sidebar) |
 | Regra de ranqueamento do feed | **`ExerciseFeedService`** (bestScore/strongCount) | **`rankFor`/`bestLink` em `src/data/exercises.ts`** (regra duplicada no frontend) |
 | Usuário, perfil, esportes escolhidos | PostgreSQL (`app_user`, `user_sport`) | — (perfil em localStorage é cache derivado) |
 | Rotinas e prescrições | PostgreSQL (`routines`, `routine_items`) | — |

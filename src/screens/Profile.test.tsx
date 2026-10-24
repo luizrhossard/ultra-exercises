@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Profile from "./Profile";
 import { SPORTS } from "../data/sports";
@@ -10,11 +10,13 @@ const mocks = vi.hoisted(() => ({
   toggleSport: vi.fn(),
   resetAll: vi.fn(),
   toast: vi.fn(),
+  token: "profile-token",
 }));
 
 vi.mock("../store", () => ({
   useApp: () => ({
     profile: mocks.profile,
+    token: mocks.token,
     setName: mocks.setName,
     toggleSport: mocks.toggleSport,
     resetAll: mocks.resetAll,
@@ -29,6 +31,8 @@ vi.mock("../components/TwoFactorSettings", () => ({
 vi.mock("../api", () => ({
   ApiError: class ApiError extends Error {},
   api: {
+    me: vi.fn().mockResolvedValue({ email: "leo@example.com", name: "leo", sports: [], goal: "", availableDays: [], sessionDurationMinutes: 60, equipment: "", preferences: "", limitations: "" }),
+    saveProfile: vi.fn().mockResolvedValue({}),
     todayReadiness: vi.fn().mockResolvedValue(null),
     saveReadiness: vi.fn(),
     twoFactorStatus: vi.fn().mockResolvedValue({ enabled: false }),
@@ -79,6 +83,23 @@ describe("Profile — identidade, esportes e zona de risco", () => {
     await user.click(futebol);
     expect(mocks.toggleSport).toHaveBeenCalledWith("futebol");
     expect(mocks.toast).toHaveBeenCalledWith("Futebol removido do foco", undefined);
+  });
+
+  it("salva disponibilidade, duração e equipamentos no perfil de treino", async () => {
+    const user = userEvent.setup();
+    render(<Profile />);
+
+    await user.click(screen.getByRole("button", { name: "Seg" }));
+    await user.clear(screen.getByLabelText(/Duração por sessão/));
+    await user.type(screen.getByLabelText(/Duração por sessão/), "45");
+    await user.type(screen.getByLabelText(/Equipamentos disponíveis/), "halteres");
+    await user.click(screen.getByRole("button", { name: "Salvar preferências" }));
+
+    await waitFor(() => expect(mocks.toast).toHaveBeenCalledWith("Preferências de treino salvas."));
+    const { api } = await import("../api");
+    expect(api.saveProfile).toHaveBeenCalledWith("profile-token", "leo", ["futebol"], expect.objectContaining({
+      availableDays: ["MONDAY"], sessionDurationMinutes: 45, equipment: "halteres",
+    }));
   });
 
   it("exige confirmação antes de resetar o app", async () => {

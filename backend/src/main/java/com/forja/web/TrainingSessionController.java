@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 /** Preserva uma cópia da prescrição e registra a execução real do atleta. */
@@ -48,7 +49,11 @@ public class TrainingSessionController {
         var routine = routines.findById(routineId)
                 .filter(r -> r.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new java.util.NoSuchElementException("Rotina não encontrada"));
-        var session = TrainingSession.builder().user(user).routine(routine).sport(routine.getSport()).build();
+        var planDate = routine.getPlanDate() == null ? LocalDate.now() : routine.getPlanDate();
+        var existing = sessions.findByUserIdAndPlanDate(user.getId(), planDate);
+        if (existing.isPresent()) return toDto(existing.get());
+        var session = TrainingSession.builder().user(user).routine(routine).sport(routine.getSport())
+                .planDate(planDate).build();
         for (var item : routine.getItems()) {
             session.getItems().add(TrainingSessionItem.builder().session(session).exercise(item.getExercise())
                     .position(item.getPosition()).prescribedSets(item.getSets()).prescribedReps(item.getReps())
@@ -68,9 +73,9 @@ public class TrainingSessionController {
     @Transactional
     ResponseEntity<SessionDto> start(@PathVariable Long id, Authentication auth) {
         return owned(id, auth).map(session -> {
-            if (session.getStatus() == SessionStatus.PLANNED) {
+            if (session.getStatus() == SessionStatus.PLANNED || session.getStatus() == SessionStatus.INTERRUPTED) {
                 session.setStatus(SessionStatus.IN_PROGRESS);
-                session.setStartedAt(Instant.now());
+                if (session.getStartedAt() == null) session.setStartedAt(Instant.now());
             }
             return ResponseEntity.ok(toDto(sessions.save(session)));
         }).orElseGet(() -> ResponseEntity.notFound().build());
@@ -82,6 +87,9 @@ public class TrainingSessionController {
                                      Authentication auth) {
         return owned(id, auth).map(session -> {
             if (patch.status() != null) {
+                if (!allowedTransition(session.getStatus(), patch.status())) {
+                    throw new IllegalArgumentException("Não é possível alterar uma sessão encerrada.");
+                }
                 session.setStatus(patch.status());
                 if (patch.status() == SessionStatus.COMPLETED && session.getCompletedAt() == null) {
                     session.setCompletedAt(Instant.now());
@@ -115,6 +123,15 @@ public class TrainingSessionController {
     }
 
     private AppUser currentUser(Authentication auth) { return users.findByEmail(auth.getName()).orElseThrow(); }
+    private boolean allowedTransition(SessionStatus current, SessionStatus next) {
+        if (current == next) return true;
+        return switch (current) {
+            case PLANNED -> next == SessionStatus.IN_PROGRESS || next == SessionStatus.SKIPPED || next == SessionStatus.INTERRUPTED;
+            case IN_PROGRESS -> next == SessionStatus.COMPLETED || next == SessionStatus.INTERRUPTED || next == SessionStatus.SKIPPED;
+            case INTERRUPTED -> next == SessionStatus.IN_PROGRESS || next == SessionStatus.COMPLETED || next == SessionStatus.SKIPPED;
+            case COMPLETED, SKIPPED -> false;
+        };
+    }
     private java.util.Optional<TrainingSession> owned(Long id, Authentication auth) {
         return sessions.findByIdAndUserId(id, currentUser(auth).getId());
     }

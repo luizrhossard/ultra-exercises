@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,28 @@ public class Routine {
 
     @Column(nullable = false, length = 120)
     private String name;
+
+    /** Data local para a qual esta recomendação foi planejada. */
+    @Column(name = "plan_date")
+    private LocalDate planDate;
+
+    @Column(name = "readiness_score")
+    private Integer readinessScore;
+
+    @Column(name = "readiness_adjusted", nullable = false)
+    @Builder.Default
+    private boolean readinessAdjusted = false;
+
+    @Column(name = "requires_review", nullable = false)
+    @Builder.Default
+    private boolean requiresReview = false;
+
+    @Column(name = "explanation", columnDefinition = "text")
+    private String explanation;
+
+    @Column(name = "rest_day", nullable = false)
+    @Builder.Default
+    private boolean restDay = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default

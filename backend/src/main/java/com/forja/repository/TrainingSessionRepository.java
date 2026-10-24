@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,26 @@ public interface TrainingSessionRepository extends JpaRepository<TrainingSession
     List<TrainingSession> findByUserIdOrderByScheduledAtDesc(Long userId);
     @EntityGraph(attributePaths = {"sport", "routine", "items", "items.exercise"})
     Optional<TrainingSession> findByIdAndUserId(Long id, Long userId);
+
+    @EntityGraph(attributePaths = {"sport", "routine", "items", "items.exercise"})
+    Optional<TrainingSession> findByUserIdAndPlanDate(Long userId, LocalDate planDate);
+
+    @Query("""
+            select distinct it.exercise.id from TrainingSession s join s.items it
+            where s.user.id = :userId and s.status = com.forja.domain.SessionStatus.COMPLETED
+              and s.completedAt >= :since and s.completedAt < :until
+            """)
+    List<Long> findCompletedExerciseIdsSince(Long userId, Instant since, Instant until);
+
+    @Query("""
+            select case when count(s) > 0 then true else false end from TrainingSession s
+            where s.user.id = :userId and s.status = com.forja.domain.SessionStatus.COMPLETED
+              and s.completedAt >= :since
+              and (s.sessionRpe >= 9 or exists (
+                  select item.exercise.id from TrainingSessionItem item
+                  where item.session = s and item.painLevel >= 5))
+            """)
+    boolean hasRecentHighEffortOrPain(Long userId, Instant since);
 
     // [UE-42] Sessões concluídas numa janela (resumo semanal).
     @EntityGraph(attributePaths = {"sport", "routine", "items", "items.exercise"})

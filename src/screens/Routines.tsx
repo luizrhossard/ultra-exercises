@@ -88,10 +88,18 @@ export default function Routines() {
     if (!token || !focusSport) return;
     setGenerating(true);
     try {
-      await api.generateRoutine(token, focusSport.id);
+      const generated = await api.generateRoutine(token, focusSport.id);
       invalidate(userKey, /routines/);
       routinesQuery.refresh();
-      toast(`Treino de ${focusSport.name} criado.`);
+      if (generated.requiresReview && generated.reviewRecommendation) {
+        toast(generated.reviewRecommendation);
+      } else if (generated.explanation) {
+        toast(generated.explanation);
+      } else if (generated.readinessAdjusted) {
+        toast(`Treino de ${focusSport.name} ajustado para sua prontidão de hoje.`);
+      } else {
+        toast(`Treino de ${focusSport.name} criado.`);
+      }
     } catch { toast("Não foi possível gerar o treino."); }
     finally { setGenerating(false); }
   };
@@ -103,6 +111,36 @@ export default function Routines() {
       toast("Sessão iniciada. Registre cada exercício.");
     } catch { toast("Não foi possível iniciar a sessão."); }
   };
+  const replaceExercise = async (routineId: number, exerciseId: number, replacementExerciseId: number) => {
+    if (!token) return;
+    try {
+      await api.replaceRoutineExercise(token, routineId, exerciseId, replacementExerciseId);
+      invalidate(userKey, /routines/);
+      routinesQuery.refresh();
+      toast("Exercício substituído por uma alternativa do mesmo esporte e categoria.");
+    } catch {
+      toast("Não foi possível substituir o exercício.");
+    }
+  };
+  const ignorePlan = async (routine: ApiRoutine) => {
+    if (!token) return;
+    try {
+      const session = await api.createSession(token, routine.id);
+      await api.patchSession(token, session.id, { status: "SKIPPED" });
+      invalidate(userKey, /progress/);
+      toast("Plano marcado como não realizado.");
+    } catch {
+      toast("Não foi possível registrar o plano como não realizado.");
+    }
+  };
+  const adjustDose = async (routineId: number, exerciseId: number, sets: number) => {
+    if (!token) return;
+    try {
+      await api.patchRoutineItem(token, routineId, exerciseId, { sets });
+      invalidate(userKey, /routines/);
+      routinesQuery.refresh();
+    } catch { toast("Não foi possível ajustar a prescrição."); }
+  };
 
   return <div className="px-5 pb-32 pt-6 lg:mx-auto lg:max-w-5xl lg:px-10 lg:pt-10">
     <motion.h1 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="font-display text-[40px] uppercase leading-none text-fog lg:text-[56px]">Rotinas</motion.h1>
@@ -113,7 +151,7 @@ export default function Routines() {
       <button disabled={!focusSport || generating} onClick={generate} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3.5 font-display uppercase text-ink-950 disabled:opacity-50">{generating ? <><IconRefresh className="animate-spin" size={17} /> Gerando…</> : <><IconBolt size={17} /> Gerar para {focusSport?.name ?? "seu esporte"}</>}</button>
     </section>
     <div className="mt-7 flex items-baseline justify-between"><h2 className="font-display text-xl uppercase text-fog">Prescritas</h2><button onClick={() => { routinesQuery.refresh(); sportsQuery.refresh(); }} className="text-[11px] font-bold uppercase text-volt-300">Atualizar</button></div>
-    <div className="mt-3 space-y-3">{loading ? <RoutineListSkeleton /> : routines.length === 0 ? <p className="rounded-2xl border border-dashed border-ink-600 p-8 text-center text-[13px] text-fog-mute">Gere sua primeira rotina acima.</p> : routines.map((routine) => <RoutineCard key={routine.id} routine={routine} onStart={() => void start(routine)} onExport={(kind) => void handleExport(kind, routine)} />)}</div>
+    <div className="mt-3 space-y-3">{loading ? <RoutineListSkeleton /> : routines.length === 0 ? <p className="rounded-2xl border border-dashed border-ink-600 p-8 text-center text-[13px] text-fog-mute">Gere sua primeira rotina acima.</p> : routines.map((routine) => <RoutineCard key={routine.id} routine={routine} onStart={() => void start(routine)} onExport={(kind) => void handleExport(kind, routine)} onReplace={(exerciseId, replacementId) => replaceExercise(routine.id, exerciseId, replacementId)} onAdjust={(exerciseId, sets) => adjustDose(routine.id, exerciseId, sets)} onIgnore={() => void ignorePlan(routine)} />)}</div>
     <SessionSheet session={session} onClose={() => setSession(null)} onChange={setSession} />
     {printRoutine && <RoutinePrintSheet routine={printRoutine} />}
     <div ref={pngRef} aria-hidden="true" style={{ position: "absolute", left: -9999, top: 0 }}>
@@ -151,9 +189,37 @@ const EXPORT_ACTIONS: { kind: ExportKind; label: string; href?: (r: ApiRoutine) 
   { kind: "email", label: "E-mail", href: (r) => `mailto:?subject=${encodeURIComponent(r.name)}&body=${encodeURIComponent(routineShareText(r))}` },
 ];
 
-const RoutineCard = memo(function RoutineCard({ routine, onStart, onExport }: { routine: ApiRoutine; onStart: () => void; onExport: (kind: ExportKind) => void }) {
+const RoutineCard = memo(function RoutineCard({ routine, onStart, onExport, onReplace, onAdjust, onIgnore }: { routine: ApiRoutine; onStart: () => void; onExport: (kind: ExportKind) => void; onReplace: (exerciseId: number, replacementId: number) => Promise<void>; onAdjust: (exerciseId: number, sets: number) => Promise<void>; onIgnore: () => void }) {
   const [open, setOpen] = useState(false);
-  return <div className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-850"><button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-4 text-left"><div><h3 className="font-display text-[17px] uppercase text-fog">{routine.name}</h3><p className="mt-1 text-[11px] text-fog-mute">{routine.sportName} · {routine.items.length} exercícios</p></div><span className="text-fog-mute">{open ? "−" : "+"}</span></button>{open && <div className="border-t border-ink-700 p-4"><div className="space-y-2">{routine.items.map((item) => <div key={item.exerciseId} className="flex items-center justify-between rounded-lg bg-ink-800 p-2.5"><div><p className="text-[12px] font-bold text-fog">{item.exerciseName}</p><p className="text-[10px] text-fog-mute">{item.sets} × {item.reps} · descanso {item.restTime}s</p></div></div>)}</div><button onClick={onStart} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3 text-[12px] font-bold uppercase tracking-[.1em] text-ink-950"><IconTimer size={15} /> Iniciar sessão</button><div className="mt-2 grid grid-cols-5 gap-1.5">{EXPORT_ACTIONS.map((action) => action.href ? <a key={action.kind} href={action.href(routine)} target={action.kind === "whatsapp" ? "_blank" : undefined} rel={action.kind === "whatsapp" ? "noopener" : undefined} className="rounded-lg border border-ink-600 py-2 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-fog-dim transition-colors hover:border-volt-400 hover:text-volt-300">{action.label}</a> : <button key={action.kind} onClick={() => onExport(action.kind)} className="rounded-lg border border-ink-600 py-2 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-fog-dim transition-colors hover:border-volt-400 hover:text-volt-300">{action.label}</button>)}</div></div>}</div>;
+  const [alternatives, setAlternatives] = useState<Record<number, { exerciseId: number; exerciseName: string }[]>>({});
+  const [loadingAlternatives, setLoadingAlternatives] = useState<number | null>(null);
+  const { token, toast } = useApp();
+  const loadAlternatives = async (exerciseId: number) => {
+    if (!token) return;
+    setLoadingAlternatives(exerciseId);
+    try {
+      const result = await api.routineAlternatives(token, routine.id, exerciseId);
+      setAlternatives((current) => ({ ...current, [exerciseId]: result }));
+      if (result.length === 0) toast("Não há alternativa compatível disponível para este exercício.");
+    } catch { toast("Não foi possível carregar as alternativas."); }
+    finally { setLoadingAlternatives(null); }
+  };
+  return <div className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-850">
+    <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-4 text-left">
+      <div><h3 className="font-display text-[17px] uppercase text-fog">{routine.name}</h3>
+        <p className="mt-1 text-[11px] text-fog-mute">{routine.restDay ? "Descanso planejado" : `${routine.sportName} · ${routine.items.length} exercícios`}</p>
+      </div><span className="text-fog-mute">{open ? "−" : "+"}</span>
+    </button>
+    {open && <div className="border-t border-ink-700 p-4">
+      {routine.explanation && <p className="mb-3 rounded-lg bg-ink-800 p-3 text-[12px] leading-relaxed text-fog-dim">{routine.explanation}</p>}
+      {routine.restDay ? <p className="rounded-lg bg-ink-800 p-4 text-center text-[13px] font-bold text-volt-300">Nenhuma sessão de treino está planejada para esta data.</p> : <>
+        <div className="space-y-2">{routine.items.map((item) => <div key={item.exerciseId} className="rounded-lg bg-ink-800 p-2.5"><div className="flex items-center justify-between gap-2"><div><p className="text-[12px] font-bold text-fog">{item.exerciseName}</p><p className="text-[10px] text-fog-mute">{item.sets} × {item.reps} · descanso {item.restTime}s</p><div className="mt-1 flex items-center gap-2"><button type="button" aria-label={`Reduzir séries de ${item.exerciseName}`} disabled={item.sets <= 1} onClick={() => void onAdjust(item.exerciseId, item.sets - 1)} className="h-6 w-6 rounded border border-ink-600 text-fog disabled:opacity-40">−</button><span className="text-[10px] text-fog-mute">Ajustar séries</span><button type="button" aria-label={`Aumentar séries de ${item.exerciseName}`} disabled={item.sets >= 10} onClick={() => void onAdjust(item.exerciseId, item.sets + 1)} className="h-6 w-6 rounded border border-ink-600 text-fog disabled:opacity-40">+</button></div></div><button type="button" onClick={() => void loadAlternatives(item.exerciseId)} className="shrink-0 rounded-md border border-ink-600 px-2 py-1.5 text-[10px] font-bold uppercase text-volt-300">{loadingAlternatives === item.exerciseId ? "Buscando…" : "Trocar"}</button></div>{Object.prototype.hasOwnProperty.call(alternatives, item.exerciseId) && alternatives[item.exerciseId].length > 0 && <select aria-label={`Alternativas para ${item.exerciseName}`} defaultValue="" onChange={(event) => { const replacementId = Number(event.target.value); if (replacementId) void onReplace(item.exerciseId, replacementId); }} className="mt-2 w-full rounded-md bg-ink-900 p-2 text-[11px] text-fog"><option value="" disabled>Escolha uma alternativa</option>{alternatives[item.exerciseId].map((option) => <option key={option.exerciseId} value={option.exerciseId}>{option.exerciseName}</option>)}</select>}</div>)}</div>
+        <button onClick={onStart} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3 text-[12px] font-bold uppercase tracking-[.1em] text-ink-950"><IconTimer size={15} /> Iniciar sessão</button>
+        <button onClick={onIgnore} className="mt-2 w-full rounded-xl border border-ink-600 py-2.5 text-[11px] font-bold uppercase tracking-wide text-fog-mute">Ignorar e marcar como não realizado</button>
+      </>}
+      <div className="mt-2 grid grid-cols-5 gap-1.5">{EXPORT_ACTIONS.map((action) => action.href ? <a key={action.kind} href={action.href(routine)} target={action.kind === "whatsapp" ? "_blank" : undefined} rel={action.kind === "whatsapp" ? "noopener" : undefined} className="rounded-lg border border-ink-600 py-2 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-fog-dim transition-colors hover:border-volt-400 hover:text-volt-300">{action.label}</a> : <button key={action.kind} onClick={() => onExport(action.kind)} className="rounded-lg border border-ink-600 py-2 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-fog-dim transition-colors hover:border-volt-400 hover:text-volt-300">{action.label}</button>)}</div>
+    </div>}
+  </div>;
 });
 
 function SessionSheet({ session, onClose, onChange }: { session: ApiSession | null; onClose: () => void; onChange: (session: ApiSession | null) => void }) {
@@ -161,6 +227,15 @@ function SessionSheet({ session, onClose, onChange }: { session: ApiSession | nu
   const [duration, setDuration] = useState("60");
   const [rpe, setRpe] = useState("6");
   const [saving, setSaving] = useState<number | null>(null);
+  const closeSession = () => {
+    if (token && session?.status === "IN_PROGRESS") {
+      void api.patchSession(token, session.id, { status: "INTERRUPTED" }).then(() => {
+        invalidate(userCacheKey(token), /progress/);
+        toast("Sessão interrompida e salva no histórico.");
+      }).catch(() => toast("Não foi possível registrar a interrupção da sessão."));
+    }
+    onClose();
+  };
   const updateItem = async (exerciseId: number, values: { completedSets: string; completedReps: string; loadKg: string; itemRpe: string; painLevel: string }) => {
     if (!token || !session) return;
     setSaving(exerciseId);
@@ -170,10 +245,28 @@ function SessionSheet({ session, onClose, onChange }: { session: ApiSession | nu
   };
   const finish = async () => {
     if (!token || !session) return;
-    try { await api.patchSession(token, session.id, { status: "COMPLETED", durationMinutes: Number(duration), sessionRpe: Number(rpe) }); invalidate(userCacheKey(token), /progress/); toast("Sessão concluída e salva."); onClose(); }
+    try {
+      await api.patchSession(token, session.id, { status: "COMPLETED", durationMinutes: Number(duration), sessionRpe: Number(rpe) });
+      const key = userCacheKey(token);
+      invalidate(key, /progress/);
+      invalidate(key, /routines/);
+      onClose();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const planDate = [tomorrow.getFullYear(), String(tomorrow.getMonth() + 1).padStart(2, "0"), String(tomorrow.getDate()).padStart(2, "0")].join("-");
+      try {
+        const sport = (await api.sports()).find((item) => item.code === session.sportCode);
+        if (!sport) throw new Error("Esporte indisponível.");
+        const nextPlan = await api.generateRoutine(token, sport.id, planDate);
+        invalidate(key, /routines/);
+        toast(nextPlan.restDay ? "Sessão salva. Amanhã está planejado como dia de descanso." : "Sessão salva. O plano provisório de amanhã já está disponível para revisão.");
+      } catch {
+        toast("Sessão concluída e salva. Não foi possível criar a recomendação de amanhã.");
+      }
+    }
     catch { toast("Não foi possível concluir a sessão."); }
   };
-  return <Sheet open={!!session} onClose={onClose} title={session ? `Executando · ${session.sportName}` : ""}>{session && <div className="space-y-3 pb-4">{session.items.map((item) => <SessionItem key={item.exerciseId} item={item} saving={saving === item.exerciseId} onSave={updateItem} />)}<div className="grid grid-cols-2 gap-3 rounded-xl border border-ink-700 p-3"><label className="text-[11px] text-fog-mute">Duração (min)<input value={duration} onChange={(e) => setDuration(e.target.value)} type="number" min="1" max="600" className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-fog outline-none" /></label><label className="text-[11px] text-fog-mute">RPE da sessão<input value={rpe} onChange={(e) => setRpe(e.target.value)} type="number" min="1" max="10" className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-fog outline-none" /></label></div><button onClick={() => void finish()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3 font-bold uppercase text-ink-950"><IconCheck size={16} /> Concluir sessão</button></div>}</Sheet>;
+  return <Sheet open={!!session} onClose={closeSession} title={session ? `Executando · ${session.sportName}` : ""}>{session && <div className="space-y-3 pb-4">{session.items.map((item) => <SessionItem key={item.exerciseId} item={item} saving={saving === item.exerciseId} onSave={updateItem} />)}<div className="grid grid-cols-2 gap-3 rounded-xl border border-ink-700 p-3"><label className="text-[11px] text-fog-mute">Duração (min)<input value={duration} onChange={(e) => setDuration(e.target.value)} type="number" min="1" max="600" className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-fog outline-none" /></label><label className="text-[11px] text-fog-mute">RPE da sessão<input value={rpe} onChange={(e) => setRpe(e.target.value)} type="number" min="1" max="10" className="mt-1 block w-full rounded-lg bg-ink-800 p-2 text-fog outline-none" /></label></div><button onClick={() => void finish()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-volt-400 py-3 font-bold uppercase text-ink-950"><IconCheck size={16} /> Concluir sessão</button></div>}</Sheet>;
 }
 
 function SessionItem({ item, saving, onSave }: { item: ApiSession["items"][number]; saving: boolean; onSave: (exerciseId: number, values: { completedSets: string; completedReps: string; loadKg: string; itemRpe: string; painLevel: string }) => void }) {
