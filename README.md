@@ -53,6 +53,15 @@ por usuário autenticado.
 
 ---
 
+## Planejamento adaptativo de treinos
+
+O gerador considera perfil, disponibilidade, duração, equipamento, histórico recente e execução real; sessões concluídas podem sugerir treino ou descanso para o dia seguinte.
+
+- Regras e proteções: [docs/features/adaptive-training-plans.md](docs/features/adaptive-training-plans.md)
+- Contrato da API: [docs/api/openapi.md](docs/api/openapi.md)
+
+---
+
 ## 🚀 Como Rodar o Projeto Locally
 
 ### 1. Requisitos Prévios

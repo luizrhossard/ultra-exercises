@@ -9,6 +9,7 @@ import com.forja.domain.Sport;
 import com.forja.repository.AppUserRepository;
 import com.forja.repository.ExerciseRepository;
 import com.forja.repository.RoutineRepository;
+import com.forja.repository.ExerciseSportRepository;
 import com.forja.service.RoutineGeneratorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,13 +38,14 @@ class RoutineControllerTest {
     @Mock RoutineGeneratorService generator;
     @Mock AppUserRepository users;
     @Mock ExerciseRepository exercises;
+    @Mock ExerciseSportRepository exerciseSports;
     @Mock Authentication auth;
 
     RoutineController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new RoutineController(routines, generator, users, exercises);
+        controller = new RoutineController(routines, generator, users, exercises, exerciseSports);
         when(auth.getName()).thenReturn("atleta@forja.com");
     }
 
@@ -76,16 +78,16 @@ class RoutineControllerTest {
     void generateDelegatesToServiceAndReturnsDto() {
         AppUser me = user(1L);
         Routine generated = routine(7L, me, sport(1L));
-        when(generator.generateWithReadiness("atleta@forja.com", 3L)).thenReturn(
-                new RoutineGeneratorService.GenerationResult(generated, null, false, false, null));
+        when(generator.generateWithReadiness("atleta@forja.com", 3L, null)).thenReturn(
+                new RoutineGeneratorService.GenerationResult(generated, null, false, false, null, "Motivo"));
 
-        var result = controller.generate(new RoutineController.GenerateRequest(3L), auth);
+        var result = controller.generate(new RoutineController.GenerateRequest(3L, null), auth);
 
         assertThat(result.id()).isEqualTo(7L);
         assertThat(result.sportCode()).isEqualTo("futebol");
         assertThat(result.readinessAdjusted()).isFalse();
         assertThat(result.requiresReview()).isFalse();
-        verify(generator).generateWithReadiness("atleta@forja.com", 3L);
+        verify(generator).generateWithReadiness("atleta@forja.com", 3L, null);
     }
 
     @Test
@@ -93,10 +95,10 @@ class RoutineControllerTest {
         AppUser me = user(1L);
         Routine generated = routine(8L, me, sport(1L));
         String recommendation = "Revise o treino com um profissional antes de iniciar.";
-        when(generator.generateWithReadiness("atleta@forja.com", 3L)).thenReturn(
-                new RoutineGeneratorService.GenerationResult(generated, 12, true, true, recommendation));
+        when(generator.generateWithReadiness("atleta@forja.com", 3L, null)).thenReturn(
+                new RoutineGeneratorService.GenerationResult(generated, 12, true, true, recommendation, "Ajuste"));
 
-        var result = controller.generate(new RoutineController.GenerateRequest(3L), auth);
+        var result = controller.generate(new RoutineController.GenerateRequest(3L, null), auth);
 
         assertThat(result.readinessScore()).isEqualTo(12);
         assertThat(result.readinessAdjusted()).isTrue();
@@ -122,6 +124,31 @@ class RoutineControllerTest {
         assertThat(first.getBody().items().get(0).sets()).isEqualTo(4); // preset FORCA
         assertThat(second.getBody().items()).hasSize(1); // sem duplicar
         verify(routines, times(1)).save(r);
+    }
+
+    @Test
+    void replacesExerciseWithSportAndCategoryCompatibleAlternativePreservingDose() {
+        AppUser me = user(1L);
+        Sport sp = sport(1L);
+        Exercise oldExercise = Exercise.builder().id(9L).name("Agachamento A").category(ExerciseCategory.FORCA).build();
+        Exercise newExercise = Exercise.builder().id(10L).name("Agachamento B").category(ExerciseCategory.FORCA).build();
+        Routine routine = routine(5L, me, sp);
+        routine.getItems().add(RoutineItem.builder().routine(routine).exercise(oldExercise).position(0)
+                .sets(2).reps("8 reps").restTime(150).build());
+        when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(me));
+        when(routines.findById(5L)).thenReturn(Optional.of(routine));
+        when(exercises.findById(10L)).thenReturn(Optional.of(newExercise));
+        when(exerciseSports.findByExerciseIdAndSportId(10L, 1L))
+                .thenReturn(Optional.of(com.forja.domain.ExerciseSport.builder().exercise(newExercise).sport(sp).build()));
+        when(routines.save(routine)).thenReturn(routine);
+
+        var result = controller.replaceItem(5L, 9L, new RoutineController.ReplaceItemRequest(10L), auth);
+
+        assertThat(result.items()).singleElement().satisfies(item -> {
+            assertThat(item.exerciseId()).isEqualTo(10L);
+            assertThat(item.sets()).isEqualTo(2);
+            assertThat(item.restTime()).isEqualTo(150);
+        });
     }
 
     @Test
