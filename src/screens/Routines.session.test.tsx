@@ -14,6 +14,9 @@ vi.mock("../api", () => ({
     sports: vi.fn(),
     routines: vi.fn(),
     generateRoutine: vi.fn(),
+    routineAlternatives: vi.fn(),
+    replaceRoutineExercise: vi.fn(),
+    patchRoutineItem: vi.fn(),
     createSession: vi.fn(),
     startSession: vi.fn(),
     patchSession: vi.fn(),
@@ -205,6 +208,58 @@ describe("Routines — geração de treino", () => {
     await waitFor(() => expect(api.generateRoutine).toHaveBeenCalled());
     expect(screen.getByRole("heading", { name: "Rotinas" })).toBeInTheDocument();
   });
+
+  it("permite trocar um exercicio por alternativa compativel", async () => {
+    const user = userEvent.setup();
+    const replacement: ApiRoutine = { ...routine, items: [{ ...routine.items[0], exerciseId: 2, exerciseName: "Flexao" }] };
+    vi.mocked(api.routines).mockResolvedValueOnce([routine]).mockResolvedValue([replacement]);
+    vi.mocked(api.routineAlternatives).mockResolvedValue([{ exerciseId: 2, exerciseName: "Flexao" }]);
+    vi.mocked(api.replaceRoutineExercise).mockResolvedValue(replacement);
+    renderScreen();
+    await expandFirstCard(user);
+
+    await user.click(screen.getByRole("button", { name: "Trocar" }));
+    await user.selectOptions(await screen.findByRole("combobox", { name: "Alternativas para Supino" }), "2");
+
+    await waitFor(() => expect(api.replaceRoutineExercise).toHaveBeenCalledWith(currentToken, 7, 1, 2));
+    expect(await screen.findByRole("status")).toHaveTextContent("Exercício substituído");
+  });
+
+  it("apresenta descanso planejado sem permitir iniciar sessão", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.routines).mockResolvedValue([{ ...routine, restDay: true, items: [] }]);
+    renderScreen();
+    await user.click(await screen.findByText(routine.name));
+
+    expect(await screen.findByText(/Nenhuma sessão de treino está planejada/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Iniciar sessão/ })).not.toBeInTheDocument();
+  });
+
+  it("permite ajustar séries antes de iniciar a sessão", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.routines).mockResolvedValue([routine]);
+    vi.mocked(api.patchRoutineItem).mockResolvedValue(routine);
+    renderScreen();
+    await expandFirstCard(user);
+
+    await user.click(screen.getByRole("button", { name: "Reduzir séries de Supino" }));
+
+    await waitFor(() => expect(api.patchRoutineItem).toHaveBeenCalledWith(currentToken, 7, 1, { sets: 3 }));
+  });
+
+  it("registra uma recomendação ignorada como sessão não realizada", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.routines).mockResolvedValue([routine]);
+    vi.mocked(api.createSession).mockResolvedValue(plannedSession);
+    vi.mocked(api.patchSession).mockResolvedValue({ ...plannedSession, status: "SKIPPED" });
+    renderScreen();
+    await expandFirstCard(user);
+
+    await user.click(screen.getByRole("button", { name: "Ignorar e marcar como não realizado" }));
+
+    await waitFor(() => expect(api.patchSession).toHaveBeenCalledWith(currentToken, 8, { status: "SKIPPED" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Plano marcado como não realizado.");
+  });
 });
 
 describe("Routines — execução da sessão", () => {
@@ -254,6 +309,7 @@ describe("Routines — execução da sessão", () => {
   it("conclui a sessão com duração e RPE e fecha o painel", async () => {
     const user = userEvent.setup();
     vi.mocked(api.patchSession).mockResolvedValue({ ...activeSession, status: "COMPLETED" });
+    vi.mocked(api.generateRoutine).mockResolvedValue(routine);
     await openActiveSession(user);
 
     await user.click(screen.getByRole("button", { name: /Concluir sessão/ }));
@@ -265,6 +321,9 @@ describe("Routines — execução da sessão", () => {
         sessionRpe: 6,
       })
     );
+    await waitFor(() => expect(api.generateRoutine).toHaveBeenCalledWith(
+      currentToken, 1, expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    ));
     await waitFor(() =>
       expect(screen.queryByText("Executando · Futebol")).not.toBeInTheDocument()
     );

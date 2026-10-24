@@ -15,6 +15,7 @@ import com.forja.repository.ExerciseSportRepository;
 import com.forja.repository.ReadinessCheckinRepository;
 import com.forja.repository.RoutineRepository;
 import com.forja.repository.SportRepository;
+import com.forja.repository.TrainingSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,12 +49,13 @@ class RoutineGeneratorServiceTest {
     @Mock ExerciseSportRepository links;
     @Mock ReadinessCheckinRepository checkins;
     @Mock RoutineRepository routines;
+    @Mock TrainingSessionRepository sessions;
 
     RoutineGeneratorService service;
 
     @BeforeEach
     void setUp() {
-        service = new RoutineGeneratorService(users, sports, links, checkins, routines);
+        service = new RoutineGeneratorService(users, sports, links, checkins, routines, sessions);
     }
 
     private Sport sport(long id, String code, String name) {
@@ -279,6 +282,122 @@ class RoutineGeneratorServiceTest {
 
         String expected = "Treino Futebol · " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM"));
         assertThat(result.getName()).isEqualTo(expected);
+        assertThat(result.getPlanDate()).isEqualTo(LocalDate.now());
+    }
+
+    @Test
+    void reusesRecommendationAlreadyPlannedForTheDay() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        Routine existing = Routine.builder().id(42L).user(user).sport(focus).planDate(LocalDate.now()).build();
+        when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(user));
+        when(sports.findById(focus.getId())).thenReturn(Optional.of(focus));
+        when(checkins.findByUserIdAndCheckinDate(user.getId(), LocalDate.now())).thenReturn(Optional.empty());
+        when(routines.findByUserIdAndPlanDate(user.getId(), LocalDate.now())).thenReturn(Optional.of(existing));
+
+        var result = service.generateWithReadiness("atleta@forja.com", focus.getId());
+
+        assertThat(result.routine()).isSameAs(existing);
+        assertThat(result.explanation()).contains("evitar duplicação");
+        verify(routines, never()).save(any());
+        verify(sessions, never()).findCompletedExerciseIdsSince(any(), any(), any());
+    }
+
+    @Test
+    void adjustsAnExistingProvisionalPlanWhenTodaysReadinessArrives() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        RoutineItem item = RoutineItem.builder().sets(4).restTime(60).build();
+        Routine existing = Routine.builder().id(42L).user(user).sport(focus).planDate(LocalDate.now())
+                .items(new ArrayList<>(List.of(item))).build();
+        when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(user));
+        when(sports.findById(focus.getId())).thenReturn(Optional.of(focus));
+        when(checkins.findByUserIdAndCheckinDate(user.getId(), LocalDate.now()))
+                .thenReturn(Optional.of(readiness(user, 2, 4, 4, 4, 0)));
+        when(routines.findByUserIdAndPlanDate(user.getId(), LocalDate.now())).thenReturn(Optional.of(existing));
+        when(routines.save(existing)).thenReturn(existing);
+
+        var result = service.generateWithReadiness("atleta@forja.com", focus.getId());
+
+        assertThat(result.readinessAdjusted()).isTrue();
+        assertThat(result.explanation()).contains("check-in");
+        assertThat(item.getSets()).isEqualTo(2);
+        assertThat(item.getRestTime()).isEqualTo(75);
+        verify(routines).save(existing);
+    }
+
+    @Test
+    void recordsGoodReadinessWithoutIncreasingTheProvisionalDose() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        RoutineItem item = RoutineItem.builder().sets(4).restTime(60).build();
+        Routine existing = Routine.builder().id(42L).user(user).sport(focus).planDate(LocalDate.now())
+                .items(new ArrayList<>(List.of(item))).build();
+        when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(user));
+        when(sports.findById(focus.getId())).thenReturn(Optional.of(focus));
+        when(checkins.findByUserIdAndCheckinDate(user.getId(), LocalDate.now()))
+                .thenReturn(Optional.of(readiness(user, 5, 1, 1, 1, 0)));
+        when(routines.findByUserIdAndPlanDate(user.getId(), LocalDate.now())).thenReturn(Optional.of(existing));
+        when(routines.save(existing)).thenReturn(existing);
+
+        var result = service.generateWithReadiness("atleta@forja.com", focus.getId());
+
+        assertThat(result.readinessScore()).isEqualTo(30);
+        assertThat(result.readinessAdjusted()).isFalse();
+        assertThat(item.getSets()).isEqualTo(4);
+        assertThat(item.getRestTime()).isEqualTo(60);
+    }
+
+    @Test
+    void prefersExercisesOutsideRecentCompletedHistoryWhenAlternativesExist() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        var candidates = routineCandidates(focus);
+        candidates.add(link(exercise(99L, "Força alternativa", ExerciseCategory.FORCA), focus, 4));
+        when(sessions.findCompletedExerciseIdsSince(any(), any(), any())).thenReturn(List.of(1L));
+
+        var result = generateWith(user, focus, candidates);
+
+        assertThat(result.getItems()).extracting(item -> item.getExercise().getId()).doesNotContain(1L);
+    }
+
+    @Test
+    void respectsShortSessionDuration() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        user.setSessionDurationMinutes(30);
+
+        var result = generateWith(user, focus, routineCandidates(focus));
+
+        assertThat(result.getItems()).hasSizeLessThanOrEqualTo(4);
+    }
+
+    @Test
+    void excludesNamedMovementsFromAthleteLimitations() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        user.setTrainingLimitations("evitar Ex0");
+
+        var result = generateWith(user, focus, routineCandidates(focus));
+
+        assertThat(result.getItems()).extracting(item -> item.getExercise().getId()).doesNotContain(1L);
+    }
+
+    @Test
+    void plansRestOnDaysOutsideAthleteAvailability() {
+        Sport focus = sport(1L, "futebol", "Futebol");
+        AppUser user = userWithSports(focus);
+        user.setTrainingDays(LocalDate.now().plusDays(1).getDayOfWeek().name());
+        when(users.findByEmail("atleta@forja.com")).thenReturn(Optional.of(user));
+        when(sports.findById(focus.getId())).thenReturn(Optional.of(focus));
+        when(checkins.findByUserIdAndCheckinDate(user.getId(), LocalDate.now())).thenReturn(Optional.empty());
+        when(routines.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = service.generateWithReadiness("atleta@forja.com", focus.getId());
+
+        assertThat(result.routine().isRestDay()).isTrue();
+        assertThat(result.routine().getItems()).isEmpty();
+        assertThat(result.explanation()).contains("planejamos descanso");
     }
 
     @Test

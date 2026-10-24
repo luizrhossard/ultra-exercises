@@ -145,6 +145,11 @@ class CatalogAndTrainingFlowIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         long sessionId = ((Number) JsonPath.read(sessionBody, "$.id")).longValue();
 
+        mvc.perform(post("/api/routines/{id}/sessions", routineId)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(sessionId));
+
         mvc.perform(post("/api/sessions/{id}/start", sessionId)
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
@@ -169,6 +174,12 @@ class CatalogAndTrainingFlowIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].status").value("COMPLETED"));
+
+        mvc.perform(post("/api/routines/{id}/sessions", routineId)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(sessionId))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
 
     @Test

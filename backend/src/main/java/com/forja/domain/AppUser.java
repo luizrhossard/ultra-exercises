@@ -29,6 +29,24 @@ public class AppUser {
     @Column(length = 80)
     private String name;
 
+    @Column(name = "training_goal", length = 80)
+    private String trainingGoal;
+
+    @Column(name = "training_days", length = 80)
+    private String trainingDays;
+
+    @Column(name = "session_duration_minutes")
+    private Integer sessionDurationMinutes;
+
+    @Column(name = "available_equipment", columnDefinition = "text")
+    private String availableEquipment;
+
+    @Column(name = "training_preferences", columnDefinition = "text")
+    private String trainingPreferences;
+
+    @Column(name = "training_limitations", columnDefinition = "text")
+    private String trainingLimitations;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

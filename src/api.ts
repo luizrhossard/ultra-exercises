@@ -8,7 +8,14 @@ export type AthleteProfile = {
   email: string;
   name: string | null;
   sports: { code: string; name: string; level: string }[];
+  goal?: string | null;
+  availableDays?: string[];
+  sessionDurationMinutes?: number | null;
+  equipment?: string | null;
+  preferences?: string | null;
+  limitations?: string | null;
 };
+export type TrainingProfileUpdate = Pick<AthleteProfile, "goal" | "availableDays" | "sessionDurationMinutes" | "equipment" | "preferences" | "limitations">;
 export type Readiness = {
   date: string; sleepQuality: number; fatigue: number; stress: number; soreness: number;
   painArea: string | null; painLevel: number; notes: string | null; readinessScore: number; requiresReview: boolean;
@@ -29,14 +36,16 @@ export type ApiFeedItem = {
   rationaleBySport: Record<string, string>;
 };
 export type ApiRoutineItem = { exerciseId: number; exerciseName: string; position: number; sets: number; reps: string; restTime: number };
+export type ApiRoutineAlternative = { exerciseId: number; exerciseName: string };
 export type ApiRoutine = {
   id: number; name: string; sportCode: string; sportName: string; createdAt: string; items: ApiRoutineItem[];
-  readinessScore?: number | null; readinessAdjusted?: boolean | null; requiresReview?: boolean | null; reviewRecommendation?: string | null;
+  readinessScore?: number | null; readinessAdjusted?: boolean | null; requiresReview?: boolean | null; reviewRecommendation?: string | null; explanation?: string | null; restDay?: boolean;
 };
+export type ApiSessionStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "INTERRUPTED" | "SKIPPED";
 export type ApiSessionItem = { exerciseId: number; exerciseName: string; position: number; prescribedSets: number; prescribedReps: string; prescribedRestTime: number; completedSets: number | null; completedReps: string | null; loadKg: number | null; itemRpe: number | null; painLevel: number | null; notes: string | null };
-export type ApiSession = { id: number; routineId: number | null; routineName: string | null; sportCode: string; sportName: string; status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "SKIPPED"; scheduledAt: string; startedAt: string | null; completedAt: string | null; durationMinutes: number | null; sessionRpe: number | null; notes: string | null; items: ApiSessionItem[] };
+export type ApiSession = { id: number; routineId: number | null; routineName: string | null; sportCode: string; sportName: string; status: ApiSessionStatus; scheduledAt: string; startedAt: string | null; completedAt: string | null; durationMinutes: number | null; sessionRpe: number | null; notes: string | null; items: ApiSessionItem[] };
 // ---- Progresso [UE-44] ----
-export type ApiProgressSession = { id: number; routineName: string | null; sportName: string; status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "SKIPPED"; scheduledAt: string; completedAt: string | null; durationMinutes: number | null; sessionRpe: number | null; maxPainLevel: number | null; totalVolumeKg: number | null; exerciseCount: number; setCount: number };
+export type ApiProgressSession = { id: number; routineName: string | null; sportName: string; status: ApiSessionStatus; scheduledAt: string; completedAt: string | null; durationMinutes: number | null; sessionRpe: number | null; maxPainLevel: number | null; totalVolumeKg: number | null; exerciseCount: number; setCount: number };
 export type ApiProgressSessionsPage = { items: ApiProgressSession[]; page: number; size: number; totalItems: number; totalPages: number; hasNext: boolean };
 export type ApiWeekBlock = { sessionsCompleted: number; totalDurationMinutes: number; totalVolumeKg: number | null; averageRpe: number | null; averageReadiness: number | null };
 export type ApiWeeklySummary = { periodStart: string; periodEnd: string; current: ApiWeekBlock; previous: ApiWeekBlock };
@@ -215,8 +224,8 @@ export const api = {
   verifyTwoFactor: (challengeToken: string, code: string) => request<AuthResponse>("/auth/2fa/verify", { method: "POST", body: JSON.stringify({ challengeToken, code }) }),
   register: (email: string, password: string, name: string) => request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify({ email, password, name }) }),
   me: (token: string) => request<AthleteProfile>("/me", {}, token),
-  saveProfile: (token: string, name: string, sports: string[]) => request<AthleteProfile>("/me", {
-    method: "PUT", body: JSON.stringify({ name, sports: sports.map((code) => ({ code, level: "COMPETITIVE" })) }),
+  saveProfile: (token: string, name: string, sports: string[], training?: TrainingProfileUpdate) => request<AthleteProfile>("/me", {
+    method: "PUT", body: JSON.stringify({ name, sports: sports.map((code) => ({ code, level: "COMPETITIVE" })), ...training }),
   }, token),
   todayReadiness: (token: string) => request<Readiness | null>("/readiness/today", {}, token),
   saveReadiness: (token: string, body: Omit<Readiness, "date" | "readinessScore" | "requiresReview">) =>
@@ -231,10 +240,15 @@ export const api = {
     return request<ApiFeedItem[]>(`/exercises/feed${qs ? `?${qs}` : ""}`);
   },
   routines: (token: string) => request<ApiRoutine[]>("/routines", {}, token),
-  generateRoutine: (token: string, sportId: number) => request<ApiRoutine>("/routines/generate", { method: "POST", body: JSON.stringify({ sportId }) }, token),
+  generateRoutine: (token: string, sportId: number, planDate?: string) => request<ApiRoutine>("/routines/generate", { method: "POST", body: JSON.stringify({ sportId, planDate }) }, token),
+  routineAlternatives: (token: string, routineId: number, exerciseId: number) => request<ApiRoutineAlternative[]>(`/routines/${routineId}/items/${exerciseId}/alternatives`, {}, token),
+  replaceRoutineExercise: (token: string, routineId: number, exerciseId: number, replacementExerciseId: number) =>
+    request<ApiRoutine>(`/routines/${routineId}/items/${exerciseId}/replace`, { method: "PUT", body: JSON.stringify({ replacementExerciseId }) }, token),
+  patchRoutineItem: (token: string, routineId: number, exerciseId: number, body: { sets?: number; restTime?: number }) =>
+    request<ApiRoutine>(`/routines/${routineId}/items/${exerciseId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
   createSession: (token: string, routineId: number) => request<ApiSession>(`/routines/${routineId}/sessions`, { method: "POST" }, token),
   startSession: (token: string, sessionId: number) => request<ApiSession>(`/sessions/${sessionId}/start`, { method: "POST" }, token),
-  patchSession: (token: string, sessionId: number, body: { status?: string; durationMinutes?: number; sessionRpe?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
+  patchSession: (token: string, sessionId: number, body: { status?: ApiSessionStatus; durationMinutes?: number; sessionRpe?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
   patchSessionItem: (token: string, sessionId: number, exerciseId: number, body: { completedSets?: number; completedReps?: string; loadKg?: number; itemRpe?: number; painLevel?: number; notes?: string }) => request<ApiSession>(`/sessions/${sessionId}/items/${exerciseId}`, { method: "PATCH", body: JSON.stringify(body) }, token),
   // ---- Progresso [UE-44] ----
   progressSessions: (token: string, page: number, size = 20, filters: HistoryFilters = {}) => {
