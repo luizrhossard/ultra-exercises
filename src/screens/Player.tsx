@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { exerciseById } from "../data/exercises";
+import { buildExerciseDetail, exerciseByName } from "../data/feed";
 import { sportById } from "../data/sports";
 import { CATEGORY_ACCENT } from "../types";
 import { useApp } from "../store";
+import { api, type ApiExerciseDetail } from "../api";
+import { CACHE_TTL, getCached, setCache } from "../cache";
+import type { Exercise } from "../types";
 import MuscleMap from "../components/MuscleMap";
 import { ScoreMeter, SectionLabel } from "../components/ui";
 import {
@@ -27,8 +31,35 @@ const FALLBACK_WHY: Record<string, string> = {
 };
 
 export default function Player() {
-  const { playerId, closePlayer, profile } = useApp();
-  const ex = playerId ? exerciseById(playerId) : undefined;
+  const { playerId, playerName, closePlayer, profile } = useApp();
+  const apiExerciseId = playerId?.match(/^api-(\d+)$/)?.[1];
+  const [detailState, setDetailState] = useState<{ id: string; exercise?: Exercise; status: "loading" | "ready" | "error" }>({ id: "", status: "loading" });
+  const [retry, setRetry] = useState(0);
+  const localExercise = playerId && !apiExerciseId ? exerciseById(playerId) : undefined;
+  const cachedDetail = apiExerciseId ? getCached<ApiExerciseDetail>("catalog", `exercise:${apiExerciseId}`) : undefined;
+  const cachedExercise = cachedDetail ? buildExerciseDetail(cachedDetail, playerName) : undefined;
+
+  useEffect(() => {
+    if (!playerId || !apiExerciseId) return;
+    let cancelled = false;
+    const cacheKey = `exercise:${apiExerciseId}`;
+    if (getCached<ApiExerciseDetail>("catalog", cacheKey)) return;
+    void api.exerciseDetail(Number(apiExerciseId)).then((detail) => {
+      if (cancelled) return;
+      setCache("catalog", cacheKey, detail, CACHE_TTL.exercise);
+      setDetailState({ id: playerId, exercise: buildExerciseDetail(detail, playerName), status: "ready" });
+    }).catch(() => {
+      if (cancelled) return;
+      const fallback = exerciseByName(playerName);
+      setDetailState(fallback
+        ? { id: playerId, exercise: fallback, status: "ready" }
+        : { id: playerId, status: "error" });
+    });
+    return () => { cancelled = true; };
+  }, [playerId, playerName, apiExerciseId, retry]);
+
+  const apiState = playerId && detailState.id === playerId ? detailState : undefined;
+  const ex = apiExerciseId ? (cachedExercise ?? apiState?.exercise) : localExercise;
   const reduced = useReducedMotion();
   const [playing, setPlaying] = useState(false);
   const [reps, setReps] = useState(0);
@@ -39,7 +70,34 @@ export default function Player() {
     return () => window.clearInterval(t);
   }, [playing, reduced]);
 
-  if (!ex) return null;
+  if (!playerId) return null;
+  if (!ex) {
+    const loading = !apiState || apiState.status === "loading";
+    return (
+      <>
+        <motion.div className="fixed inset-0 z-30 hidden bg-ink-950/75 backdrop-blur-sm lg:block" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closePlayer} aria-hidden />
+        <motion.div role="dialog" aria-modal="true" aria-label={loading ? "Carregando detalhe do exercício" : `Detalhe de ${playerName ?? "exercício"}`} className="fixed inset-0 z-40 mx-auto w-full max-w-[430px] overflow-y-auto bg-ink-900 lg:my-auto lg:h-fit lg:max-h-[90dvh] lg:max-w-[880px] lg:rounded-3xl lg:border lg:border-ink-600">
+          <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-ink-700 bg-ink-900/95 px-4 py-3 backdrop-blur-md">
+            <button onClick={closePlayer} className="grid h-9 w-9 place-items-center rounded-xl border border-ink-700 bg-ink-850 text-fog" aria-label="Fechar detalhe do exercício"><IconBack size={18} /></button>
+            <h1 className="font-display text-lg uppercase text-fog">{playerName ?? "Detalhe do exercício"}</h1>
+          </div>
+          {loading ? (
+            <div className="space-y-5 px-5 py-6" role="status" aria-label="Carregando detalhe do exercício" aria-busy="true">
+              <div className="h-8 w-2/3 animate-pulse rounded bg-ink-700" />
+              <div className="h-36 animate-pulse rounded-2xl border border-ink-700 bg-ink-850" />
+              <div className="h-28 animate-pulse rounded-2xl border border-ink-700 bg-ink-850" />
+              <div className="h-24 animate-pulse rounded-2xl border border-ink-700 bg-ink-850" />
+            </div>
+          ) : (
+            <div className="px-5 py-8 text-center" role="alert">
+              <p className="text-sm text-fog-dim">Não foi possível carregar este exercício e não há uma versão local disponível.</p>
+              <button onClick={() => { setDetailState({ id: playerId, status: "loading" }); setRetry((attempt) => attempt + 1); }} className="mt-4 rounded-xl bg-volt-400 px-5 py-3 text-sm font-bold uppercase text-ink-950">Tentar novamente</button>
+            </div>
+          )}
+        </motion.div>
+      </>
+    );
+  }
 
   const myLinks = ex.links
     .filter((l) => profile.sports.includes(l.sport))
