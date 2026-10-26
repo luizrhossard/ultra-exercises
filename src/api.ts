@@ -25,6 +25,16 @@ export type ApiFeedItem = {
   scoreBySport: Record<string, number>;
   rationaleBySport: Record<string, string>;
 };
+export type ApiExerciseDetail = {
+  id: number;
+  name: string;
+  category: ApiFeedItem["category"];
+  difficulty?: string | null;
+  equipment: string | null;
+  muscles: string[];
+  steps: string[];
+  links: { sportCode: string; sportName: string; score: number; rationale: string | null }[];
+};
 export type ApiRoutineItem = { exerciseId: number; exerciseName: string; position: number; sets: number; reps: string; restTime: number };
 export type ApiRoutine = { id: number; name: string; sportCode: string; sportName: string; createdAt: string; items: ApiRoutineItem[] };
 export type ApiSessionItem = { exerciseId: number; exerciseName: string; position: number; prescribedSets: number; prescribedReps: string; prescribedRestTime: number; completedSets: number | null; completedReps: string | null; loadKg: number | null; itemRpe: number | null; painLevel: number | null; notes: string | null };
@@ -224,6 +234,7 @@ export const api = {
     const qs = params.toString();
     return request<ApiFeedItem[]>(`/exercises/feed${qs ? `?${qs}` : ""}`);
   },
+  exerciseDetail: (exerciseId: number) => request<ApiExerciseDetail>(`/exercises/${exerciseId}`),
   routines: (token: string) => request<ApiRoutine[]>("/routines", {}, token),
   generateRoutine: (token: string, sportId: number) => request<ApiRoutine>("/routines/generate", { method: "POST", body: JSON.stringify({ sportId }) }, token),
   createSession: (token: string, routineId: number) => request<ApiSession>(`/routines/${routineId}/sessions`, { method: "POST" }, token),

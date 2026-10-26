@@ -1,4 +1,4 @@
-import type { ApiFeedItem } from "../api";
+import type { ApiExerciseDetail, ApiFeedItem } from "../api";
 import { EXERCISES, rankFor } from "./exercises";
 import { MUSCLE_LABEL } from "../types";
 import type { Category, Exercise, MuscleKey, SportLink } from "../types";
@@ -14,6 +14,50 @@ const API_CATEGORY: Record<ApiFeedItem["category"], Category> = {
 
 export function categoryFromApi(value: string): Category | undefined {
   return API_CATEGORY[value as ApiFeedItem["category"]];
+}
+
+function normalizeName(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]/g, "");
+}
+
+export function exerciseByName(name: string | null | undefined): Exercise | undefined {
+  if (!name) return undefined;
+  const normalized = normalizeName(name);
+  return EXERCISES.find((exercise) => normalizeName(exercise.name) === normalized);
+}
+
+export function difficultyToLevel(value: string | null | undefined, fallback: Exercise["level"] = 2): Exercise["level"] {
+  const normalized = normalizeName(value ?? "");
+  if (["iniciante", "beginner", "basico"].includes(normalized)) return 1;
+  if (["avancado", "advanced", "profissional"].includes(normalized)) return 3;
+  if (["intermediario", "intermediate"].includes(normalized)) return 2;
+  return fallback;
+}
+
+export function buildExerciseDetail(item: ApiExerciseDetail, requestedName?: string | null): Exercise {
+  const local = exerciseByName(item.name) ?? exerciseByName(requestedName);
+  const muscleKeys = Object.keys(MUSCLE_LABEL) as MuscleKey[];
+  const muscles = item.muscles.flatMap((value) => {
+    if (muscleKeys.includes(value as MuscleKey)) return [value as MuscleKey];
+    const normalized = normalizeName(value);
+    const match = muscleKeys.find((key) => normalizeName(MUSCLE_LABEL[key]) === normalized);
+    return match ? [match] : [];
+  });
+  return {
+    id: `api-${item.id}`,
+    name: item.name || local?.name || requestedName || `ExercÃ­cio ${item.id}`,
+    category: categoryFromApi(item.category) ?? local?.category ?? API_CATEGORY.FORCA,
+    level: difficultyToLevel(item.difficulty, local?.level ?? 2),
+    equipment: item.equipment ?? local?.equipment ?? "NÃ£o informado",
+    tempo: local?.tempo ?? "NÃ£o informado",
+    muscles: muscles.length ? [...new Set(muscles)] : (local?.muscles ?? []),
+    steps: item.steps.length ? item.steps : (local?.steps ?? []),
+    links: item.links.map((link) => ({
+      sport: link.sportCode,
+      score: Math.min(5, Math.max(1, link.score)) as SportLink["score"],
+      why: link.rationale ?? undefined,
+    })).sort((a, b) => b.score - a.score),
+  };
 }
 
 /** Converte scoreBySport/rationaleBySport da API na lista de links local, ordenada por relevância. */
