@@ -3,6 +3,7 @@ package com.forja.seed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forja.domain.Exercise;
 import com.forja.domain.ExerciseCategory;
+import com.forja.domain.ExerciseDifficulty;
 import com.forja.domain.ExerciseSport;
 import com.forja.domain.Sport;
 import com.forja.repository.ExerciseRepository;
@@ -42,7 +43,7 @@ public class DataSeeder implements ApplicationRunner {
     record LinkSeed(String sport, int score, String why) {
     }
 
-    record ExerciseSeed(String name, String category, String equipment,
+    record ExerciseSeed(String name, String category, String difficulty, String equipment,
                         List<String> muscles, List<String> steps, List<LinkSeed> links) {
     }
 
@@ -74,6 +75,7 @@ public class DataSeeder implements ApplicationRunner {
             var exercise = exercises.save(Exercise.builder()
                     .name(e.name())
                     .category(ExerciseCategory.valueOf(e.category()))
+                    .difficulty(ExerciseDifficulty.valueOf(e.difficulty()))
                     .equipment(e.equipment())
                     .muscleGroups(new ArrayList<>(e.muscles()))
                     .steps(new ArrayList<>(e.steps()))

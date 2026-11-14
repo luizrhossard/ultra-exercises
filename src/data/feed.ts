@@ -1,4 +1,4 @@
-import type { ApiFeedItem } from "../api";
+import type { ApiDifficulty, ApiFeedItem } from "../api";
 import { EXERCISES, rankFor } from "./exercises";
 import { MUSCLE_LABEL } from "../types";
 import type { Category, Exercise, MuscleKey, SportLink } from "../types";
@@ -12,8 +12,21 @@ const API_CATEGORY: Record<ApiFeedItem["category"], Category> = {
   ESPECIFICO: "Específico",
 };
 
+/** [UE-49] Dificuldade oficial (backend) → nível do catálogo local. */
+const DIFFICULTY_TO_LEVEL: Record<ApiDifficulty, Exercise["level"]> = {
+  INICIANTE: 1,
+  INTERMEDIARIO: 2,
+  AVANCADO: 3,
+};
+
 export function categoryFromApi(value: string): Category | undefined {
   return API_CATEGORY[value as ApiFeedItem["category"]];
+}
+
+/** Converte a dificuldade da API no nível local; undefined para valor ausente/desconhecido. */
+export function difficultyToLevel(value: string | undefined | null): Exercise["level"] | undefined {
+  if (!value || !(value in DIFFICULTY_TO_LEVEL)) return undefined;
+  return DIFFICULTY_TO_LEVEL[value as ApiDifficulty];
 }
 
 /** Converte scoreBySport/rationaleBySport da API na lista de links local, ordenada por relevância. */
@@ -31,6 +44,7 @@ export function linksFromApi(item: ApiFeedItem): SportLink[] {
  * Converte um item do feed da API no formato local. O ranking vem do backend
  * (melhor score + desempates); id/tempo/steps/nível são herdados do catálogo
  * local (merge por nome) para a navegação do Player continuar funcionando.
+ * A dificuldade oficial vem da API [UE-49]; o catálogo é só fallback.
  */
 export function buildFeedItem(item: ApiFeedItem): Exercise {
   const local = EXERCISES.find((e) => e.name === item.name);
@@ -39,7 +53,7 @@ export function buildFeedItem(item: ApiFeedItem): Exercise {
     id: local?.id ?? `api-${item.exerciseId}`,
     name: item.name,
     category: categoryFromApi(item.category) ?? "Força",
-    level: local?.level ?? 2,
+    level: difficultyToLevel(item.difficulty) ?? local?.level ?? 2,
     equipment: item.equipment ?? local?.equipment ?? "",
     tempo: local?.tempo ?? "",
     muscles: muscles.length > 0 ? muscles : (local?.muscles ?? []),

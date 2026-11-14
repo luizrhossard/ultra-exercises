@@ -43,12 +43,16 @@ Login com credenciais inválidas → 401 `UNAUTHORIZED`.
 `PUT` aceita `{name?, sports?: [{code}]}` (substitui esportes) → perfil completo.
 
 ### Exercises
+- `GET /api/exercises?difficulty=X&category=Y&q=termo` — **catálogo completo**
+  [UE-49] com filtros opcionais combináveis (resultado ordenado por nome). Item:
+  `{id, name, category, difficulty, equipment, muscles[]}`. `difficulty` aceita
+  `INICIANTE | INTERMEDIARIO | AVANCADO`; valor inválido → 400 `BAD_REQUEST`.
 - `GET /api/exercises/feed?sportIds=1,4&category=FORCA` — **ranking unificado**
-  (requer esportes no perfil). Item: `{exerciseId, name, category, equipment, muscles[],
-  bestScore, strongCount, scoreBySport{}, rationaleBySport{}}`. `q`/`category` são
-  filtros opcionais aplicados **após** o ranking.
-- `GET /api/exercises/{id}` — detalhe: `{id, name, category, equipment, muscleGroups[],
-  steps[], sportLinks[{sport, score, why}]}`. 404 `NOT_FOUND` se inexistente.
+  (requer esportes no perfil). Item: `{exerciseId, name, category, difficulty,
+  equipment, muscles[], bestScore, strongCount, scoreBySport{}, rationaleBySport{}}`.
+  `q`/`category` são filtros opcionais aplicados **após** o ranking.
+- `GET /api/exercises/{id}` — detalhe: `{id, name, category, difficulty, equipment,
+  muscleGroups[], steps[], sportLinks[{sport, score, why}]}`. 404 `NOT_FOUND` se inexistente.
 
 ### Routines
 - `GET /api/routines` — minhas rotinas (mais recentes primeiro), com `items`.

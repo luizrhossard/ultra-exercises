@@ -11,7 +11,7 @@
   ],
   "exercises": [
     {
-      "name": "Agachamento Búlgaro", "category": "FORCA", "equipment": "Halteres + banco",
+      "name": "Agachamento Búlgaro", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Halteres + banco",
       "muscles": ["quadriceps", "gluteos", "core", "adutores"],
       "steps": [
         "Apoie o peito do pé de trás no banco, tronco alto e halteres ao lado do corpo.",
@@ -30,7 +30,7 @@
       ]
     },
     {
-      "name": "Salto na Caixa", "category": "PLIOMETRIA", "equipment": "Caixa pliométrica",
+      "name": "Salto na Caixa", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Caixa pliométrica",
       "muscles": ["quadriceps", "gluteos", "panturrilhas", "core"],
       "steps": [
         "Pés na largura do quadril, braços para trás carregando o salto.",
@@ -46,7 +46,7 @@
       ]
     },
     {
-      "name": "Levantamento Terra", "category": "FORCA", "equipment": "Barra + anilhas",
+      "name": "Levantamento Terra", "category": "FORCA", "difficulty": "AVANCADO", "equipment": "Barra + anilhas",
       "muscles": ["posteriores", "gluteos", "dorsais", "lombar", "core", "antebracos"],
       "steps": [
         "Barra sobre o meio do pé, pés na largura do quadril.",
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "name": "Sprint em Ladeira", "category": "CONDICIONAMENTO", "equipment": "Ladeira ~8%",
+      "name": "Sprint em Ladeira", "category": "CONDICIONAMENTO", "difficulty": "INTERMEDIARIO", "equipment": "Ladeira ~8%",
       "muscles": ["gluteos", "quadriceps", "panturrilhas", "core"],
       "steps": [
         "Inclinação de 6–10%, 20–30 m marcados.",
@@ -82,7 +82,7 @@
       ]
     },
     {
-      "name": "Flexão Pliométrica", "category": "PLIOMETRIA", "equipment": "Peso corporal",
+      "name": "Flexão Pliométrica", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Peso corporal",
       "muscles": ["peitoral", "triceps", "deltoides", "core"],
       "steps": [
         "Prancha alta, mãos na largura dos ombros, core travado.",
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "name": "Barra Fixa", "category": "FORCA", "equipment": "Barra fixa",
+      "name": "Barra Fixa", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Barra fixa",
       "muscles": ["dorsais", "biceps", "antebracos", "core", "trapezio"],
       "steps": [
         "Pegada um pouco além dos ombros, escápulas deprimidas antes de puxar.",
@@ -116,7 +116,7 @@
       ]
     },
     {
-      "name": "Remada Curvada", "category": "FORCA", "equipment": "Barra",
+      "name": "Remada Curvada", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Barra",
       "muscles": ["dorsais", "trapezio", "biceps", "lombar", "core"],
       "steps": [
         "Quadril para trás, tronco a ~45°, coluna neutra.",
@@ -132,7 +132,7 @@
       ]
     },
     {
-      "name": "Desenvolvimento Militar", "category": "FORCA", "equipment": "Barra ou halteres",
+      "name": "Desenvolvimento Militar", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Barra ou halteres",
       "muscles": ["deltoides", "triceps", "trapezio", "core"],
       "steps": [
         "Barra na linha da clavícula, pegada um pouco além dos ombros.",
@@ -149,7 +149,7 @@
       ]
     },
     {
-      "name": "Prancha com Toque no Ombro", "category": "CORE", "equipment": "Peso corporal",
+      "name": "Prancha com Toque no Ombro", "category": "CORE", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["core", "obliquos", "deltoides", "gluteos"],
       "steps": [
         "Prancha alta, mãos sob os ombros, pés um pouco mais afastados.",
@@ -166,7 +166,7 @@
       ]
     },
     {
-      "name": "Woodchopper com Anilha", "category": "CORE", "equipment": "Anilha ou polia",
+      "name": "Woodchopper com Anilha", "category": "CORE", "difficulty": "INICIANTE", "equipment": "Anilha ou polia",
       "muscles": ["obliquos", "core", "deltoides", "gluteos"],
       "steps": [
         "Segure a anilha ao lado do quadril, pés firmes, joelhos semiflexionados.",
@@ -183,7 +183,7 @@
       ]
     },
     {
-      "name": "Afundo Lateral", "category": "FORCA", "equipment": "Halter ou peso corporal",
+      "name": "Afundo Lateral", "category": "FORCA", "difficulty": "INICIANTE", "equipment": "Halter ou peso corporal",
       "muscles": ["quadriceps", "adutores", "gluteos", "core"],
       "steps": [
         "Pés juntos, passo largo para o lado mantendo o outro estendido.",
@@ -200,7 +200,7 @@
       ]
     },
     {
-      "name": "Cadeira Nórdica", "category": "FORCA", "equipment": "Parceiro ou apoio de pé",
+      "name": "Cadeira Nórdica", "category": "FORCA", "difficulty": "AVANCADO", "equipment": "Parceiro ou apoio de pé",
       "muscles": ["posteriores", "gluteos", "panturrilhas"],
       "steps": [
         "Ajoelhado, tornozelos fixos, corpo em linha reta do joelho à cabeça.",
@@ -216,7 +216,7 @@
       ]
     },
     {
-      "name": "Corda de Batalha", "category": "CONDICIONAMENTO", "equipment": "Battle rope",
+      "name": "Corda de Batalha", "category": "CONDICIONAMENTO", "difficulty": "INICIANTE", "equipment": "Battle rope",
       "muscles": ["deltoides", "core", "antebracos", "quadriceps"],
       "steps": [
         "Corda ancorada, joelhos semiflexionados, quadril para trás.",
@@ -232,7 +232,7 @@
       ]
     },
     {
-      "name": "Sombra com Halteres Leves", "category": "ESPECIFICO", "equipment": "Halteres 1–2 kg",
+      "name": "Sombra com Halteres Leves", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Halteres 1–2 kg",
       "muscles": ["deltoides", "peitoral", "core", "panturrilhas"],
       "steps": [
         "Halteres leves (1–2 kg), guarda fechada, queixo baixo.",
@@ -245,7 +245,7 @@
       ]
     },
     {
-      "name": "Deslocamento Lateral com Faixa", "category": "ESPECIFICO", "equipment": "Mini band",
+      "name": "Deslocamento Lateral com Faixa", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Mini band",
       "muscles": ["abdutores", "gluteos", "quadriceps", "core"],
       "steps": [
         "Mini band acima dos joelhos, posição de base do seu esporte.",
@@ -261,7 +261,7 @@
       ]
     },
     {
-      "name": "Salto Lateral Skater", "category": "PLIOMETRIA", "equipment": "Peso corporal",
+      "name": "Salto Lateral Skater", "category": "PLIOMETRIA", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["gluteos", "quadriceps", "adutores", "panturrilhas"],
       "steps": [
         "Salte lateralmente de uma perna para a outra, como um patinador.",
@@ -277,7 +277,7 @@
       ]
     },
     {
-      "name": "Arremesso Rotacional de Med Ball", "category": "PLIOMETRIA", "equipment": "Med ball + parede",
+      "name": "Arremesso Rotacional de Med Ball", "category": "PLIOMETRIA", "difficulty": "INICIANTE", "equipment": "Med ball + parede",
       "muscles": ["obliquos", "core", "peitoral", "deltoides", "gluteos"],
       "steps": [
         "De lado para a parede, bola no quadril de trás, joelhos semiflexionados.",
@@ -293,7 +293,7 @@
       ]
     },
     {
-      "name": "Mobilidade de Quadril 90/90", "category": "MOBILIDADE", "equipment": "Peso corporal",
+      "name": "Mobilidade de Quadril 90/90", "category": "MOBILIDADE", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["flexores", "gluteos", "adutores"],
       "steps": [
         "Sentado, as duas pernas a 90° — uma à frente, outra atrás.",
@@ -310,7 +310,7 @@
       ]
     },
     {
-      "name": "Ponte de Glúteo Unilateral", "category": "FORCA", "equipment": "Peso corporal ou halter",
+      "name": "Ponte de Glúteo Unilateral", "category": "FORCA", "difficulty": "INICIANTE", "equipment": "Peso corporal ou halter",
       "muscles": ["gluteos", "posteriores", "core"],
       "steps": [
         "Deitado, uma perna apoiada no chão e a outra estendida.",
@@ -326,7 +326,7 @@
       ]
     },
     {
-      "name": "Burpee com Salto", "category": "CONDICIONAMENTO", "equipment": "Peso corporal",
+      "name": "Burpee com Salto", "category": "CONDICIONAMENTO", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["peitoral", "quadriceps", "core", "panturrilhas", "deltoides"],
       "steps": [
         "Do agachamento, jogue as pernas para trás até a prancha.",
@@ -343,7 +343,7 @@
       ]
     },
     {
-      "name": "Panturrilha em Pé", "category": "FORCA", "equipment": "Step + halter",
+      "name": "Panturrilha em Pé", "category": "FORCA", "difficulty": "INICIANTE", "equipment": "Step + halter",
       "muscles": ["panturrilhas"],
       "steps": [
         "Metade do pé no step, calcanhar pendurado, halter na mão.",
@@ -359,7 +359,7 @@
       ]
     },
     {
-      "name": "Puxada na Toalha", "category": "FORCA", "equipment": "Toalha + barra fixa",
+      "name": "Puxada na Toalha", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Toalha + barra fixa",
       "muscles": ["antebracos", "dorsais", "biceps", "core"],
       "steps": [
         "Passe duas toalhas sobre a barra e segure uma em cada mão.",

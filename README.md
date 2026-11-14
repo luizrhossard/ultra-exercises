@@ -12,7 +12,7 @@ Este projeto é composto por duas partes principais: o **Frontend** (React + Vit
 
 ## 🧪 Testes
 
-### Backend (86 testes: unitários + integração)
+### Backend (106 testes: unitários + integração)
 
 Os testes de integração usam um Postgres dedicado (`db-test`, porta **5434**),
 subido via Docker Compose. É **pré-requisito**:
