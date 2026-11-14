@@ -79,3 +79,12 @@ npx playwright install chromium && npm run e2e
 docker compose -f backend/docker-compose.yml up -d db-test
 mvn -B -f backend/pom.xml verify
 ```
+
+## Suíte E2E complementar (UE-64)
+
+O workflow `e2e-tests.yml` valida Chromium, Firefox, WebKit, dois perfis móveis e smoke.
+O Playwright controla o servidor Vite; não é necessário iniciar outro servidor na mesma porta.
+O disparo manual respeita o navegador escolhido e recebe o filtro de tags por variável de ambiente.
+Os contratos de API rodam somente quando o secret `E2E_BACKEND_URL` está configurado;
+essa disponibilidade é exposta como output do job de configuração, válido nas condições dos jobs.
+O resumo usa o resultado real dos jobs, e os relatórios ficam nos artefatos da execução.
