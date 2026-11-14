@@ -68,7 +68,7 @@ class ExerciseDifficultyIntegrationTest {
                         "Aterrissagem Silenciosa de Salto", "Passada de Aproximação de Ataque",
                         "Deslocamento Lateral com Salto de Bloqueio", "Impulsão Vertical com Alcance de Bloqueio",
                         "Elevação em Y-T-W com Elástico", "Saltos Reativos de Contato Curto"))))
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
 
         assertThat((List<?>) JsonPath.read(body, "$[?(@.difficulty == 'INICIANTE')].name")).hasSize(28);
         assertThat((List<?>) JsonPath.read(body, "$[?(@.difficulty == 'INTERMEDIARIO')].name")).hasSize(22);
@@ -81,7 +81,7 @@ class ExerciseDifficultyIntegrationTest {
         String body = mvc.perform(get("/api/exercises").param("category", "ESPECIFICO"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(27))
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
 
         List<Map<String, Object>> specific = JsonPath.read(body, "$[*]");
         List<String> requiredNames = List.of(
@@ -109,7 +109,7 @@ class ExerciseDifficultyIntegrationTest {
         String body = mvc.perform(get("/api/exercises").param("category", "ESPECIFICO"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(27))
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
 
         List<Map<String, Object>> specific = JsonPath.read(body, "$[*]");
         Map<String, String> requiredSportByName = Map.of(
@@ -142,7 +142,7 @@ class ExerciseDifficultyIntegrationTest {
         String body = mvc.perform(get("/api/exercises").param("category", "ESPECIFICO"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(27))
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
 
         List<Map<String, Object>> specific = JsonPath.read(body, "$[*]");
         List<String> runningDrills = List.of(
@@ -176,7 +176,7 @@ class ExerciseDifficultyIntegrationTest {
     void ct03_detailMatchesCatalogDifficulty() throws Exception {
         String avancados = mvc.perform(get("/api/exercises").param("difficulty", "AVANCADO"))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         int id = JsonPath.read(avancados, "$[0].id");
         String expected = JsonPath.read(avancados, "$[0].difficulty");
 
