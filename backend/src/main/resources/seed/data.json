@@ -11,7 +11,7 @@
   ],
   "exercises": [
     {
-      "name": "Agachamento Búlgaro", "category": "FORCA", "equipment": "Halteres + banco",
+      "name": "Agachamento Búlgaro", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Halteres + banco",
       "muscles": ["quadriceps", "gluteos", "core", "adutores"],
       "steps": [
         "Apoie o peito do pé de trás no banco, tronco alto e halteres ao lado do corpo.",
@@ -30,7 +30,7 @@
       ]
     },
     {
-      "name": "Salto na Caixa", "category": "PLIOMETRIA", "equipment": "Caixa pliométrica",
+      "name": "Salto na Caixa", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Caixa pliométrica",
       "muscles": ["quadriceps", "gluteos", "panturrilhas", "core"],
       "steps": [
         "Pés na largura do quadril, braços para trás carregando o salto.",
@@ -46,7 +46,7 @@
       ]
     },
     {
-      "name": "Levantamento Terra", "category": "FORCA", "equipment": "Barra + anilhas",
+      "name": "Levantamento Terra", "category": "FORCA", "difficulty": "AVANCADO", "equipment": "Barra + anilhas",
       "muscles": ["posteriores", "gluteos", "dorsais", "lombar", "core", "antebracos"],
       "steps": [
         "Barra sobre o meio do pé, pés na largura do quadril.",
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "name": "Sprint em Ladeira", "category": "CONDICIONAMENTO", "equipment": "Ladeira ~8%",
+      "name": "Sprint em Ladeira", "category": "CONDICIONAMENTO", "difficulty": "INTERMEDIARIO", "equipment": "Ladeira ~8%",
       "muscles": ["gluteos", "quadriceps", "panturrilhas", "core"],
       "steps": [
         "Inclinação de 6–10%, 20–30 m marcados.",
@@ -82,7 +82,7 @@
       ]
     },
     {
-      "name": "Flexão Pliométrica", "category": "PLIOMETRIA", "equipment": "Peso corporal",
+      "name": "Flexão Pliométrica", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Peso corporal",
       "muscles": ["peitoral", "triceps", "deltoides", "core"],
       "steps": [
         "Prancha alta, mãos na largura dos ombros, core travado.",
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "name": "Barra Fixa", "category": "FORCA", "equipment": "Barra fixa",
+      "name": "Barra Fixa", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Barra fixa",
       "muscles": ["dorsais", "biceps", "antebracos", "core", "trapezio"],
       "steps": [
         "Pegada um pouco além dos ombros, escápulas deprimidas antes de puxar.",
@@ -116,7 +116,7 @@
       ]
     },
     {
-      "name": "Remada Curvada", "category": "FORCA", "equipment": "Barra",
+      "name": "Remada Curvada", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Barra",
       "muscles": ["dorsais", "trapezio", "biceps", "lombar", "core"],
       "steps": [
         "Quadril para trás, tronco a ~45°, coluna neutra.",
@@ -132,7 +132,7 @@
       ]
     },
     {
-      "name": "Desenvolvimento Militar", "category": "FORCA", "equipment": "Barra ou halteres",
+      "name": "Desenvolvimento Militar", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Barra ou halteres",
       "muscles": ["deltoides", "triceps", "trapezio", "core"],
       "steps": [
         "Barra na linha da clavícula, pegada um pouco além dos ombros.",
@@ -149,7 +149,7 @@
       ]
     },
     {
-      "name": "Prancha com Toque no Ombro", "category": "CORE", "equipment": "Peso corporal",
+      "name": "Prancha com Toque no Ombro", "category": "CORE", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["core", "obliquos", "deltoides", "gluteos"],
       "steps": [
         "Prancha alta, mãos sob os ombros, pés um pouco mais afastados.",
@@ -166,7 +166,7 @@
       ]
     },
     {
-      "name": "Woodchopper com Anilha", "category": "CORE", "equipment": "Anilha ou polia",
+      "name": "Woodchopper com Anilha", "category": "CORE", "difficulty": "INICIANTE", "equipment": "Anilha ou polia",
       "muscles": ["obliquos", "core", "deltoides", "gluteos"],
       "steps": [
         "Segure a anilha ao lado do quadril, pés firmes, joelhos semiflexionados.",
@@ -183,7 +183,7 @@
       ]
     },
     {
-      "name": "Afundo Lateral", "category": "FORCA", "equipment": "Halter ou peso corporal",
+      "name": "Afundo Lateral", "category": "FORCA", "difficulty": "INICIANTE", "equipment": "Halter ou peso corporal",
       "muscles": ["quadriceps", "adutores", "gluteos", "core"],
       "steps": [
         "Pés juntos, passo largo para o lado mantendo o outro estendido.",
@@ -200,7 +200,7 @@
       ]
     },
     {
-      "name": "Cadeira Nórdica", "category": "FORCA", "equipment": "Parceiro ou apoio de pé",
+      "name": "Cadeira Nórdica", "category": "FORCA", "difficulty": "AVANCADO", "equipment": "Parceiro ou apoio de pé",
       "muscles": ["posteriores", "gluteos", "panturrilhas"],
       "steps": [
         "Ajoelhado, tornozelos fixos, corpo em linha reta do joelho à cabeça.",
@@ -216,7 +216,7 @@
       ]
     },
     {
-      "name": "Corda de Batalha", "category": "CONDICIONAMENTO", "equipment": "Battle rope",
+      "name": "Corda de Batalha", "category": "CONDICIONAMENTO", "difficulty": "INICIANTE", "equipment": "Battle rope",
       "muscles": ["deltoides", "core", "antebracos", "quadriceps"],
       "steps": [
         "Corda ancorada, joelhos semiflexionados, quadril para trás.",
@@ -232,7 +232,7 @@
       ]
     },
     {
-      "name": "Sombra com Halteres Leves", "category": "ESPECIFICO", "equipment": "Halteres 1–2 kg",
+      "name": "Sombra com Halteres Leves", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Halteres 1–2 kg",
       "muscles": ["deltoides", "peitoral", "core", "panturrilhas"],
       "steps": [
         "Halteres leves (1–2 kg), guarda fechada, queixo baixo.",
@@ -245,7 +245,7 @@
       ]
     },
     {
-      "name": "Deslocamento Lateral com Faixa", "category": "ESPECIFICO", "equipment": "Mini band",
+      "name": "Deslocamento Lateral com Faixa", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Mini band",
       "muscles": ["abdutores", "gluteos", "quadriceps", "core"],
       "steps": [
         "Mini band acima dos joelhos, posição de base do seu esporte.",
@@ -261,7 +261,7 @@
       ]
     },
     {
-      "name": "Salto Lateral Skater", "category": "PLIOMETRIA", "equipment": "Peso corporal",
+      "name": "Salto Lateral Skater", "category": "PLIOMETRIA", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["gluteos", "quadriceps", "adutores", "panturrilhas"],
       "steps": [
         "Salte lateralmente de uma perna para a outra, como um patinador.",
@@ -277,7 +277,7 @@
       ]
     },
     {
-      "name": "Arremesso Rotacional de Med Ball", "category": "PLIOMETRIA", "equipment": "Med ball + parede",
+      "name": "Arremesso Rotacional de Med Ball", "category": "PLIOMETRIA", "difficulty": "INICIANTE", "equipment": "Med ball + parede",
       "muscles": ["obliquos", "core", "peitoral", "deltoides", "gluteos"],
       "steps": [
         "De lado para a parede, bola no quadril de trás, joelhos semiflexionados.",
@@ -293,7 +293,7 @@
       ]
     },
     {
-      "name": "Mobilidade de Quadril 90/90", "category": "MOBILIDADE", "equipment": "Peso corporal",
+      "name": "Mobilidade de Quadril 90/90", "category": "MOBILIDADE", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["flexores", "gluteos", "adutores"],
       "steps": [
         "Sentado, as duas pernas a 90° — uma à frente, outra atrás.",
@@ -310,7 +310,7 @@
       ]
     },
     {
-      "name": "Ponte de Glúteo Unilateral", "category": "FORCA", "equipment": "Peso corporal ou halter",
+      "name": "Ponte de Glúteo Unilateral", "category": "FORCA", "difficulty": "INICIANTE", "equipment": "Peso corporal ou halter",
       "muscles": ["gluteos", "posteriores", "core"],
       "steps": [
         "Deitado, uma perna apoiada no chão e a outra estendida.",
@@ -326,7 +326,7 @@
       ]
     },
     {
-      "name": "Burpee com Salto", "category": "CONDICIONAMENTO", "equipment": "Peso corporal",
+      "name": "Burpee com Salto", "category": "CONDICIONAMENTO", "difficulty": "INICIANTE", "equipment": "Peso corporal",
       "muscles": ["peitoral", "quadriceps", "core", "panturrilhas", "deltoides"],
       "steps": [
         "Do agachamento, jogue as pernas para trás até a prancha.",
@@ -343,7 +343,7 @@
       ]
     },
     {
-      "name": "Panturrilha em Pé", "category": "FORCA", "equipment": "Step + halter",
+      "name": "Panturrilha em Pé", "category": "FORCA", "difficulty": "INICIANTE", "equipment": "Step + halter",
       "muscles": ["panturrilhas"],
       "steps": [
         "Metade do pé no step, calcanhar pendurado, halter na mão.",
@@ -359,7 +359,7 @@
       ]
     },
     {
-      "name": "Puxada na Toalha", "category": "FORCA", "equipment": "Toalha + barra fixa",
+      "name": "Puxada na Toalha", "category": "FORCA", "difficulty": "INTERMEDIARIO", "equipment": "Toalha + barra fixa",
       "muscles": ["antebracos", "dorsais", "biceps", "core"],
       "steps": [
         "Passe duas toalhas sobre a barra e segure uma em cada mão.",
@@ -371,6 +371,207 @@
         { "sport": "jiu-jitsu", "score": 5, "why": "Pegada em tecido + puxada: o mais próximo da puxada de kimono que existe na academia." },
         { "sport": "boxe", "score": 3 },
         { "sport": "natacao", "score": 3 }
+      ]
+    },
+    {
+      "name": "Rotação Externa de Ombro com Elástico", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Elástico de resistência leve + toalha",
+      "muscles": ["manguito rotador", "deltoides", "trapezio"],
+      "steps": [
+        "Prenda o elástico na altura do cotovelo e fique de lado para a ancoragem.",
+        "Cotovelo colado ao tronco a 90°, com uma toalha enrolada entre braço e costela.",
+        "Gire o antebraço para fora em 2 s sem afastar o cotovelo do corpo, escápula encaixada para trás e para baixo.",
+        "Volte em 3 s controlando a tensão. 3 séries de 15 de cada lado, carga leve e sem dor."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Prevenção do ombro de nadador: os rotadores externos equilibram o volume enorme de rotação interna da braçada e mantêm a cabeça do úmero centrada." },
+        { "sport": "volei", "score": 4, "why": "Freia o braço após o ataque — a fase excêntrica onde o manguito mais sofre." },
+        { "sport": "tenis", "score": 4, "why": "Desacelera o braço depois do saque e do forehand, protegendo o ombro dominante." }
+      ]
+    },
+    {
+      "name": "Rotação Interna de Ombro com Elástico", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Elástico de resistência leve + toalha",
+      "muscles": ["manguito rotador", "peitoral", "dorsais"],
+      "steps": [
+        "Elástico na altura do cotovelo, ancoragem do lado do braço que vai trabalhar.",
+        "Cotovelo a 90° colado ao tronco, toalha enrolada entre braço e costela.",
+        "Leve o antebraço em direção ao abdômen em 2 s, sem girar o tronco junto.",
+        "Retorne em 3 s até a posição neutra. 3 séries de 15 de cada lado, sem dor."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 4, "why": "Prevenção do ombro de nadador: subescapular forte e controlado estabiliza a entrada da mão e a fase de agarre sem sobrecarregar o tendão." },
+        { "sport": "tenis", "score": 4, "why": "Rotação interna é o motor da aceleração do saque — treinada de forma controlada, protege o ombro." },
+        { "sport": "volei", "score": 3 }
+      ]
+    },
+    {
+      "name": "Puxada de Braçada com Elástico", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Elástico tubular com manoplas (stretch cord)",
+      "muscles": ["dorsais", "triceps", "deltoides", "core"],
+      "steps": [
+        "Prenda o elástico à frente na altura do quadril; incline o tronco a ~45° com coluna neutra e core travado.",
+        "Braços estendidos à frente simulando a entrada da mão, cotovelo alto e escápula ativa.",
+        "Puxe imitando a braçada de crawl: agarre com cotovelo alto, puxe sob o corpo e empurre até a coxa.",
+        "Retorne controlado. Alterne braços em 3–4 séries de 30–45 s mantendo o padrão técnico."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Replica fora d'água o padrão exato da braçada (agarre com cotovelo alto, puxada e finalização), fortalecendo a fase propulsiva." },
+        { "sport": "jiu-jitsu", "score": 2 }
+      ]
+    },
+    {
+      "name": "Nado com Paraquedas de Resistência", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Piscina + paraquedas de natação",
+      "muscles": ["dorsais", "deltoides", "triceps", "core", "gluteos"],
+      "steps": [
+        "Prenda o cinto do paraquedas na cintura e posicione o paraquedas atrás dos pés.",
+        "Nade crawl em esforço forte por 25 m, mantendo alinhamento de corpo e rotação de tronco.",
+        "Priorize a pegada da água: cotovelo alto e braçada longa, sem encurtar o movimento.",
+        "Descanse 30–45 s e repita 6–8 vezes; termine com 50 m soltos sem o paraquedas."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Nado com resistência: sobrecarga direta no gesto esportivo, aumentando força por braçada sem alterar a técnica." }
+      ]
+    },
+    {
+      "name": "Nado com Pull Buoy e Palmar", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Piscina + pull buoy + palmar",
+      "muscles": ["dorsais", "deltoides", "triceps", "peitoral", "core"],
+      "steps": [
+        "Prenda o pull buoy entre as coxas e calce palmares de tamanho moderado.",
+        "Nade crawl sem pernada, mantendo o quadril alto com o core firme.",
+        "Foque na entrada limpa da mão, no agarre com cotovelo alto e na finalização até a coxa.",
+        "Faça 6–10 × 50 m com 20 s de pausa; interrompa ao primeiro sinal de dor no ombro."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Força específica de braçada: isola membros superiores e aumenta a carga por puxada com o pull buoy e o palmar." }
+      ]
+    },
+    {
+      "name": "Prancha Streamline com Rotação", "category": "CORE", "difficulty": "INTERMEDIARIO", "equipment": "Peso corporal",
+      "muscles": ["core", "obliquos", "deltoides", "gluteos"],
+      "steps": [
+        "Deite de barriga para baixo em posição de streamline: braços estendidos acima da cabeça, mãos sobrepostas.",
+        "Eleve levemente braços e pernas, contraindo glúteos e abdômen para formar uma linha reta.",
+        "Gire o corpo inteiro como um bloco até ficar de lado, simulando a rotação do crawl, e segure 2 s.",
+        "Volte ao centro e gire para o outro lado. 3 séries de 40 s sem perder o alinhamento."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Core de rotação e estabilidade em streamline: o tronco gira como um bloco enquanto o corpo se mantém alinhado, como no crawl e no costas." },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Mobilidade de Ombro com Bastão", "category": "MOBILIDADE", "difficulty": "INICIANTE", "equipment": "Bastão ou cabo de vassoura",
+      "muscles": ["deltoides", "manguito rotador", "peitoral", "dorsais"],
+      "steps": [
+        "Segure o bastão com pegada bem aberta à frente do quadril, braços estendidos.",
+        "Leve o bastão por cima da cabeça até atrás do corpo em um arco lento, sem dobrar os cotovelos.",
+        "Retorne pelo mesmo caminho mantendo costelas para baixo e sem arquear a lombar.",
+        "Faça 2 séries de 10–12 repetições; estreite a pegada aos poucos conforme a amplitude melhora."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 5, "why": "Amplitude de flexão e rotação de ombro para a recuperação e a entrada da mão, reduzindo compensações que levam ao impacto do ombro." },
+        { "sport": "volei", "score": 3 },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Mobilidade de Tornozelo em Flexão Plantar", "category": "MOBILIDADE", "difficulty": "INICIANTE", "equipment": "Colchonete",
+      "muscles": ["panturrilhas", "tibial anterior", "tornozelo"],
+      "steps": [
+        "Ajoelhe sobre o colchonete com o peito dos pés apoiado no chão, dedos apontando para trás.",
+        "Sente lentamente sobre os calcanhares até sentir o alongamento na frente do tornozelo.",
+        "Segure 20–30 s e, se possível, eleve levemente os joelhos para aprofundar.",
+        "Finalize com 15 círculos de tornozelo para cada lado. 2 séries."
+      ],
+      "links": [
+        { "sport": "natacao", "score": 4, "why": "Tornozelo com flexão plantar ampla transforma o pé numa nadadeira: pernada mais eficiente e menos arrasto." },
+        { "sport": "corrida", "score": 2 }
+      ]
+    },
+    {
+      "name": "Aterrissagem Silenciosa de Salto", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Caixa baixa (20–30 cm)",
+      "muscles": ["quadriceps", "gluteos", "panturrilhas", "core"],
+      "steps": [
+        "Em pé sobre a caixa, pés na largura do quadril e joelhos levemente flexionados.",
+        "Desça da caixa sem pular para trás: entre em flexão de quadril e joelho assim que os pés tocarem o chão.",
+        "Aterrisse com os dois pés inteiros ao mesmo tempo, joelhos alinhados com a ponta dos pés e tronco à frente.",
+        "Pare 2 s em posição de agachamento sem ruído nem balanço. Faça 3 séries de 5 aterrissagens."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Técnica de aterrissagem após bloqueio e ataque: absorver a queda com joelho alinhado é o que protege joelho e tornozelo do jogador de vôlei." },
+        { "sport": "basquete", "score": 4, "why": "Mesma absorção de impacto da aterrissagem de rebote, em que a falha de técnica gera lesão de joelho." },
+        { "sport": "futebol", "score": 3 }
+      ]
+    },
+    {
+      "name": "Passada de Aproximação de Ataque", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Quadra ou área livre + bola (opcional)",
+      "muscles": ["quadriceps", "gluteos", "panturrilhas", "deltoides", "core"],
+      "steps": [
+        "Parta de pé, bola simulada na frente do corpo. Dê três passos: direita, esquerda, direita (ou o inverso para canhotos).",
+        "No último passo, deixe o braço de trás fazer um arco para trás e frene com o pé de apoio.",
+        "Salte em direção ao alto com os braços subindo juntos e alcance o ponto mais alto possível.",
+        "Aterrisse com a técnica silenciosa do exercício anterior. 4 séries de 5 aproximações com pausa de 40 s."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Padrão do salto de ataque: aproximação em três passos que transforma a corrida em impulsão vertical no ponto alto." },
+        { "sport": "basquete", "score": 3 }
+      ]
+    },
+    {
+      "name": "Deslocamento Lateral com Salto de Bloqueio", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Quadra ou área livre",
+      "muscles": ["quadriceps", "gluteos", "adutores", "panturrilhas", "deltoides"],
+      "steps": [
+        "Posição de bloqueio: joelhos flexionados, tronco à frente, braços erguidos à frente do rosto.",
+        "Desloque-se lateralmente 3 passos com o pé de frente à frente do corpo, sem cruzar as pernas.",
+        "No último passo, freie e salte verticalmente, braços estendidos acima da rede.",
+        "Aterrisse no mesmo ponto em flexão e volte para a posição de bloqueio. 3 séries de 6 repetições por lado."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Combinação de deslocamento + salto: o movimento real do bloqueio, do acompanhamento lateral ao salto com braços no alto." },
+        { "sport": "basquete", "score": 3 },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Impulsão Vertical com Alcance de Bloqueio", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Parede marcada ou fita métrica",
+      "muscles": ["quadriceps", "gluteos", "panturrilhas", "deltoides", "core"],
+      "steps": [
+        "De frente para a parede, marque com a mão o alcance de pé parado.",
+        "Faça contra-movimento rápido (agachamento curto de 1 s), braços para trás e salte alcançando a marca mais alta possível.",
+        "Toque a parede com a mão dominante no ponto mais alto e aterrisse com joelhos flexionados.",
+        "Descanse 30 s entre saltos. 4 séries de 4 saltos, mantendo a altura máxima em todos."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Impulsão vertical para o bloqueio: o ganho de alcance com braço estendido é o que decide a altura da rede bloqueada." },
+        { "sport": "basquete", "score": 4, "why": "Mesmo ganho de salto vertical usado no rebote e no toco." }
+      ]
+    },
+    {
+      "name": "Elevação em Y-T-W com Elástico", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Elástico de resistência leve",
+      "muscles": ["trapezio", "manguito rotador", "serrátil", "deltoides", "dorsais"],
+      "steps": [
+        "Prenda o elástico na altura do peito e segure-o com os braços estendidos à frente, palmas para dentro.",
+        "Faça as letras em sequência: Y (braços em diagonal acima da cabeça), T (braços em linha com o ombro) e W (cotovelos dobrados, mãos para fora).",
+        "Escápulas descem e se aproximam ao final de cada letra; o movimento é lento, 2 s por fase.",
+        "Faça 3 séries de 8 repetições completas com carga leve, sem dor no ombro."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Prevenção do ombro de ataque: fortalece serrátil e trapézio inferior, que estabilizam a escápula durante o ataque e o bloqueio." },
+        { "sport": "tenis", "score": 4, "why": "Mesma estabilidade escapular que protege o ombro dominante em saques e batidas repetidas." },
+        { "sport": "natacao", "score": 3 }
+      ]
+    },
+    {
+      "name": "Saltos Reativos de Contato Curto", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Cones ou marcas no chão",
+      "muscles": ["panturrilhas", "quadriceps", "gluteos", "tornozelo"],
+      "steps": [
+        "Pés na largura do quadril, sobre um cone ou marca. Mantenha o tronco alto e os braços dobrados.",
+        "Salte o mínimo possível: o tempo de contato com o chão deve ser curto, como um quique.",
+        "Ao tocar o chão, já emende o próximo salto com os calcanhares quase encostando no glúteo.",
+        "Faça 4 séries de 10 contatos em 10 s, com 60 s de descanso entre séries."
+      ],
+      "links": [
+        { "sport": "volei", "score": 4, "why": "Reatividade de tornozelo e perna para responder rápido à bola e saltar de novo logo após a aterrissagem." },
+        { "sport": "basquete", "score": 4, "why": "Contato curto e reativo para saltos repetidos e a defesa rápida." },
+        { "sport": "futebol", "score": 3 }
       ]
     }
   ]

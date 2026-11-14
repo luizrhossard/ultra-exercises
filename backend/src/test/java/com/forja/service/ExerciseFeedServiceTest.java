@@ -2,6 +2,7 @@ package com.forja.service;
 
 import com.forja.domain.Exercise;
 import com.forja.domain.ExerciseCategory;
+import com.forja.domain.ExerciseDifficulty;
 import com.forja.domain.ExerciseSport;
 import com.forja.domain.Sport;
 import com.forja.repository.ExerciseSportRepository;
@@ -34,7 +35,9 @@ class ExerciseFeedServiceTest {
     }
 
     private Exercise exercise(long id, String name, ExerciseCategory cat, String equipment, List<String> muscles) {
-        return Exercise.builder().id(id).name(name).category(cat).equipment(equipment).muscleGroups(muscles).build();
+        return Exercise.builder().id(id).name(name).category(cat)
+                .difficulty(ExerciseDifficulty.INICIANTE)
+                .equipment(equipment).muscleGroups(muscles).build();
     }
 
     private ExerciseSport link(Exercise ex, Sport sp, int score) {
@@ -86,7 +89,8 @@ class ExerciseFeedServiceTest {
     void filtersByCategory() {
         Sport fut = sport(1L, "futebol");
         Exercise agach = exercise(1L, "Agachamento", ExerciseCategory.FORCA, null, List.of("quadriceps"));
-        Exercise salto = exercise(2L, "Salto", ExerciseCategory.PLIOMETRIA, null, List.of("panturrilhas"));
+        Exercise salto = Exercise.builder().id(2L).name("Salto").category(ExerciseCategory.PLIOMETRIA)
+                .difficulty(ExerciseDifficulty.AVANCADO).equipment(null).muscleGroups(List.of("panturrilhas")).build();
 
         when(links.findBySportIdIn(any())).thenReturn(List.of(link(agach, fut, 5), link(salto, fut, 5)));
 
@@ -94,5 +98,18 @@ class ExerciseFeedServiceTest {
                 .extracting(ExerciseFeedService.FeedItem::exerciseId).containsExactly(1L);
         assertThat(service.feed(List.of(1L), null, ExerciseCategory.PLIOMETRIA))
                 .extracting(ExerciseFeedService.FeedItem::exerciseId).containsExactly(2L);
+    }
+
+    @Test
+    void feedItemCarriesDifficultyFromExercise() {
+        Sport fut = sport(1L, "futebol");
+        Exercise salto = Exercise.builder().id(2L).name("Salto").category(ExerciseCategory.PLIOMETRIA)
+                .difficulty(ExerciseDifficulty.AVANCADO).equipment(null).muscleGroups(List.of("panturrilhas")).build();
+
+        when(links.findBySportIdIn(any())).thenReturn(List.of(link(salto, fut, 5)));
+
+        assertThat(service.feed(List.of(1L), null, null))
+                .extracting(ExerciseFeedService.FeedItem::difficulty)
+                .containsExactly(ExerciseDifficulty.AVANCADO);
     }
 }
