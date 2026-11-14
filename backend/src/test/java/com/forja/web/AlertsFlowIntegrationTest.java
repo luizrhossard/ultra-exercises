@@ -31,6 +31,9 @@ class AlertsFlowIntegrationTest {
     @Autowired
     MockMvc mvc;
 
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     private String bearer(String token) {
         return "Bearer " + token;
     }
@@ -59,6 +62,9 @@ class AlertsFlowIntegrationTest {
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             Number sessionId = JsonPath.read(session, "$.id");
+            // Simula hist?rico legado sem data de planejamento (permite duas sess?es no dia).
+            jdbc.update("update training_sessions set plan_date = null where id = ?", sessionId.longValue());
+            jdbc.update("update routines set plan_date = null where id = ?", routineId.longValue());
             Number exerciseId = JsonPath.read(session, "$.items[0].exerciseId");
             mvc.perform(patch("/api/sessions/" + sessionId.intValue() + "/items/" + exerciseId.intValue())
                             .header("Authorization", bearer(token))

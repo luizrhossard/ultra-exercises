@@ -80,7 +80,7 @@ class ExerciseDifficultyIntegrationTest {
     void ue55_tennisSpecificExercisesCoverAcceptanceCriteria() throws Exception {
         String body = mvc.perform(get("/api/exercises").param("category", "ESPECIFICO"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(18))
+                .andExpect(jsonPath("$.length()").value(27))
                 .andReturn().getResponse().getContentAsString();
 
         List<Map<String, Object>> specific = JsonPath.read(body, "$[*]");
@@ -108,7 +108,7 @@ class ExerciseDifficultyIntegrationTest {
     void ue56_boxingAndJiuJitsuSpecificExercisesCoverAcceptanceCriteria() throws Exception {
         String body = mvc.perform(get("/api/exercises").param("category", "ESPECIFICO"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(18))
+                .andExpect(jsonPath("$.length()").value(27))
                 .andReturn().getResponse().getContentAsString();
 
         List<Map<String, Object>> specific = JsonPath.read(body, "$[*]");
@@ -141,7 +141,7 @@ class ExerciseDifficultyIntegrationTest {
     void ue57_runningTechniqueDrillsAreSpecificAndLinkedToRunning() throws Exception {
         String body = mvc.perform(get("/api/exercises").param("category", "ESPECIFICO"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(18))
+                .andExpect(jsonPath("$.length()").value(27))
                 .andReturn().getResponse().getContentAsString();
 
         List<Map<String, Object>> specific = JsonPath.read(body, "$[*]");
