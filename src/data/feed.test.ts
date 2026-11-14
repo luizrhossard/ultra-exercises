@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { ApiFeedItem } from "../api";
-import { buildFeedItem, buildFeedItems, categoryFromApi, linksFromApi, rankLocalFeed } from "./feed";
+import type { ApiExerciseDetail, ApiFeedItem } from "../api";
+import { buildExerciseDetail, buildFeedItem, buildFeedItems, categoryFromApi, difficultyToLevel, linksFromApi, rankLocalFeed } from "./feed";
 import { EXERCISES } from "./exercises";
 
 const futebolItem: ApiFeedItem = {
@@ -65,6 +65,61 @@ describe("buildFeedItem", () => {
   it("descarta músculos desconhecidos e usa os do catálogo como fallback", () => {
     const ex = buildFeedItem({ ...futebolItem, muscles: ["quadriceps", "panturrilha-inexistente"] });
     expect(ex.muscles).toEqual(["quadriceps"]);
+  });
+});
+
+describe("buildExerciseDetail", () => {
+  it("converte categoria, dificuldade, músculos e links e herda cadência pelo nome", () => {
+    const local = EXERCISES[0];
+    const detail: ApiExerciseDetail = {
+      id: 42,
+      name: local.name,
+      category: "PLIOMETRIA",
+      difficulty: "ADVANCED",
+      equipment: "Caixa",
+      muscles: ["quadriceps", "gluteos"],
+      steps: ["Controle a aterrissagem."],
+      links: [{ sportCode: "futebol", sportName: "Futebol", score: 5, rationale: "Potência no jogo." }],
+    };
+
+    const exercise = buildExerciseDetail(detail);
+
+    expect(exercise).toMatchObject({
+      id: "api-42",
+      category: "Pliometria",
+      level: 3,
+      equipment: "Caixa",
+      tempo: local.tempo,
+      muscles: ["quadriceps", "gluteos"],
+      steps: ["Controle a aterrissagem."],
+      links: [{ sport: "futebol", score: 5, why: "Potência no jogo." }],
+    });
+  });
+
+  it("resolve o catálogo local pelo nome e usa nível padrão para dificuldade desconhecida", () => {
+    const local = EXERCISES[0];
+    const detail: ApiExerciseDetail = {
+      id: 43,
+      name: "Nome retornado diferente",
+      category: "FORCA",
+      difficulty: "UNKNOWN",
+      equipment: null,
+      muscles: [],
+      steps: [],
+      links: [],
+    };
+    const exercise = buildExerciseDetail(detail, local.name);
+
+    expect(exercise.level).toBe(local.level);
+    expect(exercise.tempo).toBe(local.tempo);
+    expect(exercise.steps).toEqual(local.steps);
+    expect(exercise.muscles).toEqual(local.muscles);
+  });
+});
+
+describe("difficultyToLevel", () => {
+  it.each([["BEGINNER", 1], ["INTERMEDIATE", 2], ["ADVANCED", 3]] as const)("mapeia %s para nível %i", (difficulty, expected) => {
+    expect(difficultyToLevel(difficulty)).toBe(expected);
   });
 });
 

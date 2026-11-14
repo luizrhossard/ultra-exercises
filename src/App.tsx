@@ -49,7 +49,7 @@ function Toasts() {
 }
 
 function Shell() {
-  const { profile, tab, playerId, token, authLoading } = useApp();
+  const { profile, tab, playerId, playerName, token, authLoading } = useApp();
   // [UE-29] Rota pública de rotina compartilhada (/compartilhada/:token) fora do gate de auth.
   const sharedToken = useMemo(() => {
     const match = window.location.pathname.match(/^\/compartilhada\/([A-Za-z0-9_-]+)$/);
@@ -117,7 +117,7 @@ function Shell() {
       <AnimatePresence>
         {playerId && profile.onboarded && (
           <Suspense fallback={<ScreenFallback />}>
-            <Player key={playerId} />
+            <Player key={`${playerId}:${playerName ?? ""}`} />
           </Suspense>
         )}
       </AnimatePresence>

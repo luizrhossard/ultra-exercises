@@ -34,6 +34,7 @@ describe("api — wrappers batem no endpoint certo", () => {
     { name: "saveReadiness", call: () => api.saveReadiness("tok", { sleepQuality: 3, fatigue: 3, stress: 3, soreness: 3, painArea: "", painLevel: 0, notes: "" }), token: "tok", method: "PUT", path: "/readiness/today" },
     { name: "sports", call: () => api.sports(), path: "/sports" },
     { name: "exercisesFeed com filtros", call: () => api.exercisesFeed([1, 2], "supino", "Força"), path: "/exercises/feed?sportIds=1&sportIds=2&q=supino&category=For%C3%A7a" },
+    { name: "exerciseDetail", call: () => api.exerciseDetail(42), path: "/exercises/42" },
     { name: "routines", call: () => api.routines("tok"), token: "tok", path: "/routines" },
     { name: "generateRoutine", call: () => api.generateRoutine("tok", 7), token: "tok", method: "POST", path: "/routines/generate", body: { sportId: 7 } },
     { name: "createSession", call: () => api.createSession("tok", 7), token: "tok", method: "POST", path: "/routines/7/sessions" },

@@ -32,11 +32,12 @@ interface AppStore {
   profile: UserProfile;
   tab: Tab;
   playerId: string | null;
+  playerName: string | null;
   toasts: Toast[];
   genFocus: string | null;
   setGenFocus: (s: string | null) => void;
   setTab: (t: Tab) => void;
-  openPlayer: (id: string) => void;
+  openPlayer: (id: string, name?: string) => void;
   closePlayer: () => void;
   toast: (msg: string, color?: string) => void;
   authenticate: (mode: "login" | "register", email: string, password: string, name: string) => Promise<void>;
@@ -65,6 +66,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
   const [tab, setTab] = useState<Tab>("explorar");
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [playerName, setPlayerName] = useState<string | null>(null);
   const [genFocus, setGenFocus] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("forja:token:v1"));
@@ -127,13 +129,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const cancelChallenge = useCallback(() => setPendingChallenge(null), []);
 
+  const openPlayer = useCallback((id: string, name?: string) => {
+    setPlayerName(name ?? null);
+    setPlayerId(id);
+  }, []);
+  const closePlayer = useCallback(() => {
+    setPlayerId(null);
+    setPlayerName(null);
+  }, []);
+
   const logout = useCallback(() => {
     clearCache();
     localStorage.removeItem("forja:token:v1"); setToken(null);
     setPendingChallenge(null);
     setAuthLoading(false);
+    closePlayer();
     setProfile({ name: "", sports: [], onboarded: false }); setTab("explorar");
-  }, []);
+  }, [closePlayer]);
 
   const completeOnboarding = useCallback(async (name: string, sports: string[]) => {
     if (!token) throw new Error("Sua sessão expirou. Entre novamente.");
@@ -159,8 +171,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("forja:profile:v1");
     setProfile({ name: "", sports: [], onboarded: false });
     setTab("explorar");
-    setPlayerId(null);
-  }, []);
+    closePlayer();
+  }, [closePlayer]);
 
   return (
     <Ctx.Provider
@@ -171,12 +183,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         pendingChallenge,
         tab,
         playerId,
+        playerName,
         toasts,
         genFocus,
         setGenFocus,
         setTab,
-        openPlayer: setPlayerId,
-        closePlayer: () => setPlayerId(null),
+        openPlayer,
+        closePlayer,
         toast,
         authenticate,
         verifyChallenge,

@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AppProvider } from "../store";
 import Routines from "./Routines";
+import Player from "./Player";
 
 vi.mock("../api", () => ({
   ApiError: class ApiError extends Error {},
@@ -12,6 +13,7 @@ vi.mock("../api", () => ({
     register: vi.fn(),
     saveProfile: vi.fn(),
     sports: vi.fn(),
+    exerciseDetail: vi.fn(),
     routines: vi.fn(),
     generateRoutine: vi.fn(),
     createSession: vi.fn(),
@@ -27,10 +29,19 @@ vi.mock("qrcode.react", () => ({
   QRCodeSVG: () => <svg data-testid="qr-svg" />,
 }));
 
-import { api, type ApiRoutine, type ApiSession, type ApiSport } from "../api";
+import { api, type ApiExerciseDetail, type ApiRoutine, type ApiSession, type ApiSport } from "../api";
 import { clearCache } from "../cache";
 
 const sport: ApiSport = { id: 1, code: "futebol", name: "Futebol", description: null };
+const exerciseDetail: ApiExerciseDetail = {
+  id: 1,
+  name: "Supino",
+  category: "FORCA",
+  equipment: "Barra",
+  muscles: ["peitoral"],
+  steps: ["Deite no banco e empurre a barra."],
+  links: [{ sportCode: "futebol", sportName: "Futebol", score: 4, rationale: "Ajuda nos contatos." }],
+};
 
 const routine: ApiRoutine = {
   id: 7,
@@ -97,6 +108,7 @@ beforeEach(() => {
     sports: [{ code: "futebol", name: "Futebol", level: "COMPETITIVE" }],
   });
   vi.mocked(api.sports).mockResolvedValue([sport]);
+  vi.mocked(api.exerciseDetail).mockResolvedValue(exerciseDetail);
   vi.mocked(api.routines).mockResolvedValue([]);
 });
 
@@ -111,6 +123,7 @@ function renderScreen() {
   return render(
     <AppProvider>
       <Routines />
+      <Player />
     </AppProvider>
   );
 }
@@ -124,6 +137,21 @@ async function expandFirstCard(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("Routines — geração de treino", () => {
+  it("abre o detalhe do exercício ao ativar sua linha na rotina", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.routines).mockResolvedValue([routine]);
+    renderScreen();
+    await expandFirstCard(user);
+
+    const detailsButton = screen.getByRole("button", { name: "Ver detalhes de Supino" });
+    detailsButton.focus();
+    await user.keyboard("{Enter}");
+
+    expect(api.exerciseDetail).toHaveBeenCalledWith(1);
+    expect(await screen.findByRole("dialog", { name: "Supino" })).toBeInTheDocument();
+    expect(await screen.findByText("Deite no banco e empurre a barra.")).toBeInTheDocument();
+  });
+
   it("mostra skeleton enquanto as consultas carregam", () => {
     vi.mocked(api.sports).mockReturnValue(new Promise(() => {}));
     vi.mocked(api.routines).mockReturnValue(new Promise(() => {}));

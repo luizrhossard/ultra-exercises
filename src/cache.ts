@@ -16,6 +16,8 @@ export const CACHE_TTL = {
   sports: 24 * 60 * 60_000,
   /** Feed de exercícios ranqueado por esportes — catálogo muda raramente. */
   feed: 24 * 60 * 60_000,
+  /** Detalhes pÃºblicos do catÃ¡logo de exercÃ­cios. */
+  exercise: 24 * 60 * 60_000,
   /** Lista de rotinas do usuário. */
   routines: 2 * 60_000,
   /** Check-in de prontidão do dia. */
