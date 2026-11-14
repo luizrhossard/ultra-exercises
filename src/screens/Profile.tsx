@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { EXERCISES } from "../data/exercises";
 import { SPORTS, sportById } from "../data/sports";
@@ -7,11 +7,48 @@ import { SportIcon, IconBolt, IconCheck } from "../components/Icons";
 import { SectionLabel } from "../components/ui";
 import ReadinessCard from "../components/ReadinessCard";
 import TwoFactorSettings from "../components/TwoFactorSettings";
+import { api, type TrainingProfileUpdate } from "../api";
+
+const TRAINING_DAYS = [
+  ["MONDAY", "Seg"], ["TUESDAY", "Ter"], ["WEDNESDAY", "Qua"], ["THURSDAY", "Qui"],
+  ["FRIDAY", "Sex"], ["SATURDAY", "Sáb"], ["SUNDAY", "Dom"],
+] as const;
 
 export default function Profile() {
-  const { profile, setName, toggleSport, resetAll, toast } = useApp();
+  const { profile, setName, toggleSport, resetAll, toast, token } = useApp();
   const [name, setNameLocal] = useState(profile.name);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [training, setTraining] = useState<TrainingProfileUpdate>({
+    goal: "", availableDays: [], sessionDurationMinutes: 60, equipment: "", preferences: "", limitations: "",
+  });
+  const [savingTraining, setSavingTraining] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    void api.me(token).then((remote) => {
+      if (!active) return;
+      setTraining({
+        goal: remote.goal ?? "", availableDays: remote.availableDays ?? [],
+        sessionDurationMinutes: remote.sessionDurationMinutes ?? 60,
+        equipment: remote.equipment ?? "", preferences: remote.preferences ?? "", limitations: remote.limitations ?? "",
+      });
+    }).catch(() => toast("Não foi possível carregar suas preferências de treino."));
+    return () => { active = false; };
+  }, [token, toast]);
+
+  const saveTraining = async () => {
+    if (!token) return;
+    setSavingTraining(true);
+    try {
+      await api.saveProfile(token, name.trim(), profile.sports, training);
+      toast("Preferências de treino salvas.");
+    } catch {
+      toast("Não foi possível salvar suas preferências de treino.");
+    } finally {
+      setSavingTraining(false);
+    }
+  };
 
   return (
     <div className="px-5 pb-32 pt-6 lg:mx-auto lg:max-w-4xl lg:px-10 lg:pb-24 lg:pt-10">
@@ -53,6 +90,38 @@ export default function Profile() {
       </div>
 
       <ReadinessCard />
+
+      <section className="mt-5 rounded-2xl border border-ink-700 bg-ink-850 p-4">
+        <SectionLabel>Preferências de treino</SectionLabel>
+        <label className="mt-3 block text-[11px] font-bold uppercase tracking-wide text-fog-mute">Objetivo
+          <input value={training.goal ?? ""} onChange={(e) => setTraining((p) => ({ ...p, goal: e.target.value }))} maxLength={80} placeholder="Ex.: condicionamento para futebol" className="mt-1 w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-[13px] text-fog" />
+        </label>
+        <fieldset className="mt-3">
+          <legend className="text-[11px] font-bold uppercase tracking-wide text-fog-mute">Dias disponíveis</legend>
+          <div className="mt-2 grid grid-cols-7 gap-1.5">
+            {TRAINING_DAYS.map(([day, label]) => {
+              const selected = (training.availableDays ?? []).includes(day);
+              return <button key={day} type="button" aria-pressed={selected} onClick={() => setTraining((p) => ({
+                ...p, availableDays: selected ? (p.availableDays ?? []).filter((value) => value !== day) : [...(p.availableDays ?? []), day],
+              }))} className={`rounded-lg border py-2 text-[11px] font-bold ${selected ? "border-volt-400 bg-volt-400/10 text-volt-300" : "border-ink-600 text-fog-mute"}`}>{label}</button>;
+            })}
+          </div>
+          <p className="mt-1 text-[10px] text-fog-mute">Sem dias selecionados, a agenda fica flexível.</p>
+        </fieldset>
+        <label className="mt-3 block text-[11px] font-bold uppercase tracking-wide text-fog-mute">Duração por sessão (minutos)
+          <input type="number" min={15} max={240} step={5} value={training.sessionDurationMinutes ?? 60} onChange={(e) => setTraining((p) => ({ ...p, sessionDurationMinutes: Number(e.target.value) }))} className="mt-1 w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-[13px] text-fog" />
+        </label>
+        <label className="mt-3 block text-[11px] font-bold uppercase tracking-wide text-fog-mute">Equipamentos disponíveis
+          <input value={training.equipment ?? ""} onChange={(e) => setTraining((p) => ({ ...p, equipment: e.target.value }))} maxLength={500} placeholder="Ex.: halteres, elásticos, nenhum" className="mt-1 w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-[13px] text-fog" />
+        </label>
+        <label className="mt-3 block text-[11px] font-bold uppercase tracking-wide text-fog-mute">Preferências
+          <textarea value={training.preferences ?? ""} onChange={(e) => setTraining((p) => ({ ...p, preferences: e.target.value }))} maxLength={500} rows={2} placeholder="Ex.: priorizar Supino; prefiro agachamento" className="mt-1 w-full resize-y rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-[13px] text-fog" />
+        </label>
+        <label className="mt-3 block text-[11px] font-bold uppercase tracking-wide text-fog-mute">Limitações informadas por você
+          <textarea value={training.limitations ?? ""} onChange={(e) => setTraining((p) => ({ ...p, limitations: e.target.value }))} maxLength={1000} rows={2} placeholder="Ex.: evitar saltos; sem agachamento. Não é diagnóstico." className="mt-1 w-full resize-y rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-[13px] text-fog" />
+        </label>
+        <button type="button" disabled={savingTraining} onClick={() => void saveTraining()} className="mt-3 w-full rounded-xl bg-volt-400 py-2.5 text-[12px] font-bold uppercase tracking-wide text-ink-950 disabled:opacity-60">{savingTraining ? "Salvando…" : "Salvar preferências"}</button>
+      </section>
 
       {/* stats */}
       <div className="mt-4 grid grid-cols-2 gap-2.5">

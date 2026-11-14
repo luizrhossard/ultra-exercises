@@ -40,7 +40,7 @@ Login com credenciais inválidas → 401 `UNAUTHORIZED`.
 `[{id, code, name, description}]` — códigos: `futebol, boxe, jiu-jitsu, basquete, volei, corrida, natacao, tenis`.
 
 ### Profile — `GET /api/me`, `PUT /api/me`
-`PUT` aceita `{name?, sports?: [{code}]}` (substitui esportes) → perfil completo.
+`PUT` aceita `{name?, sports: [{code, level}], goal?, availableDays?, sessionDurationMinutes?, equipment?, preferences?, limitations?}`. `sports` substitui os esportes; preferências opcionais ausentes são preservadas.
 
 ### Exercises
 - `GET /api/exercises?difficulty=X&category=Y&q=termo` — **catálogo completo**
@@ -56,20 +56,20 @@ Login com credenciais inválidas → 401 `UNAUTHORIZED`.
 
 ### Routines
 - `GET /api/routines` — minhas rotinas (mais recentes primeiro), com `items`.
-- `POST /api/routines/generate` `{sportId}` — "treino do dia": esporte foco pesa 2×,
-  cotas por categoria, até 7 exercícios (201).
+- `POST /api/routines/generate` `{sportId, planDate?}` — planeja uma recomendação para hoje ou uma data futura, sem duplicar rotina do mesmo atleta/data. Considera objetivo, dias disponíveis, duração, equipamento, limitações declaradas, esporte, nível, histórico concluído recente e prontidão. A resposta explica os ajustes; um check-in posterior pode tornar conservadora a recomendação provisória daquela data.
 - `POST /api/routines/{id}/items` `{exerciseId}` — adiciona item com preset da categoria
   (sem duplicar).
 - `PATCH /api/routines/{id}/items/{exerciseId}` `{sets?, restTime?}`.
+- `GET /api/routines/{id}/items/{exerciseId}/alternatives` — alternativas vinculadas ao mesmo esporte e categoria.
+- `PUT /api/routines/{id}/items/{exerciseId}/replace` `{replacementExerciseId}` — substitui mantendo a dosagem prescrita.
 - `DELETE /api/routines/{id}` — 204.
 - Rotina de outro usuário em qualquer operação → **404** (não vaza existência).
 
 ### Sessions
-- `POST /api/routines/{routineId}/sessions` — cria sessão `PLANNED` a partir dos itens da rotina.
+- `POST /api/routines/{routineId}/sessions` — cria sessão `PLANNED` a partir da prescrição; repetição retorna a sessão daquela data.
 - `GET /api/sessions` — minhas sessões.
 - `POST /api/sessions/{id}/start` — `IN_PROGRESS`.
-- `PATCH /api/sessions/{id}` `{status?, durationMinutes?, sessionRpe?}` — `COMPLETED`
-  preenche `completedAt`.
+- `PATCH /api/sessions/{id}` `{status?, durationMinutes?, sessionRpe?}` — estados `PLANNED`, `IN_PROGRESS`, `COMPLETED`, `INTERRUPTED` ou `SKIPPED`; estados finais não podem ser reescritos.
 - `PATCH /api/sessions/{id}/items/{exerciseId}` `{completedSets?, loadKg?, itemRpe?}`.
 
 ### Readiness — `GET /api/readiness/today`, `PUT /api/readiness/today`

@@ -35,6 +35,7 @@ function BodyBase() {
 }
 
 const FRONT_ZONES: Partial<Record<MuscleKey, React.ReactNode>> = {
+  cervicais: <rect x="55" y="31" width="10" height="11" rx="3" />,
   peitoral: <rect x="41.5" y="45" width="16.5" height="14" rx="7" />,
   biceps: <rect x="28.5" y="57" width="8" height="30" rx="4" />,
   antebracos: <rect x="28.5" y="93" width="8" height="28" rx="4" />,
@@ -49,6 +50,7 @@ const FRONT_CENTER: Partial<Record<MuscleKey, React.ReactNode>> = {
 };
 
 const BACK_ZONES: Partial<Record<MuscleKey, React.ReactNode>> = {
+  cervicais: <rect x="55" y="31" width="10" height="11" rx="3" />,
   dorsais: <rect x="41.5" y="56" width="17" height="27" rx="8" />,
   posteriores: <rect x="45.5" y="137" width="11.5" height="38" rx="5.5" />,
   panturrilhas: <rect x="46.5" y="188" width="9" height="32" rx="4.5" />,

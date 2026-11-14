@@ -31,6 +31,7 @@ const STATUS_LABEL: Record<ApiProgressSession["status"], string> = {
   PLANNED: "Planejada",
   IN_PROGRESS: "Em andamento",
   COMPLETED: "Concluída",
+  INTERRUPTED: "Interrompida",
   SKIPPED: "Pulada",
 };
 
