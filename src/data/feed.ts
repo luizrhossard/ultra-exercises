@@ -26,7 +26,7 @@ export function exerciseByName(name: string | null | undefined): Exercise | unde
   return EXERCISES.find((exercise) => normalizeName(exercise.name) === normalized);
 }
 
-export function difficultyToLevel(value: string | null | undefined, fallback: Exercise["level"] = 2): Exercise["level"] {
+export function difficultyToLevel(value: string | null | undefined, fallback?: Exercise["level"]): Exercise["level"] | undefined {
   const normalized = normalizeName(value ?? "");
   if (["iniciante", "beginner", "basico"].includes(normalized)) return 1;
   if (["avancado", "advanced", "profissional"].includes(normalized)) return 3;
@@ -47,7 +47,7 @@ export function buildExerciseDetail(item: ApiExerciseDetail, requestedName?: str
     id: `api-${item.id}`,
     name: item.name || local?.name || requestedName || `ExercÃ­cio ${item.id}`,
     category: categoryFromApi(item.category) ?? local?.category ?? API_CATEGORY.FORCA,
-    level: difficultyToLevel(item.difficulty, local?.level ?? 2),
+    level: difficultyToLevel(item.difficulty) ?? local?.level ?? 2,
     equipment: item.equipment ?? local?.equipment ?? "NÃ£o informado",
     tempo: local?.tempo ?? "NÃ£o informado",
     muscles: muscles.length ? [...new Set(muscles)] : (local?.muscles ?? []),
@@ -75,6 +75,7 @@ export function linksFromApi(item: ApiFeedItem): SportLink[] {
  * Converte um item do feed da API no formato local. O ranking vem do backend
  * (melhor score + desempates); id/tempo/steps/nível são herdados do catálogo
  * local (merge por nome) para a navegação do Player continuar funcionando.
+ * A dificuldade oficial vem da API [UE-49]; o catálogo é só fallback.
  */
 export function buildFeedItem(item: ApiFeedItem): Exercise {
   const local = EXERCISES.find((e) => e.name === item.name);
@@ -83,7 +84,7 @@ export function buildFeedItem(item: ApiFeedItem): Exercise {
     id: local?.id ?? `api-${item.exerciseId}`,
     name: item.name,
     category: categoryFromApi(item.category) ?? "Força",
-    level: local?.level ?? 2,
+    level: difficultyToLevel(item.difficulty) ?? local?.level ?? 2,
     equipment: item.equipment ?? local?.equipment ?? "",
     tempo: local?.tempo ?? "",
     muscles: muscles.length > 0 ? muscles : (local?.muscles ?? []),

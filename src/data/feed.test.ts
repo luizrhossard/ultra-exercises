@@ -7,6 +7,7 @@ const futebolItem: ApiFeedItem = {
   exerciseId: 3,
   name: "Agachamento Búlgaro",
   category: "FORCA",
+  difficulty: "INTERMEDIARIO",
   equipment: "Halteres + banco",
   muscles: ["quadriceps", "gluteos", "core"],
   bestScore: 5,
@@ -27,6 +28,20 @@ describe("categoryFromApi", () => {
 
   it("retorna undefined para categoria desconhecida", () => {
     expect(categoryFromApi("ZUMBA")).toBeUndefined();
+  });
+});
+
+describe("difficultyToLevel [UE-49]", () => {
+  it("mapeia as três dificuldades oficiais para o nível local", () => {
+    expect(difficultyToLevel("INICIANTE")).toBe(1);
+    expect(difficultyToLevel("INTERMEDIARIO")).toBe(2);
+    expect(difficultyToLevel("AVANCADO")).toBe(3);
+  });
+
+  it("retorna undefined para valor ausente ou desconhecido (fallback do catálogo)", () => {
+    expect(difficultyToLevel(undefined)).toBeUndefined();
+    expect(difficultyToLevel(null)).toBeUndefined();
+    expect(difficultyToLevel("XPTO")).toBeUndefined();
   });
 });
 
@@ -53,6 +68,17 @@ describe("buildFeedItem", () => {
     expect(ex.category).toBe("Força");
     expect(ex.tempo).toBe("3-1-1");
     expect(ex.steps.length).toBeGreaterThan(0);
+    expect(ex.level).toBe(2);
+  });
+
+  it("usa a dificuldade oficial da API como nível do card [UE-49]", () => {
+    expect(buildFeedItem(futebolItem).level).toBe(2);
+    expect(buildFeedItem({ ...futebolItem, difficulty: "AVANCADO" }).level).toBe(3);
+    expect(buildFeedItem({ ...futebolItem, difficulty: "INICIANTE" }).level).toBe(1);
+  });
+
+  it("cai para o nível do catálogo local quando a dificuldade vem inválida/ausente", () => {
+    const ex = buildFeedItem({ ...futebolItem, difficulty: "XPTO" as ApiFeedItem["difficulty"] });
     expect(ex.level).toBe(2);
   });
 
@@ -143,7 +169,65 @@ describe("rankLocalFeed", () => {
     expect(rankLocalFeed([])).toEqual([]);
   });
 
-  it("cobre os mesmos 22 exercícios do catálogo", () => {
-    expect(EXERCISES).toHaveLength(22);
+  it("cobre os mesmos 38 exercícios do catálogo", () => {
+    expect(EXERCISES).toHaveLength(38);
+  });
+
+  it("inclui os exercícios específicos de tênis exigidos pela UE-55", () => {
+    const tennisSpecific = EXERCISES.filter((exercise) =>
+      exercise.category === "Específico" && exercise.links.some((link) => link.sport === "tenis"),
+    );
+
+    expect(tennisSpecific.map((exercise) => exercise.name)).toEqual(
+      expect.arrayContaining([
+        "Arremesso de Med Ball no Padrão do Saque",
+        "Split Step Reativo",
+        "Deslocamento em Oito na Quadra",
+        "Extensão Excêntrica de Punho",
+        "Rotação Externa de Ombro com Faixa",
+      ]),
+    );
+  });
+
+  it("inclui exercícios específicos suficientes de boxe e jiu-jitsu para a UE-56", () => {
+    const specificFor = (sport: string) => EXERCISES.filter((exercise) =>
+      exercise.category === "Específico" && exercise.links.some((link) => link.sport === sport),
+    );
+    const boxing = specificFor("boxe");
+    const jiuJitsu = specificFor("jiu-jitsu");
+
+    expect(boxing.length).toBeGreaterThanOrEqual(4);
+    expect(boxing.map((exercise) => exercise.name)).toEqual(
+      expect.arrayContaining([
+        "Isometria Cervical com Harness",
+        "Soco no Landmine",
+        "Condicionamento de Boxe em Rounds 3:1",
+        "Sombra de Boxe com Elástico",
+      ]),
+    );
+    expect(jiuJitsu.length).toBeGreaterThanOrEqual(4);
+    expect(jiuJitsu.map((exercise) => exercise.name)).toEqual(
+      expect.arrayContaining([
+        "Pegada de Kimono — Retenção de Lapela e Manga",
+        "Sprawl Reativo e Defesa de Queda",
+        "Ponte Isométrica de Quadril para Grappling",
+        "Levantada Técnica de Jiu-Jitsu",
+      ]),
+    );
+  });
+
+  it("inclui ao menos três drills específicos de corrida para a UE-57", () => {
+    const runningSpecific = EXERCISES.filter((exercise) =>
+      exercise.category === "Específico" && exercise.links.some((link) => link.sport === "corrida"),
+    );
+
+    expect(runningSpecific.length).toBeGreaterThanOrEqual(3);
+    expect(runningSpecific.map((exercise) => exercise.name)).toEqual(
+      expect.arrayContaining([
+        "Skip A — Técnica de Passada",
+        "Dribbling de Corrida",
+        "Pogos Bilaterais de Baixa Amplitude",
+      ]),
+    );
   });
 });

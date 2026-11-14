@@ -3,6 +3,7 @@ package com.forja.seed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forja.domain.Exercise;
 import com.forja.domain.ExerciseCategory;
+import com.forja.domain.ExerciseDifficulty;
 import com.forja.domain.ExerciseSport;
 import com.forja.domain.Sport;
 import com.forja.repository.ExerciseRepository;
@@ -24,7 +25,7 @@ import java.util.Map;
 /**
  * Popula a base com a curadoria completa (esportes, exercícios e os pares
  * exercise_sport com score + rationale) a partir de seed/data.json.
- * Idempotente: pula se já houver dados.
+ * Idempotente e incremental: insere apenas esportes/exercícios ausentes.
  */
 @Slf4j
 @Component
@@ -42,7 +43,7 @@ public class DataSeeder implements ApplicationRunner {
     record LinkSeed(String sport, int score, String why) {
     }
 
-    record ExerciseSeed(String name, String category, String equipment,
+    record ExerciseSeed(String name, String category, String difficulty, String equipment,
                         List<String> muscles, List<String> steps, List<LinkSeed> links) {
     }
 
@@ -52,28 +53,29 @@ public class DataSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) throws Exception {
-        if (sports.count() > 0) {
-            log.info("Seed Forja: base já populada — pulando.");
-            return;
-        }
-
         var data = json.readValue(
                 new ClassPathResource("seed/data.json").getInputStream(), SeedData.class);
 
+        // Incremental [UE-51]: esportes e exercícios são identificados por code/name (unique);
+        // bases já populadas recebem apenas o que ainda não existe.
         Map<String, Sport> byCode = new HashMap<>();
         for (var s : data.sports()) {
-            byCode.put(s.code(), sports.save(Sport.builder()
+            byCode.put(s.code(), sports.findByCode(s.code()).orElseGet(() -> sports.save(Sport.builder()
                     .code(s.code())
                     .name(s.name())
                     .description(s.description())
-                    .build()));
+                    .build())));
         }
 
         int pairs = 0;
+        int created = 0;
         for (var e : data.exercises()) {
+            if (exercises.findByName(e.name()).isPresent()) continue;
+            created++;
             var exercise = exercises.save(Exercise.builder()
                     .name(e.name())
                     .category(ExerciseCategory.valueOf(e.category()))
+                    .difficulty(ExerciseDifficulty.valueOf(e.difficulty()))
                     .equipment(e.equipment())
                     .muscleGroups(new ArrayList<>(e.muscles()))
                     .steps(new ArrayList<>(e.steps()))
@@ -90,7 +92,11 @@ public class DataSeeder implements ApplicationRunner {
             }
         }
 
-        log.info("Seed Forja aplicado: {} esportes · {} exercícios · {} pares exercise_sport.",
-                byCode.size(), data.exercises().size(), pairs);
+        if (created == 0) {
+            log.info("Seed Forja: catálogo já atualizado — nada a inserir.");
+            return;
+        }
+        log.info("Seed Forja aplicado: {} esportes · {} exercícios novos · {} pares exercise_sport novos.",
+                byCode.size(), created, pairs);
     }
 }

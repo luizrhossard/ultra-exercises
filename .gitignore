@@ -14,5 +14,6 @@ backend/.settings/
 
 # Test artifacts
 coverage/
+allure-results/
 playwright-report/
 test-results/

@@ -38,6 +38,9 @@ class ProgressControllerIntegrationTest {
     @Autowired
     MockMvc mvc;
 
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     private String bearer(String token) {
         return "Bearer " + token;
     }
@@ -63,10 +66,16 @@ class ProgressControllerIntegrationTest {
 
     /** Cria a sessão a partir da rotina e devolve o corpo completo (itens incluídos). */
     private String createSessionBody(String token, long routineId) throws Exception {
-        return mvc.perform(post("/api/routines/" + routineId + "/sessions")
+        String body = mvc.perform(post("/api/routines/" + routineId + "/sessions")
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
+        // Hist?rico legado pode conter v?rias sess?es no mesmo dia, sem plan_date.
+        // Libera o planejamento ap?s a cria??o para semear registros independentes.
+        Number id = JsonPath.read(body, "$.id");
+        jdbc.update("update training_sessions set plan_date = null where id = ?", id.longValue());
+        jdbc.update("update routines set plan_date = null where id = ?", routineId);
+        return body;
     }
 
     /** Registra o item, inicia e conclui a sessão. */

@@ -12,7 +12,7 @@ Este projeto é composto por duas partes principais: o **Frontend** (React + Vit
 
 ## 🧪 Testes
 
-### Backend (86 testes: unitários + integração)
+### Backend (106 testes: unitários + integração)
 
 Os testes de integração usam um Postgres dedicado (`db-test`, porta **5434**),
 subido via Docker Compose. É **pré-requisito**:
@@ -50,6 +50,15 @@ por usuário autenticado.
 
 - Feature e UX: [docs/features/progress.md](docs/features/progress.md)
 - Contrato dos endpoints: [docs/api/progress-endpoints.md](docs/api/progress-endpoints.md)
+
+---
+
+## Planejamento adaptativo de treinos
+
+O gerador considera perfil, disponibilidade, duração, equipamento, histórico recente e execução real; sessões concluídas podem sugerir treino ou descanso para o dia seguinte.
+
+- Regras e proteções: [docs/features/adaptive-training-plans.md](docs/features/adaptive-training-plans.md)
+- Contrato da API: [docs/api/openapi.md](docs/api/openapi.md)
 
 ---
 

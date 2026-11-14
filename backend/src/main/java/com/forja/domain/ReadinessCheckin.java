@@ -33,4 +33,9 @@ public class ReadinessCheckin {
     public int getReadinessScore() {
         return sleepQuality * 2 + (6 - fatigue) * 2 + (6 - stress) + (6 - soreness);
     }
+
+    /** [UE-58] Relato relevante que pede revisão da sessão por um profissional. */
+    public boolean requiresReview() {
+        return painLevel >= 5 || fatigue >= 5 || soreness >= 5;
+    }
 }
