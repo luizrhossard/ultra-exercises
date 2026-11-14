@@ -485,6 +485,94 @@
         { "sport": "natacao", "score": 4, "why": "Tornozelo com flexão plantar ampla transforma o pé numa nadadeira: pernada mais eficiente e menos arrasto." },
         { "sport": "corrida", "score": 2 }
       ]
+    },
+    {
+      "name": "Aterrissagem Silenciosa de Salto", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Caixa baixa (20–30 cm)",
+      "muscles": ["quadriceps", "gluteos", "panturrilhas", "core"],
+      "steps": [
+        "Em pé sobre a caixa, pés na largura do quadril e joelhos levemente flexionados.",
+        "Desça da caixa sem pular para trás: entre em flexão de quadril e joelho assim que os pés tocarem o chão.",
+        "Aterrisse com os dois pés inteiros ao mesmo tempo, joelhos alinhados com a ponta dos pés e tronco à frente.",
+        "Pare 2 s em posição de agachamento sem ruído nem balanço. Faça 3 séries de 5 aterrissagens."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Técnica de aterrissagem após bloqueio e ataque: absorver a queda com joelho alinhado é o que protege joelho e tornozelo do jogador de vôlei." },
+        { "sport": "basquete", "score": 4, "why": "Mesma absorção de impacto da aterrissagem de rebote, em que a falha de técnica gera lesão de joelho." },
+        { "sport": "futebol", "score": 3 }
+      ]
+    },
+    {
+      "name": "Passada de Aproximação de Ataque", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Quadra ou área livre + bola (opcional)",
+      "muscles": ["quadriceps", "gluteos", "panturrilhas", "deltoides", "core"],
+      "steps": [
+        "Parta de pé, bola simulada na frente do corpo. Dê três passos: direita, esquerda, direita (ou o inverso para canhotos).",
+        "No último passo, deixe o braço de trás fazer um arco para trás e frene com o pé de apoio.",
+        "Salte em direção ao alto com os braços subindo juntos e alcance o ponto mais alto possível.",
+        "Aterrisse com a técnica silenciosa do exercício anterior. 4 séries de 5 aproximações com pausa de 40 s."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Padrão do salto de ataque: aproximação em três passos que transforma a corrida em impulsão vertical no ponto alto." },
+        { "sport": "basquete", "score": 3 }
+      ]
+    },
+    {
+      "name": "Deslocamento Lateral com Salto de Bloqueio", "category": "ESPECIFICO", "difficulty": "INTERMEDIARIO", "equipment": "Quadra ou área livre",
+      "muscles": ["quadriceps", "gluteos", "adutores", "panturrilhas", "deltoides"],
+      "steps": [
+        "Posição de bloqueio: joelhos flexionados, tronco à frente, braços erguidos à frente do rosto.",
+        "Desloque-se lateralmente 3 passos com o pé de frente à frente do corpo, sem cruzar as pernas.",
+        "No último passo, freie e salte verticalmente, braços estendidos acima da rede.",
+        "Aterrisse no mesmo ponto em flexão e volte para a posição de bloqueio. 3 séries de 6 repetições por lado."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Combinação de deslocamento + salto: o movimento real do bloqueio, do acompanhamento lateral ao salto com braços no alto." },
+        { "sport": "basquete", "score": 3 },
+        { "sport": "tenis", "score": 3 }
+      ]
+    },
+    {
+      "name": "Impulsão Vertical com Alcance de Bloqueio", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Parede marcada ou fita métrica",
+      "muscles": ["quadriceps", "gluteos", "panturrilhas", "deltoides", "core"],
+      "steps": [
+        "De frente para a parede, marque com a mão o alcance de pé parado.",
+        "Faça contra-movimento rápido (agachamento curto de 1 s), braços para trás e salte alcançando a marca mais alta possível.",
+        "Toque a parede com a mão dominante no ponto mais alto e aterrisse com joelhos flexionados.",
+        "Descanse 30 s entre saltos. 4 séries de 4 saltos, mantendo a altura máxima em todos."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Impulsão vertical para o bloqueio: o ganho de alcance com braço estendido é o que decide a altura da rede bloqueada." },
+        { "sport": "basquete", "score": 4, "why": "Mesmo ganho de salto vertical usado no rebote e no toco." }
+      ]
+    },
+    {
+      "name": "Elevação em Y-T-W com Elástico", "category": "ESPECIFICO", "difficulty": "INICIANTE", "equipment": "Elástico de resistência leve",
+      "muscles": ["trapezio", "manguito rotador", "serrátil", "deltoides", "dorsais"],
+      "steps": [
+        "Prenda o elástico na altura do peito e segure-o com os braços estendidos à frente, palmas para dentro.",
+        "Faça as letras em sequência: Y (braços em diagonal acima da cabeça), T (braços em linha com o ombro) e W (cotovelos dobrados, mãos para fora).",
+        "Escápulas descem e se aproximam ao final de cada letra; o movimento é lento, 2 s por fase.",
+        "Faça 3 séries de 8 repetições completas com carga leve, sem dor no ombro."
+      ],
+      "links": [
+        { "sport": "volei", "score": 5, "why": "Prevenção do ombro de ataque: fortalece serrátil e trapézio inferior, que estabilizam a escápula durante o ataque e o bloqueio." },
+        { "sport": "tenis", "score": 4, "why": "Mesma estabilidade escapular que protege o ombro dominante em saques e batidas repetidas." },
+        { "sport": "natacao", "score": 3 }
+      ]
+    },
+    {
+      "name": "Saltos Reativos de Contato Curto", "category": "PLIOMETRIA", "difficulty": "INTERMEDIARIO", "equipment": "Cones ou marcas no chão",
+      "muscles": ["panturrilhas", "quadriceps", "gluteos", "tornozelo"],
+      "steps": [
+        "Pés na largura do quadril, sobre um cone ou marca. Mantenha o tronco alto e os braços dobrados.",
+        "Salte o mínimo possível: o tempo de contato com o chão deve ser curto, como um quique.",
+        "Ao tocar o chão, já emende o próximo salto com os calcanhares quase encostando no glúteo.",
+        "Faça 4 séries de 10 contatos em 10 s, com 60 s de descanso entre séries."
+      ],
+      "links": [
+        { "sport": "volei", "score": 4, "why": "Reatividade de tornozelo e perna para responder rápido à bola e saltar de novo logo após a aterrissagem." },
+        { "sport": "basquete", "score": 4, "why": "Contato curto e reativo para saltos repetidos e a defesa rápida." },
+        { "sport": "futebol", "score": 3 }
+      ]
     }
   ]
 }

@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * [UE-66] QA — Validação dos Casos de Teste de Dificuldade (story UE-49).
- * Base isolada (db-test) populada pelo DataSeeder com os 30 exercícios curados.
+ * Base isolada (db-test) populada pelo DataSeeder com os 36 exercícios curados.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,12 +31,12 @@ class ExerciseDifficultyIntegrationTest {
     @Autowired
     MockMvc mvc;
 
-    /** CT-01: cadastro válido (caminho feliz) — os 30 exercícios do seed saem classificados. */
+    /** CT-01: cadastro válido (caminho feliz) — os 36 exercícios do seed saem classificados. */
     @Test
     void ct01_seedClassifiesAllExercisesWithValidDifficulty() throws Exception {
         String body = mvc.perform(get("/api/exercises"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(30))
+                .andExpect(jsonPath("$.length()").value(36))
                 .andExpect(jsonPath("$[*].difficulty",
                         everyItem(oneOf("INICIANTE", "INTERMEDIARIO", "AVANCADO"))))
                 .andExpect(jsonPath("$[*].name", everyItem(oneOf(
@@ -52,11 +52,15 @@ class ExerciseDifficultyIntegrationTest {
                         "Rotação Externa de Ombro com Elástico", "Rotação Interna de Ombro com Elástico",
                         "Puxada de Braçada com Elástico", "Nado com Paraquedas de Resistência",
                         "Nado com Pull Buoy e Palmar", "Prancha Streamline com Rotação",
-                        "Mobilidade de Ombro com Bastão", "Mobilidade de Tornozelo em Flexão Plantar"))))
+                        "Mobilidade de Ombro com Bastão", "Mobilidade de Tornozelo em Flexão Plantar",
+                        // [UE-52] Vôlei
+                        "Aterrissagem Silenciosa de Salto", "Passada de Aproximação de Ataque",
+                        "Deslocamento Lateral com Salto de Bloqueio", "Impulsão Vertical com Alcance de Bloqueio",
+                        "Elevação em Y-T-W com Elástico", "Saltos Reativos de Contato Curto"))))
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat((List<?>) JsonPath.read(body, "$[?(@.difficulty == 'INICIANTE')].name")).hasSize(16);
-        assertThat((List<?>) JsonPath.read(body, "$[?(@.difficulty == 'INTERMEDIARIO')].name")).hasSize(12);
+        assertThat((List<?>) JsonPath.read(body, "$[?(@.difficulty == 'INICIANTE')].name")).hasSize(18);
+        assertThat((List<?>) JsonPath.read(body, "$[?(@.difficulty == 'INTERMEDIARIO')].name")).hasSize(16);
         assertThat((List<?>) JsonPath.read(body, "$[?(@.difficulty == 'AVANCADO')].name")).hasSize(2);
     }
 
@@ -105,6 +109,6 @@ class ExerciseDifficultyIntegrationTest {
 
         mvc.perform(get("/api/exercises"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(30));
+                .andExpect(jsonPath("$.length()").value(36));
     }
 }
