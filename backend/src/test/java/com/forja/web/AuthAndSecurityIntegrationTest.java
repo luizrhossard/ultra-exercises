@@ -41,9 +41,22 @@ class AuthAndSecurityIntegrationTest {
     }
 
     @Test
+    void registerWithDuplicateEmailReturnsConflictWithStandardError() throws Exception {
+        TestUsers.register(mvc, "dup@forja.com");
+
+        mvc.perform(post("/api/auth/register")
+                        .contentType("application/json")
+                        .content("{\"email\":\"dup@forja.com\",\"password\":\"senha12345\",\"name\":\"Outro\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value("E-mail já cadastrado."))
+                .andExpect(jsonPath("$.traceId").isNotEmpty());
+    }
+
+    @Test
     void registerReturnsTokenAndAllowsAccessToMe() throws Exception {
         String token = TestUsers.register(mvc, "ana@forja.com");
-
         mvc.perform(get("/api/me").header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("ana@forja.com"));

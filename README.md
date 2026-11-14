@@ -59,8 +59,9 @@ por usuário autenticado.
 Certifique-se de ter instalado:
 *   [Node.js](https://nodejs.org/) (LTS)
 *   [Java JDK 21+](https://adoptium.net/) (JDK 25 é suportado)
-*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para o banco de dados)
-*   [Maven](https://maven.apache.org/) instalado globalmente (`mvn`)
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para o banco de dados e/ou a API)
+
+O Maven não precisa ser instalado globalmente: o projeto inclui o wrapper (`mvnw`/`mvnw.cmd`) na pasta `backend/`.
 
 ---
 
@@ -79,12 +80,21 @@ docker compose up -d db
 
 O servidor de backend está configurado para iniciar na porta **`8085`** (evitando conflito com a porta `8080`).
 
-Acesse a pasta `backend/` e execute:
+**Opção 1 — Docker (recomendado):** sobe API + banco de uma vez, a API espera o banco ficar healthy:
 ```powershell
-mvn spring-boot:run
+cd backend
+docker compose up -d --build api
+docker compose logs -f api        # acompanhar logs
 ```
 
-A API estará disponível em `http://localhost:8085`. O Flyway executará as migrações automaticamente ao iniciar e aplicará o seed inicial de dados.
+**Opção 2 — Local (dev com recarga):**
+```powershell
+cd backend
+docker compose up -d db
+.\mvnw.cmd spring-boot:run
+```
+
+A API estará disponível em `http://localhost:8085` (Swagger em `/swagger-ui.html`). O Flyway executará as migrações automaticamente ao iniciar e aplicará o seed inicial de dados.
 
 ---
 

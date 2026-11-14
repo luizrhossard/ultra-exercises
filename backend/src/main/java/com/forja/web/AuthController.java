@@ -1,5 +1,6 @@
 package com.forja.web;
 
+import com.forja.common.exception.ConflictException;
 import com.forja.common.exception.UnauthorizedException;
 import com.forja.domain.AppUser;
 import com.forja.repository.AppUserRepository;
@@ -70,7 +71,7 @@ public class AuthController {
     @PostMapping("/register")
     ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         if (users.findByEmail(request.email()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            throw new ConflictException("E-mail já cadastrado.");
         }
         var user = users.save(AppUser.builder()
                 .email(request.email())

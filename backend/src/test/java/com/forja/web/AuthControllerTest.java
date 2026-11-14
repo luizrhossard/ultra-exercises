@@ -57,14 +57,14 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerWithExistingEmailReturnsConflict() {
+    void registerWithExistingEmailThrowsConflict() {
         when(users.findByEmail("existe@forja.com"))
                 .thenReturn(Optional.of(AppUser.builder().email("existe@forja.com").build()));
 
-        var response = controller.register(
-                new AuthController.RegisterRequest("existe@forja.com", "senha12345", null));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThatThrownBy(() -> controller.register(
+                new AuthController.RegisterRequest("existe@forja.com", "senha12345", null)))
+                .isInstanceOf(com.forja.common.exception.ConflictException.class)
+                .hasMessageContaining("já cadastrado");
         verify(users, never()).save(any());
     }
 

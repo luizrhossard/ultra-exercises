@@ -9,7 +9,7 @@ import ReadinessCard from "../components/ReadinessCard";
 import TwoFactorSettings from "../components/TwoFactorSettings";
 
 export default function Profile() {
-  const { profile, setName, toggleSport, resetAll, toast } = useApp();
+  const { profile, setName, toggleSport, resetAll, toast, logout } = useApp();
   const [name, setNameLocal] = useState(profile.name);
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -109,6 +109,18 @@ export default function Profile() {
 
       {/* security: two-factor authentication [UE-24] */}
       <TwoFactorSettings />
+
+      {/* session */}
+      <section className="mt-7">
+        <button
+          type="button"
+          data-testid="logout"
+          onClick={() => logout()}
+          className="w-full rounded-xl border border-ink-600 py-3 text-[12px] font-bold uppercase tracking-[0.12em] text-fog-dim transition-colors hover:border-volt-400 hover:text-volt-400"
+        >
+          Sair da conta
+        </button>
+      </section>
 
       {/* how relevance works */}
       <section className="mt-7 rounded-2xl border border-ink-700 bg-ink-850 p-4">

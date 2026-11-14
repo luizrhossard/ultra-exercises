@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures/page-objects';
+import { expectAuthenticated, expectLoggedOut, expectActiveTab, logoutViaProfile } from '../utils/app-shell';
 import { TEST_USERS, generateTestUser } from '../utils/test-data';
 
 test.describe('Authentication Flows', () => {
@@ -12,7 +13,7 @@ test.describe('Authentication Flows', () => {
       await authPage.login(TEST_USERS.standard.email, TEST_USERS.standard.password);
       
       // Should redirect to home/dashboard after login
-      await expect(page).toHaveURL(/\/(home|dashboard|$)/);
+      await expectAuthenticated(page);
       
       // Should show user profile or logout option
       const userMenu = page.locator('[data-testid="user-menu"], button:has-text("Perfil"), button:has-text("Sair")');
@@ -25,6 +26,8 @@ test.describe('Authentication Flows', () => {
       await authPage.goto('/auth');
       await authPage.login('invalid@test.com', 'wrongpassword');
       
+      // A mensagem aparece depois da resposta da API: espera o alerta antes de ler.
+      await expect(authPage.errorMessage).toBeVisible({ timeout: 10_000 });
       const errorMessage = await authPage.getErrorMessage();
       expect(errorMessage.toLowerCase()).toMatch(/inválido|incorreto|erro|credenciais|não foi possível/);
       // UE-25 contrato: erro deve expor traceId Ref: para correlacao com logs
@@ -44,7 +47,7 @@ test.describe('Authentication Flows', () => {
       await expect(emailInput).toHaveAttribute('required');
       
       // Verify form doesn't submit by checking we're still on auth page
-      await expect(page).toHaveURL(/\/auth/);
+      await expectLoggedOut(page);
     });
 
     test('should show error with empty password', async ({ page, authPage }) => {
@@ -57,7 +60,7 @@ test.describe('Authentication Flows', () => {
       await expect(passwordInput).toHaveAttribute('required');
       
       // Verify form doesn't submit by checking we're still on auth page
-      await expect(page).toHaveURL(/\/auth/);
+      await expectLoggedOut(page);
     });
   });
 
@@ -71,30 +74,20 @@ test.describe('Authentication Flows', () => {
       await authPage.register(newUser.name, newUser.email, newUser.password);
       
       // Should redirect to home or onboarding after registration
-      await expect(page).toHaveURL(/\/(home|dashboard|onboarding|$)/);
+      await expectAuthenticated(page);
     });
 
     test('should show error for duplicate email', async ({ page, authPage }) => {
       test.skip(!process.env.E2E_BACKEND_URL, 'Requires backend API');
-      
-      // First create the user via UI
-      const newUser = generateTestUser('duplicate');
-      await authPage.goto('/auth');
-      await authPage.register(newUser.name, newUser.email, newUser.password);
-      await expect(page).toHaveURL(/\/(home|dashboard|onboarding|$)/);
-      
-      // Logout
-      const logoutButton = page.locator('[data-testid="logout"], button:has-text("Sair"), a:has-text("Logout")');
-      await authPage.clickAndWait(logoutButton);
-      await expect(page).toHaveURL(/\/auth/);
-      
-      // Try to register with same email
-      await authPage.register('Another User', newUser.email, 'DifferentPass123');
-      
-      const errorMessage = await authPage.getErrorMessage();
-      expect(errorMessage.toLowerCase()).toMatch(/já existe|already exists|duplicate|email.*usado|já cadastrado/);
-    });
 
+      // Usa um e-mail que já existe (usuário fixo): o erro de conflito vem direto da tela de cadastro.
+      await authPage.goto('/auth');
+      await authPage.register('Duplicado', TEST_USERS.standard.email, TEST_USERS.standard.password);
+
+      await expect(authPage.errorMessage).toBeVisible({ timeout: 10_000 });
+      const errorMessage = await authPage.getErrorMessage();
+      expect(errorMessage.toLowerCase()).toMatch(/j\u00e1 cadastrado/);
+    });
     test('should show error for mismatched passwords', async ({ page, authPage }) => {
       // The current UI doesn't have confirm password field
       // This test documents expected behavior if confirm field is added
@@ -127,14 +120,9 @@ test.describe('Authentication Flows', () => {
       // First login
       await authPage.goto('/auth');
       await authPage.login(TEST_USERS.standard.email, TEST_USERS.standard.password);
-      await expect(page).toHaveURL(/\/(home|dashboard|$)/);
+      await expectAuthenticated(page);
       
-      // Then logout
-      const logoutButton = page.locator('[data-testid="logout"], button:has-text("Sair"), a:has-text("Logout")');
-      await authPage.clickAndWait(logoutButton);
-      
-      // Should redirect to auth page
-      await expect(page).toHaveURL(/\/auth/);
+      await logoutViaProfile(page);
     });
   });
 
@@ -144,31 +132,23 @@ test.describe('Authentication Flows', () => {
       
       await authPage.goto('/auth');
       await authPage.login(TEST_USERS.standard.email, TEST_USERS.standard.password);
-      await expect(page).toHaveURL(/\/(home|dashboard|$)/);
+      await expectAuthenticated(page);
       
       // Reload page
       await page.reload();
       await page.waitForLoadState('networkidle');
       
       // Should still be logged in
-      await expect(page).toHaveURL(/\/(home|dashboard|$)/);
+      await expectAuthenticated(page);
       const userMenu = page.locator('[data-testid="user-menu"], button:has-text("Perfil"), button:has-text("Sair")');
       await expect(userMenu.first()).toBeVisible({ timeout: 10_000 });
     });
 
     test('should redirect to login when accessing protected route without auth', async ({ page }) => {
+      // Sem sessão o app é um gate: qualquer caminho mostra a tela de login.
       await page.goto('/routines');
       await page.waitForLoadState('networkidle');
-      
-      // Should redirect to auth page (if auth guard is implemented)
-      // Note: This test may need adjustment based on actual auth guard implementation
-      const currentUrl = page.url();
-      if (currentUrl.includes('/auth')) {
-        await expect(page).toHaveURL(/\/auth/);
-      } else {
-        // If no redirect, at least verify we're on the routines page
-        await expect(page).toHaveURL(/\/routines/);
-      }
+      await expectLoggedOut(page);
     });
   });
 
@@ -183,7 +163,7 @@ test.describe('Authentication Flows', () => {
         '123456' // Would need actual TOTP code
       );
       
-      await expect(page).toHaveURL(/\/(home|dashboard|$)/);
+      await expectAuthenticated(page);
     });
 
     test('should show 2FA challenge when user has 2FA enabled', async ({ page, authPage }) => {
@@ -258,17 +238,22 @@ test.describe('Authentication Flows', () => {
 
     test('should show loading state during authentication', async ({ page, authPage }) => {
       test.skip(!process.env.E2E_BACKEND_URL, 'Requires backend API to test loading state');
-      
+
+      // Atrasa a resposta da API para o estado de carregamento ficar observável.
+      await page.route('**/api/auth/login', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await route.continue();
+      });
+
       await authPage.goto('/auth');
       await authPage.emailInput.fill(TEST_USERS.standard.email);
       await authPage.passwordInput.fill(TEST_USERS.standard.password);
-      
-      // Click submit and check for loading state
-      const submitPromise = authPage.submitButton.click();
-      
-      // Button should show "Conectando…" while loading
-      await expect(authPage.submitButton).toHaveText(/Conectando/);
-      
+
+      // O botão de envio é o primeiro do formulário (o texto muda para "Conectando" durante o envio).
+      const submit = page.locator('form button').first();
+      const submitPromise = submit.click();
+      await expect(submit).toHaveText(/Conectando/);
+
       await submitPromise;
     });
   });
