@@ -33,7 +33,7 @@ jobs:
         run: npm run test:coverage
       - name: Publicar relatório de cobertura
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-coverage
           path: coverage/
@@ -56,7 +56,7 @@ jobs:
         run: npx playwright test --project=chromium
       - name: Publicar relatório do Playwright
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
@@ -90,7 +90,7 @@ jobs:
         run: mvn -B -f backend/pom.xml verify
       - name: Publicar relatórios de teste e cobertura
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-reports
           path: |
@@ -113,7 +113,7 @@ jobs:
       - name: Build de produção
         run: npm run build
       - name: Publicar artefato dist/
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: dist/

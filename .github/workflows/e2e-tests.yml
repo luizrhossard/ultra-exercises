@@ -127,7 +127,7 @@ jobs:
 
       - name: Upload test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ matrix.browser }}
           path: |
@@ -138,7 +138,7 @@ jobs:
 
       - name: Upload screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screenshots-${{ matrix.browser }}
           path: test-results/**/*.png
@@ -146,7 +146,7 @@ jobs:
 
       - name: Upload videos on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: videos-${{ matrix.browser }}
           path: test-results/**/*.webm
@@ -154,7 +154,7 @@ jobs:
 
       - name: Upload traces on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: traces-${{ matrix.browser }}
           path: test-results/**/*.zip
@@ -215,7 +215,7 @@ jobs:
 
       - name: Upload test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ matrix.browser }}
           path: |
@@ -269,7 +269,7 @@ jobs:
 
       - name: Upload smoke test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-report
           path: |
@@ -307,7 +307,7 @@ jobs:
 
       - name: Upload API contract test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-contracts-report
           path: |
