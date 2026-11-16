@@ -66,11 +66,13 @@ public class ProfileController {
         if (request.equipment() != null) user.setAvailableEquipment(request.equipment().trim());
         if (request.preferences() != null) user.setTrainingPreferences(request.preferences().trim());
         if (request.limitations() != null) user.setTrainingLimitations(request.limitations().trim());
+        var previousLevels = user.getUserSports().stream().collect(java.util.stream.Collectors.toMap(
+                us -> us.getSport().getCode(), UserSport::getLevel));
         user.getUserSports().clear();
         for (var sport : selected) {
             var choice = request.sports().stream().filter(s -> s.code().equals(sport.getCode())).findFirst().orElseThrow();
             user.getUserSports().add(UserSport.builder().user(user).sport(sport)
-                    .level(choice.level() == null ? SportLevel.COMPETITIVE : choice.level()).build());
+                    .level(choice.level() == null ? previousLevels.getOrDefault(sport.getCode(), SportLevel.RECREATIONAL) : choice.level()).build());
         }
         return toDto(users.save(user));
     }

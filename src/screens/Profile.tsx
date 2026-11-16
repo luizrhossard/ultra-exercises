@@ -1,3 +1,4 @@
+import TrainingLevelSettings from "../components/TrainingLevelSettings";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { EXERCISES } from "../data/exercises";
@@ -90,6 +91,7 @@ export default function Profile() {
       </div>
 
       <ReadinessCard />
+      <TrainingLevelSettings />
 
       <section className="mt-5 rounded-2xl border border-ink-700 bg-ink-850 p-4">
         <SectionLabel>Preferências de treino</SectionLabel>

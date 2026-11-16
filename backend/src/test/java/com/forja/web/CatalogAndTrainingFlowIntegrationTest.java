@@ -243,4 +243,20 @@ class CatalogAndTrainingFlowIntegrationTest {
                 .andExpect(jsonPath("$.requiresReview").value(true))
                 .andExpect(jsonPath("$.reviewRecommendation", org.hamcrest.Matchers.containsString("profissional")));
     }
+    @Test
+    void savingPreferencesPreservesPreviouslySelectedSportLevel() throws Exception {
+        String token = TestUsers.register(mvc, "preserve-level@forja.com");
+        mvc.perform(put("/api/me").header("Authorization", bearer(token)).contentType("application/json")
+                .content("""
+                        {"name":"Atleta","sports":[{"code":"futebol","level":"PROFESSIONAL"}]}
+                        """)).andExpect(status().isOk());
+        mvc.perform(put("/api/me").header("Authorization", bearer(token)).contentType("application/json")
+                .content("""
+                        {"name":"Atleta","sports":[{"code":"futebol"}],"goal":"mobilidade"}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sports[0].level").value("PROFESSIONAL"))
+                .andExpect(jsonPath("$.goal").value("mobilidade"));
+    }
+
 }

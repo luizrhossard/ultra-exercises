@@ -109,6 +109,34 @@ public class RoutineGeneratorService {
 
     @Transactional
     public GenerationResult generateWithReadiness(String userEmail, Long focusSportId, LocalDate requestedDate) {
+        return build(userEmail, focusSportId, requestedDate, true);
+    }
+
+    @Transactional(readOnly = true)
+    public Routine preview(String userEmail, Long focusSportId) {
+        var routine = build(userEmail, focusSportId, LocalDate.now(), false).routine();
+        if (routine.isRestDay() || routine.isRequiresReview())
+            throw new IllegalArgumentException("O planejamento atual indica descanso ou revis?o profissional. Confira o perfil e o check-in antes de propor um treino.");
+        var now = java.time.Instant.now();
+        var history = sessions.findByUserIdAndStatusAndCompletedAtBetweenOrderByCompletedAtDesc(
+                routine.getUser().getId(), SessionStatus.COMPLETED, now.minus(42, java.time.temporal.ChronoUnit.DAYS), now);
+        var readiness = checkins.findByUserIdAndCheckinDate(routine.getUser().getId(), LocalDate.now()).orElse(null);
+        var policy = new TrainingPersonalization(levelFor(routine.getUser(), focusSportId), readiness, history, now);
+        routine.getItems().removeIf(i -> !policy.eligible(i.getExercise()));
+        for (var item : routine.getItems()) {
+            var dose = policy.prescribe(item.getExercise());
+            item.setSets(Math.min(item.getSets(), dose.sets()));
+            item.setRestTime(Math.max(item.getRestTime(), dose.rest()));
+            item.setSelectionReason(dose.reason());
+        }
+        if (routine.getItems().isEmpty()) throw new IllegalArgumentException("N?o h? exerc?cios eleg?veis para a proposta. Revise seu hist?rico e check-in.");
+        routine.setGenerationSummary(policy.summary());
+        // Chat proposals are optional routines, separate from the unique daily plan.
+        routine.setPlanDate(null);
+        return routine;
+    }
+
+    private GenerationResult build(String userEmail, Long focusSportId, LocalDate requestedDate, boolean persist) {
         LocalDate planDate = requestedDate == null ? LocalDate.now() : requestedDate;
         var user = users.findByEmail(userEmail)
                 .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado: " + userEmail));
@@ -122,7 +150,7 @@ public class RoutineGeneratorService {
         boolean recentExecutionConcern = sessions.hasRecentHighEffortOrPain(user.getId(),
                 planDate.minusDays(7).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
         boolean conservativeAdjustment = readinessAdjusted || recentExecutionConcern;
-        var existing = routines.findByUserIdAndPlanDate(user.getId(), planDate);
+        var existing = persist ? routines.findByUserIdAndPlanDate(user.getId(), planDate) : Optional.<Routine>empty();
         if (existing.isPresent()) {
             var routine = existing.get();
             boolean newlyConservative = conservativeAdjustment && !routine.isReadinessAdjusted();
@@ -160,7 +188,7 @@ public class RoutineGeneratorService {
                     .name("Descanso · " + planDate.format(DAY)).planDate(planDate)
                     .readinessScore(readinessScore).readinessAdjusted(conservativeAdjustment)
                     .requiresReview(requiresReview).restDay(true).explanation(explanation).build();
-            return new GenerationResult(routines.save(rest), readinessScore, conservativeAdjustment, requiresReview,
+            return new GenerationResult(persist ? routines.save(rest) : rest, readinessScore, conservativeAdjustment, requiresReview,
                     reviewText(requiresReview), explanation);
         }
 
@@ -294,7 +322,7 @@ public class RoutineGeneratorService {
                                 ? "Não encontramos exercícios compatíveis com os equipamentos informados; usamos as opções esportivas disponíveis."
                                 : "Priorizamos objetivo e esporte foco e evitamos repetir exercícios concluídos nos últimos 14 dias quando havia alternativas.";
         routine.setExplanation(explanation);
-        return new GenerationResult(routines.save(routine), readinessScore, conservativeAdjustment,
+        return new GenerationResult(persist ? routines.save(routine) : routine, readinessScore, conservativeAdjustment,
                 requiresReview, recommendation, explanation);
     }
 

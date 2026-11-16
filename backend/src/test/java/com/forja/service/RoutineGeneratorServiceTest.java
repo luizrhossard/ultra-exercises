@@ -600,4 +600,35 @@ class RoutineGeneratorServiceTest {
 
         assertThat(names(r)).containsExactly("Int5", "IntOther", "Adv3");
     }
+    @Test
+    void chatPreviewPreservesEquipmentRulesWithoutSavingDailyPlan() {
+        var focus = sport(1L, "futebol", "Futebol");
+        var user = userWithSports(focus);
+        user.setAvailableEquipment("sem equipamento");
+        var bodyweight = exercise(1L, "Mobilidade", ExerciseCategory.MOBILIDADE);
+        bodyweight.setEquipment("peso corporal");
+        var machine = exercise(2L, "M?quina", ExerciseCategory.FORCA);
+        machine.setEquipment("m?quina");
+        when(users.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(sports.findById(1L)).thenReturn(Optional.of(focus));
+        when(links.findBySportIdIn(any())).thenReturn(List.of(link(bodyweight, focus, 5), link(machine, focus, 5)));
+        var preview = service.preview(user.getEmail(), 1L);
+        assertThat(preview.getItems()).extracting(i -> i.getExercise().getId()).containsExactly(1L);
+        assertThat(preview.getId()).isNull();
+        assertThat(preview.getPlanDate()).isNull();
+        verify(routines, never()).save(any());
+        verify(routines, never()).findByUserIdAndPlanDate(any(), any());
+    }
+
+    @Test
+    void chatPreviewCannotOverrideRestDay() {
+        var focus = sport(1L, "futebol", "Futebol");
+        var user = userWithSports(focus);
+        user.setTrainingDays(LocalDate.now().plusDays(1).getDayOfWeek().name());
+        when(users.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(sports.findById(1L)).thenReturn(Optional.of(focus));
+        assertThatThrownBy(() -> service.preview(user.getEmail(), 1L)).isInstanceOf(IllegalArgumentException.class);
+        verify(routines, never()).save(any());
+    }
+
 }

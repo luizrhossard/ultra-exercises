@@ -33,6 +33,9 @@ public class Routine {
     @Column(nullable = false, length = 120)
     private String name;
 
+    @Column(name = "generation_summary", columnDefinition = "text")
+    private String generationSummary;
+
     /** Data local para a qual esta recomendação foi planejada. */
     @Column(name = "plan_date")
     private LocalDate planDate;

@@ -45,11 +45,11 @@ export type ApiExerciseDetail = {
   steps: string[];
   links: { sportCode: string; sportName: string; score: number; rationale: string | null }[];
 };
-export type ApiRoutineItem = { exerciseId: number; exerciseName: string; position: number; sets: number; reps: string; restTime: number };
+export type ApiRoutineItem = { exerciseId: number; exerciseName: string; position: number; sets: number; reps: string; restTime: number; selectionReason?: string | null };
 export type ApiRoutineAlternative = { exerciseId: number; exerciseName: string };
 export type ApiRoutine = {
   id: number; name: string; sportCode: string; sportName: string; createdAt: string; items: ApiRoutineItem[];
-  readinessScore?: number | null; readinessAdjusted?: boolean | null; requiresReview?: boolean | null; reviewRecommendation?: string | null; explanation?: string | null; restDay?: boolean;
+  readinessScore?: number | null; readinessAdjusted?: boolean | null; requiresReview?: boolean | null; reviewRecommendation?: string | null; explanation?: string | null; restDay?: boolean; generationSummary?: string | null;
 };
 export type ApiSessionStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "INTERRUPTED" | "SKIPPED";
 export type ApiSessionItem = { exerciseId: number; exerciseName: string; position: number; prescribedSets: number; prescribedReps: string; prescribedRestTime: number; completedSets: number | null; completedReps: string | null; loadKg: number | null; itemRpe: number | null; painLevel: number | null; notes: string | null };
@@ -234,8 +234,8 @@ export const api = {
   verifyTwoFactor: (challengeToken: string, code: string) => request<AuthResponse>("/auth/2fa/verify", { method: "POST", body: JSON.stringify({ challengeToken, code }) }),
   register: (email: string, password: string, name: string) => request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify({ email, password, name }) }),
   me: (token: string) => request<AthleteProfile>("/me", {}, token),
-  saveProfile: (token: string, name: string, sports: string[], training?: TrainingProfileUpdate) => request<AthleteProfile>("/me", {
-    method: "PUT", body: JSON.stringify({ name, sports: sports.map((code) => ({ code, level: "COMPETITIVE" })), ...training }),
+  saveProfile: (token: string, name: string, sports: string[], training?: TrainingProfileUpdate, levels?: Record<string, string>) => request<AthleteProfile>("/me", {
+    method: "PUT", body: JSON.stringify({ name, sports: sports.map((code) => ({ code, level: levels?.[code] })), ...training }),
   }, token),
   todayReadiness: (token: string) => request<Readiness | null>("/readiness/today", {}, token),
   saveReadiness: (token: string, body: Omit<Readiness, "date" | "readinessScore" | "requiresReview">) =>

@@ -54,13 +54,13 @@ public class RoutineController {
     }
 
     record ItemDto(Long exerciseId, String exerciseName, int position,
-                   int sets, String reps, int restTime) {
+                   int sets, String reps, int restTime, String selectionReason) {
     }
 
     record RoutineDto(Long id, String name, String sportCode, String sportName,
                       Instant createdAt, List<ItemDto> items, Integer readinessScore,
                       Boolean readinessAdjusted, Boolean requiresReview, String reviewRecommendation,
-                      String explanation, Boolean restDay) {
+                      String explanation, Boolean restDay, String generationSummary) {
     }
 
     @GetMapping
@@ -230,13 +230,13 @@ public class RoutineController {
                                 it.getPosition(),
                                 it.getSets(),
                                 it.getReps(),
-                                it.getRestTime()))
+                                it.getRestTime(), it.getSelectionReason()))
                         .toList(),
                 readinessScore,
                 readinessAdjusted,
                 requiresReview,
                 reviewRecommendation,
                 explanation,
-                restDay);
+                restDay, r.getGenerationSummary());
     }
 }

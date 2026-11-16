@@ -17,6 +17,10 @@ import java.util.Optional;
 public interface TrainingSessionRepository extends JpaRepository<TrainingSession, Long>,
         JpaSpecificationExecutor<TrainingSession> {
 
+    @EntityGraph(attributePaths = {"items", "items.exercise"})
+    List<TrainingSession> findByUserIdAndStatusAndCompletedAtBetweenOrderByCompletedAtDesc(
+            Long userId, SessionStatus status, Instant start, Instant end);
+
     @EntityGraph(attributePaths = {"sport", "routine", "items", "items.exercise"})
     List<TrainingSession> findByUserIdOrderByScheduledAtDesc(Long userId);
     @EntityGraph(attributePaths = {"sport", "routine", "items", "items.exercise"})
