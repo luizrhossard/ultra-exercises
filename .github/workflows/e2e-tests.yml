@@ -1,4 +1,4 @@
-﻿name: E2E Tests [UE-64]
+name: E2E Tests [UE-64]
 
 on:
   push:
@@ -82,7 +82,7 @@ jobs:
       matrix: ${{ fromJSON(needs.configure.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -126,7 +126,7 @@ jobs:
       E2E_BACKEND_URL: ${{ secrets.E2E_BACKEND_URL }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
