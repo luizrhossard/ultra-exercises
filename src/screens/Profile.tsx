@@ -7,6 +7,7 @@ import { SportIcon, IconBolt, IconCheck } from "../components/Icons";
 import { SectionLabel } from "../components/ui";
 import ReadinessCard from "../components/ReadinessCard";
 import TwoFactorSettings from "../components/TwoFactorSettings";
+import TrainingLevelSettings from "../components/TrainingLevelSettings";
 
 export default function Profile() {
   const { profile, setName, toggleSport, resetAll, toast } = useApp();
@@ -53,6 +54,7 @@ export default function Profile() {
       </div>
 
       <ReadinessCard />
+      <TrainingLevelSettings />
 
       {/* stats */}
       <div className="mt-4 grid grid-cols-2 gap-2.5">

@@ -38,6 +38,9 @@ public class RoutineItem {
     @Column(name = "rest_time", nullable = false)
     private int restTime;
 
+    @Column(name = "selection_reason", columnDefinition = "text")
+    private String selectionReason;
+
     /** Chave composta (routine_id, exercise_id). */
     @Getter
     @NoArgsConstructor

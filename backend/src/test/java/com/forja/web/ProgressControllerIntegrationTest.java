@@ -57,7 +57,7 @@ class ProgressControllerIntegrationTest {
                         .header("Authorization", bearer(token))
                         .contentType("application/json").content("{\"sportId\":1}"))
                 .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         return ((Number) JsonPath.read(routine, "$.id")).longValue();
     }
 
@@ -66,7 +66,7 @@ class ProgressControllerIntegrationTest {
         return mvc.perform(post("/api/routines/" + routineId + "/sessions")
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
     }
 
     /** Registra o item, inicia e conclui a sessão. */
@@ -363,7 +363,7 @@ class ProgressControllerIntegrationTest {
     /** Músculos do exercício via endpoint público de detalhe. */
     private List<String> musclesOf(long exerciseId) throws Exception {
         return JsonPath.read(mvc.perform(get("/api/exercises/{id}", exerciseId))
-                .andReturn().getResponse().getContentAsString(), "$.muscles[*]");
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8), "$.muscles[*]");
     }
 
     /** true se qualquer exercício das sessões indicadas contém o músculo informado. */

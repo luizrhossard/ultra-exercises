@@ -50,7 +50,7 @@ public class ProfileController {
         for (var sport : selected) {
             var choice = request.sports().stream().filter(s -> s.code().equals(sport.getCode())).findFirst().orElseThrow();
             user.getUserSports().add(UserSport.builder().user(user).sport(sport)
-                    .level(choice.level() == null ? SportLevel.COMPETITIVE : choice.level()).build());
+                    .level(choice.level() == null ? SportLevel.RECREATIONAL : choice.level()).build());
         }
         return toDto(users.save(user));
     }

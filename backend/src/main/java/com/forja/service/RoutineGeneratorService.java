@@ -2,6 +2,8 @@ package com.forja.service;
 
 import com.forja.domain.*;
 import com.forja.repository.AppUserRepository;
+import com.forja.repository.TrainingSessionRepository;
+import com.forja.repository.ReadinessCheckinRepository;
 import com.forja.repository.ExerciseSportRepository;
 import com.forja.repository.RoutineRepository;
 import com.forja.repository.SportRepository;
@@ -10,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -51,20 +55,37 @@ public class RoutineGeneratorService {
     private final SportRepository sports;
     private final ExerciseSportRepository links;
     private final RoutineRepository routines;
+    private final TrainingSessionRepository sessions;
+    private final ReadinessCheckinRepository checkins;
 
     private record Candidate(Long exerciseId, int total, int focusScore, Exercise exercise) {
     }
 
     @Transactional
     public Routine generate(String userEmail, Long focusSportId) {
+        return routines.save(preview(userEmail, focusSportId));
+    }
+
+    @Transactional(readOnly = true)
+    public Routine preview(String userEmail, Long focusSportId) {
         var user = users.findByEmail(userEmail)
                 .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado: " + userEmail));
         var focus = sports.findById(focusSportId)
                 .orElseThrow(() -> new NoSuchElementException("Esporte não encontrado: " + focusSportId));
 
+        var now = Instant.now();
+        var level = user.getUserSports().stream()
+                .filter(us -> us.getSport().getId().equals(focusSportId))
+                .map(UserSport::getLevel).findFirst().orElse(SportLevel.RECREATIONAL);
+        var history = sessions.findByUserIdAndStatusAndCompletedAtBetweenOrderByCompletedAtDesc(
+                user.getId(), SessionStatus.COMPLETED, now.minus(42, ChronoUnit.DAYS), now);
+        var readiness = checkins.findByUserIdAndCheckinDate(user.getId(), LocalDate.now()).orElse(null);
+        var personalization = new TrainingPersonalization(level, readiness, history, now);
+
         var userSportIds = user.getUserSports().stream()
                 .map(us -> us.getSport().getId())
-                .toList();
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        userSportIds.add(focusSportId);
 
         // score = 2 × relevância no foco + melhor relevância nos demais esportes do usuário
         Map<Long, Candidate> candidates = new LinkedHashMap<>();
@@ -85,21 +106,27 @@ public class RoutineGeneratorService {
         var ranked = candidates.values().stream()
                 .map(c -> new Candidate(c.exerciseId(),
                         focusScore.getOrDefault(c.exerciseId(), 0) * 2
-                                + otherBest.getOrDefault(c.exerciseId(), 0),
+                                + otherBest.getOrDefault(c.exerciseId(), 0)
+                                + personalization.adjustment(c.exercise()),
                         focusScore.getOrDefault(c.exerciseId(), 0),
                         c.exercise()))
-                .filter(c -> c.total() > 0)
+                .filter(c -> c.focusScore() > 0 && personalization.eligible(c.exercise()))
                 .sorted(comparingInt(Candidate::total).reversed()
-                        .thenComparing(comparingInt(Candidate::focusScore).reversed()))
+                        .thenComparing(comparingInt(Candidate::focusScore).reversed())
+                        .thenComparing(Candidate::exerciseId))
                 .toList();
 
         // cotas por categoria + preenchimento até 7 exercícios
         List<Candidate> picked = new ArrayList<>();
         Set<Long> used = new HashSet<>();
-        for (var quota : QUOTAS) {
+        var quotas = personalization.targetSize() == 5 ? List.of(
+                Map.entry(ExerciseCategory.MOBILIDADE, 1), Map.entry(ExerciseCategory.CORE, 1),
+                Map.entry(ExerciseCategory.FORCA, 1), Map.entry(ExerciseCategory.CONDICIONAMENTO, 1),
+                Map.entry(ExerciseCategory.ESPECIFICO, 1)) : QUOTAS;
+        for (var quota : quotas) {
             int taken = 0;
             for (var c : ranked) {
-                if (taken >= quota.getValue()) break;
+                if (taken >= quota.getValue() || picked.size() >= personalization.targetSize()) break;
                 if (!used.contains(c.exerciseId()) && c.exercise().getCategory() == quota.getKey()) {
                     picked.add(c);
                     used.add(c.exerciseId());
@@ -108,30 +135,34 @@ public class RoutineGeneratorService {
             }
         }
         for (var c : ranked) {
-            if (picked.size() >= 7) break;
+            if (picked.size() >= personalization.targetSize()) break;
             if (used.add(c.exerciseId())) picked.add(c);
         }
 
+        if (picked.isEmpty()) {
+            throw new IllegalArgumentException("Não há exercícios elegíveis para este esporte com os registros atuais. Revise as informações e o treino com um profissional.");
+        }
         var routine = Routine.builder()
                 .user(user)
                 .sport(focus)
+                .generationSummary(personalization.summary())
                 .name("Treino " + focus.getName() + " · " + LocalDate.now().format(DAY))
                 .build();
 
         int position = 0;
         for (var c : picked) {
-            var preset = PRESETS.get(c.exercise().getCategory());
-            int sets = Math.min(5, preset.sets() + (c.focusScore() >= 5 ? 1 : 0));
+            var prescription = personalization.prescribe(c.exercise());
             routine.getItems().add(RoutineItem.builder()
                     .routine(routine)
                     .exercise(c.exercise())
                     .position(position++)
-                    .sets(sets)
-                    .reps(preset.reps())
-                    .restTime(preset.rest())
+                    .sets(prescription.sets())
+                    .reps(prescription.reps())
+                    .restTime(prescription.rest())
+                    .selectionReason(prescription.reason())
                     .build());
         }
 
-        return routines.save(routine);
+        return routine;
     }
 }

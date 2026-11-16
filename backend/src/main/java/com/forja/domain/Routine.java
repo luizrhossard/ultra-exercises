@@ -32,6 +32,9 @@ public class Routine {
     @Column(nullable = false, length = 120)
     private String name;
 
+    @Column(name = "generation_summary", columnDefinition = "text")
+    private String generationSummary;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

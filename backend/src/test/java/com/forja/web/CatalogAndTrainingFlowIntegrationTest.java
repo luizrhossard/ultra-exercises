@@ -27,6 +27,56 @@ class CatalogAndTrainingFlowIntegrationTest {
     @Autowired
     MockMvc mvc;
 
+    @Test
+    void generationUsesOnlyOwnCompletedHistoryAndExplainsAdjustments() throws Exception {
+        String athlete = TestUsers.register(mvc, "adaptive@forja.com");
+        String other = TestUsers.register(mvc, "adaptive-other@forja.com");
+        String first = mvc.perform(post("/api/routines/generate")
+                        .header("Authorization", bearer(athlete)).contentType("application/json")
+                        .content("{\"sportId\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.generationSummary").value(org.hamcrest.Matchers.containsString("Sem histórico")))
+                .andExpect(jsonPath("$.items[0].selectionReason").isNotEmpty())
+                .andReturn().getResponse().getContentAsString();
+        long routineId = ((Number) JsonPath.read(first, "$.id")).longValue();
+        int painfulId = ((Number) JsonPath.read(first, "$.items[0].exerciseId")).intValue();
+        String session = mvc.perform(post("/api/routines/{id}/sessions", routineId)
+                        .header("Authorization", bearer(athlete)))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        long sessionId = ((Number) JsonPath.read(session, "$.id")).longValue();
+        mvc.perform(patch("/api/sessions/{id}/items/{exercise}", sessionId, painfulId)
+                        .header("Authorization", bearer(athlete)).contentType("application/json")
+                        .content("{\"completedSets\":2,\"completedReps\":\"8 reps\",\"itemRpe\":9,\"painLevel\":2}"))
+                .andExpect(status().isOk());
+        mvc.perform(patch("/api/sessions/{id}", sessionId)
+                        .header("Authorization", bearer(athlete)).contentType("application/json")
+                        .content("{\"status\":\"COMPLETED\",\"sessionRpe\":9}"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/routines/generate")
+                        .header("Authorization", bearer(athlete)).contentType("application/json")
+                        .content("{\"sportId\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.generationSummary").value(org.hamcrest.Matchers.containsString("1 sessões")))
+                .andExpect(jsonPath("$.generationSummary").value(org.hamcrest.Matchers.containsString("Volume reduzido")))
+                .andExpect(jsonPath("$.items[*].exerciseId").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem(painfulId))));
+        mvc.perform(post("/api/routines/generate")
+                        .header("Authorization", bearer(other)).contentType("application/json")
+                        .content("{\"sportId\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.generationSummary").value(org.hamcrest.Matchers.containsString("Sem histórico")))
+                .andExpect(jsonPath("$.items[*].exerciseId").value(org.hamcrest.Matchers.hasItem(painfulId)));
+        mvc.perform(get("/api/routines").header("Authorization", bearer(athlete)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].generationSummary").isNotEmpty())
+                .andExpect(jsonPath("$[0].items[0].selectionReason").isNotEmpty());
+        mvc.perform(put("/api/readiness/today").header("Authorization", bearer(athlete))
+                        .contentType("application/json").content("{\"sleepQuality\":3,\"fatigue\":3,\"stress\":3,\"soreness\":3,\"painLevel\":5}"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/routines/generate").header("Authorization", bearer(athlete))
+                        .contentType("application/json").content("{\"sportId\":1}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("revisão")));
+    }
+
     private String bearer(String token) {
         return "Bearer " + token;
     }

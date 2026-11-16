@@ -40,12 +40,14 @@ class RoutineGeneratorServiceTest {
     @Mock SportRepository sports;
     @Mock ExerciseSportRepository links;
     @Mock RoutineRepository routines;
+    @Mock com.forja.repository.TrainingSessionRepository sessions;
+    @Mock com.forja.repository.ReadinessCheckinRepository checkins;
 
     RoutineGeneratorService service;
 
     @BeforeEach
     void setUp() {
-        service = new RoutineGeneratorService(users, sports, links, routines);
+        service = new RoutineGeneratorService(users, sports, links, routines, sessions, checkins);
     }
 
     private Sport sport(long id, String code, String name) {
@@ -143,7 +145,7 @@ class RoutineGeneratorServiceTest {
     }
 
     @Test
-    void addsExtraSetWhenFocusScoreIsFive() {
+    void relevanceDoesNotIncreaseVolumeWithoutPerformanceHistory() {
         Sport focus = sport(1L, "futebol", "Futebol");
         AppUser user = userWithSports(focus);
 
@@ -157,8 +159,8 @@ class RoutineGeneratorServiceTest {
                 .filter(it -> it.getExercise().getId() == 1L).findFirst().orElseThrow();
         RoutineItem item3 = result.getItems().stream()
                 .filter(it -> it.getExercise().getId() == 2L).findFirst().orElseThrow();
-        assertThat(item5.getSets()).isEqualTo(5); // preset FORCA 4 + 1
-        assertThat(item3.getSets()).isEqualTo(4);
+        assertThat(item5.getSets()).isEqualTo(3); // recreational baseline
+        assertThat(item3.getSets()).isEqualTo(3);
     }
 
     @Test

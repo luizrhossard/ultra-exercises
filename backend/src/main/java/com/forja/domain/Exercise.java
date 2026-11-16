@@ -29,6 +29,10 @@ public class Exercise {
     @Column(nullable = false, length = 24)
     private ExerciseCategory category;
 
+    @Column(nullable = false, length = 16)
+    @Builder.Default
+    private String difficulty = "INICIANTE";
+
     @Column(length = 120)
     private String equipment;
 

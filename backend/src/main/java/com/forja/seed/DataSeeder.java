@@ -42,7 +42,7 @@ public class DataSeeder implements ApplicationRunner {
     record LinkSeed(String sport, int score, String why) {
     }
 
-    record ExerciseSeed(String name, String category, String equipment,
+    record ExerciseSeed(String name, String category, String difficulty, String equipment,
                         List<String> muscles, List<String> steps, List<LinkSeed> links) {
     }
 
@@ -74,6 +74,7 @@ public class DataSeeder implements ApplicationRunner {
             var exercise = exercises.save(Exercise.builder()
                     .name(e.name())
                     .category(ExerciseCategory.valueOf(e.category()))
+                    .difficulty(e.difficulty() == null ? "INICIANTE" : e.difficulty())
                     .equipment(e.equipment())
                     .muscleGroups(new ArrayList<>(e.muscles()))
                     .steps(new ArrayList<>(e.steps()))
